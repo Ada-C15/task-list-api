@@ -30,8 +30,8 @@ The Goal model should be have a _relationship_ with the model Task.
 
 After learning the strategy for creating a one-to-many relationship, in the Goal model, we recommend:
 
-    - Setting the `backref` value to `'tasks'`
-    - Setting the `lazy` value to `True`
+- Setting the `backref` value to `'tasks'`
+- Setting the `lazy` value to `True`
 
 ### Updates to the Task Model
 
@@ -41,8 +41,8 @@ The Task model should belong to one `Goal`.
 
 After learning the strategy for creating a one-to-many relationship, in the Task model, we recommend:
 
-    - Setting the foreign key to `goal`'s primary key column
-    - Setting the `nullable` to `True`
+- Setting the foreign key to `goal`'s primary key column
+- Setting the `nullable` to `True`
 
 ### Getting Tasks of One Goal
 

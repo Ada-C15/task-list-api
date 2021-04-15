@@ -23,11 +23,10 @@ def app():
 def client(app):
     return app.test_client()
 
+
 # This fixture gets called in every test that
 # references "one_task"
 # This fixture creates a task and saves it in the database
-
-
 @pytest.fixture
 def one_task(app):
     new_task = Task(

@@ -1,13 +1,3 @@
-def test_index(client):
-    # Act
-    response = client.get("/")
-    response_body = response.get_json()
-
-    # Assert
-    assert "name" in response_body
-    assert "message" in response_body
-
-
 def test_get_tasks_no_saved_tasks(client):
     # Act
     response = client.get("/tasks")
