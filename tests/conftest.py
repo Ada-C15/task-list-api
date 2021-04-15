@@ -12,6 +12,7 @@ def app():
     app = create_app({"TESTING": True})
 
     with app.app_context():
+        db.create_all()
         yield app
 
     # close and remove the temporary database
