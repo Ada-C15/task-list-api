@@ -38,8 +38,8 @@ Install dependencies (we've already gathered them all into a `requirements.txt` 
 
 Create two databases:
 
-1. A development database named `task-list-api_development`
-1. A test database named `task-list-api_test`
+1. A development database named `task_list_api_development`
+1. A test database named `task_list_api_test`
 
 ## Creating a `.env` File
 
@@ -53,8 +53,8 @@ Create two environment variables that will hold your database URLs.
 Your `.env` may look like this:
 
 ```
-SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://postgres:postgres@localhost:5432/task-list-api_development
-SQLALCHEMY_TEST_DATABASE_URI=postgresql+psycopg2://postgres:postgres@localhost:5432/task-list-api_test
+SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://postgres:postgres@localhost:5432/task_list_api_development
+SQLALCHEMY_TEST_DATABASE_URI=postgresql+psycopg2://postgres:postgres@localhost:5432/task_list_api_test
 ```
 
 ## Run `$ flask db init`
