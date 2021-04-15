@@ -53,7 +53,7 @@ As a client, I want to be able to make a `POST` request to `/goals` with the fol
 
 and get this response:
 
-`200 OK`
+`201 CREATED`
 
 ```json
 {
