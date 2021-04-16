@@ -110,7 +110,7 @@ def test_delete_goal(client, one_goal):
         "details": 'Goal 1 "Build a habit of going outside daily" successfully deleted'
     }
 
-    # Check that the task was deleted
+    # Check that the goal was deleted
     response = client.get("/goals/1")
     assert response.status_code == 404
 
