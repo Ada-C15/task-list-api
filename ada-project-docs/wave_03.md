@@ -10,7 +10,7 @@ A task's `is_complete` is `true` when there is a datetime for the task's `comple
 
 ## Requirements
 
-The following route is required for wave 3.
+The following are required routes for wave 3. Feel free to implement the routes in any order within this wave.
 
 ### Tips
 
