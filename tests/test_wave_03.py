@@ -56,3 +56,61 @@ def test_toggle_complete_on_complete_task(client, completed_task):
             "is_complete": False
         }
     }
+    assert Task.query.get(1).completed_at == None
+
+
+# Let's add this test for creating tasks, now that
+# the completion functionality has been implemented
+def test_create_task_with_valid_completed_at(client):
+    # Act
+    response = client.post("/tasks", json={
+        "title": "A Brand New Task",
+        "description": "Test Description",
+        "completed_at": datetime.utcnow()
+    })
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 201
+    assert "task" in response_body
+    assert response_body == {
+        "task": {
+            "id": 1,
+            "title": "A Brand New Task",
+            "description": "Test Description",
+            "is_complete": True
+        }
+    }
+    new_task = Task.query.get(1)
+    assert new_task
+    assert new_task.title == "A Brand New Task"
+    assert new_task.description == "Test Description"
+    assert new_task.completed_at
+
+
+# Let's add this test for updating tasks, now that
+# the completion functionality has been implemented
+def test_update_task_with_completed_at_date(client, completed_task):
+    # Act
+    response = client.put("/tasks/1", json={
+        "title": "Updated Task Title",
+        "description": "Updated Test Description",
+        "completed_at": datetime.utcnow()
+    })
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 200
+    assert "task" in response_body
+    assert response_body == {
+        "task": {
+            "id": 1,
+            "title": "Updated Task Title",
+            "description": "Updated Test Description",
+            "is_complete": True
+        }
+    }
+    task = Task.query.get(1)
+    assert task.title == "Updated Task Title"
+    assert task.description == "Updated Test Description"
+    assert task.completed_at
