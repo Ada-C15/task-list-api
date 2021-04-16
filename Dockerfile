@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y \
     libssl-dev libffi-dev \
     --no-install-recommends
 
+RUN apt-get update && apt-get install -y postgresql-client
+
 # Create directory for app
 RUN mkdir /app
 
