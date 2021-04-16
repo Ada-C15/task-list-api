@@ -44,6 +44,32 @@ After learning the strategy for creating a one-to-many relationship, in the Task
 - Setting the foreign key to `goal`'s primary key column
 - Setting the `nullable` to `True`
 
+Remember to run `flask db migrate` and `flask db upgrade` whenever there is a change to the model.
+
+### Sending a List of Task IDs to a Goal
+
+Given:
+
+- a goal that has the ID `1`
+- three tasks with the IDs `1`, `2`, and `3`
+
+When I send a `POST` request to `/goals/1/tasks` with this request body:
+
+```json
+{
+  "task_ids": [1, 2, 3]
+}
+```
+
+Then the three `Task`s belong to the `Goal` and it gets updated in the database, and we get back a `200 OK` with the following response body:
+
+```json
+{
+  "id": 1,
+  "task_ids": [1, 2, 3]
+}
+```
+
 ### Getting Tasks of One Goal
 
 Given a goal that has:
