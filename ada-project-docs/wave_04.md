@@ -15,7 +15,7 @@ To complete this wave, follow these steps:
 1. Setup a Slack workspace and create a Slackbot with the right permissions, and get a Slackbot API key
 1. Verify that your Slackbot works using the Slack Tester
 1. Verify that your Slackbot works using Postman
-1. Modify the `/tasks/<task_id>/complete` route to make a call to the Slack API
+1. Modify the `/tasks/<task_id>/mark_complete` route to make a call to the Slack API
 1. Use Postman to verify your work
 
 ### Setup a Slack Workspace
@@ -95,7 +95,7 @@ Let's verify that this API call works even in Postman!
 
 - We could put in the token as a query param. However, the Slack API documentation states that it prefers API keys to be sent in the "Authorization" request header.
 
-### Modify `/tasks/<task_id>/complete` to Call the Slack API: Toggle Complete
+### Modify `/tasks/<task_id>/mark_complete` to Call the Slack API
 
 Given a task that has:
 
@@ -103,7 +103,7 @@ Given a task that has:
 - A `title` attribute with the value `"My Beautiful Task"`
 - A `completed_at` attribute with a `null` value
 
-when I send a `PATCH` request to `/tasks/1/complete`,
+when I send a `PATCH` request to `/tasks/1/mark_complete`,
 
 then a Slack message is immediately sent to the channel `task-notifications` in the configured Slack workspace, with the text `"Someone just completed the task My Beautiful Task"`. "My Beautiful Task" should be the title of the task.
 
