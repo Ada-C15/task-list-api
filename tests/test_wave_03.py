@@ -1,5 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch
+from datetime import datetime
+from app.models.task import Task
 
 
 def test_toggle_complete_on_incomplete_task(client, one_task):
@@ -35,6 +37,7 @@ def test_toggle_complete_on_incomplete_task(client, one_task):
             "is_complete": True
         }
     }
+    assert Task.query.get(1).completed_at
 
 
 def test_toggle_complete_on_complete_task(client, completed_task):
