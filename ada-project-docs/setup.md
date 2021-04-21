@@ -9,7 +9,7 @@ The goal for setup is to cover all of the set up needed at the beginning of this
 1. Setting up development and test databases
 1. Setting up a `.env` file
 1. Running `$ flask db init`
-1. Running `$ flask run`
+1. Running `$ flask run` and `$ FLASK_ENV=development flask run`
 
 # Requirements
 
@@ -63,6 +63,12 @@ Run `$ flask db init`.
 
 **_After you make your first model in Wave 1_**, run the other commands `migrate` and `upgrade`.
 
-## Run `$ flask run`
+## Run `$ flask run` or `$ FLASK_ENV=development flask run`
 
 Check that your Flask server can run with `$ flask run`.
+
+When running the Flask server with the following command, we enable development and hot-reloading. This feature refreshes the Flask server every time there is a detected change.
+
+```bash
+$ FLASK_ENV=development flask run
+```
