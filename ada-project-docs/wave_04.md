@@ -12,7 +12,8 @@ Our goal is to integrate the Slack web API. When our API marks a task as "comple
 
 To complete this wave, follow these steps:
 
-1. Setup a Slack workspace and create a Slackbot with the right permissions, and get a Slackbot API key
+1. Setup a Slack workspace
+1. Create a Slackbot with the right permissions, and get a Slackbot API key
 1. Verify that your Slackbot works using the Slack Tester
 1. Verify that your Slackbot works using Postman
 1. Modify the `/tasks/<task_id>/mark_complete` route to make a call to the Slack API
@@ -26,29 +27,56 @@ Create an independent Slack workspace. Follow classroom instructions to find out
 
 In your independent Slack workspace, create a public channel named `task-notifications`.
 
-Ensure that you are able to log into Slack:
+### Create a Slackbot
 
-1. Visit https://api.slack.com/apps, which is the dashboard for all Slack API things.
-1. Go to "Your Apps" or sign in.
+Ensure that you are able to log into Slack's API/Apps dashboard:
+
+- Visit https://api.slack.com/apps, which is the dashboard for all Slack API things
+  - This may redirect you to Slack. If so, sign in and then visit https://api.slack.com/apps again.
+
+![](assets/slack_app_splash.png)
+
+1. Go to "Your Apps"
    - Sign into the workspace that you want the Slackbot to live in
    - You can always go back to the "Your apps" page using the button on the top right
-1. Make a new app.
+1. Make a new app by pressing the "Create app" button
    - The app name doesn't matter, but we recommend including your first name or an identifier in it ("Ada's Bot").
-   - Making an app should bring you to a new page that lists "Add features and functionality" as a header. Expand this header.
+
+![](assets/create_slackbot.png)
+
+Making an app should bring you to a new page that lists "Add features and functionality" as a header. Expand this header.
+
+![](assets/redirect_slackbot_splash.png)
 
 ### Configure Your Slackbot, and Get Your Slackbot API Key (Token)
 
-After seeing the header "Add features and functionality" and expanding it...
+After seeing the header "Add features and functionality" and expanding it, click "Permissions."
 
-1. Click "Permissions"
-1. Scroll down to "Bot Token Scopes"
-1. Add `chat:write` and `chat:write.public` to "Bot Token Scopes"
-1. Scroll up, and click the button named "Install to Workspace."
-1. This brings you to an authorization page. Confirm that the permissions are for a bot with `chat:write` and `chat:write.public`, and accept.
-1. A new page should list "OAuth Tokens for Your Workspace"
-   - Find the value titled "Bot User OAuth Access Token"
-   - This value should always start with the characters `xoxb`
-   - This value is your bot token. **Be ready to copy/paste and keep this value**.
+![](assets/slackbot_scroll_to_permissions.png)
+
+Scroll down to "Scopes" and "Bot Token Scopes"
+
+![](assets/slackbot_scopes_empty.png)
+
+Add `chat:write` and `chat:write.public` to "Bot Token Scopes"
+
+![](assets/slackbot_scopes_populated.png)
+
+Scroll up, and click the button named "Install to Workspace."
+
+![](assets/slackbot_install_to_workspace.png)
+
+This brings you to an authorization page. Accept and authorize your Slackbot.
+
+![](assets/slackbot_authorize_bot.png)
+
+At the top, find the section "OAuth Tokens for Your Workspace"
+
+- Find the value titled "Bot User OAuth Access Token"
+- This value should always start with the characters `xoxb`
+- This value is your bot token. **Be ready to copy/paste and keep this value**.
+
+![](assets/slackbot_token_verify.png)
 
 Whenever you want to go back to this page, follow these steps:
 
@@ -57,39 +85,65 @@ Whenever you want to go back to this page, follow these steps:
 1. Expand the "Features and functionality" section
 1. Go to "OAuth & Permissions"
 
+![](assets/slackbot_your_apps.png)
+
 ### Verify the API Key with the Slack Tester
 
 We want to verify that our new Slackbot API key works with the Slack API functionality we need.
 
-1. Go to test https://api.slack.com/methods/chat.postMessage/test (if you click on the tab "Documentation", it will show you all the documentation)
-1. Visit https://api.slack.com/methods/chat.postMessage to read about the Slack API endpoint we will use in our project. Answer the following questions:
-   - What is the responsibility of this endpoint?
-   - What is the URL and HTTP method for this endpoint?
-   - What are the _two_ _required_ arguments for this endpoint?
-   - How does this endpoint relate to the Slackbot API key (token) we just created?
-1. Visit https://api.slack.com/methods/chat.postMessage/test to test this endpoint
-   - For `token`, paste in the Slackbot token you created earlier
-   - For `channel`, type in `task-notifications` (or the name of a public channel in your Slack workspace)
-   - For `text`, type in a nice message for everyone to read
-1. Press the "Test Method" button
-1. Scroll down to see the HTTP response. Answer the following questions:
-   - Did we get a success message? If so, did we see the message in our actual Slack workspace?
-   - Did we get an error emssage? If so, why?
-   - What is the shape of this JSON? Is it a JSON object or array? What keys and values are there?
+Visit https://api.slack.com/methods/chat.postMessage to read about the Slack API endpoint we will use in our project.
+
+![](assets/api_documentation.png)
+
+Answer the following questions. These questions will help you become familiar with the API, and make working with it easier.
+
+- What is the responsibility of this endpoint?
+- What is the URL and HTTP method for this endpoint?
+- What are the _two_ _required_ arguments for this endpoint?
+- How does this endpoint relate to the Slackbot API key (token) we just created?
+
+Now, visit https://api.slack.com/methods/chat.postMessage/test.
+
+![](assets/api_test.png)
+
+Fill in the HTTP Request info to test this endpoint.
+
+- For `token`, paste in the Slackbot token you created earlier
+- For `channel`, type in `task-notifications` (or the name of a public, existing channel in your Slack workspace)
+- For `text`, type in a nice message for everyone to read, such as "Hello, World!"
+
+Press the "Test Method" button!
+
+![](assets/slack_notification_hello_world.png)
+
+Scroll down to see the HTTP response. Answer the following questions:
+
+- Did we get a success message? If so, did we see the message in our actual Slack workspace?
+- Did we get an error emssage? If so, why?
+- What is the shape of this JSON? Is it a JSON object or array? What keys and values are there?
 
 ### Verify with Postman
 
 Let's verify that this API call works even in Postman!
 
-1. Open Postman
-1. Make a new request:
-   - Change the method to `POST`
-   - Use this as the request URL: `https://slack.com/api/chat.postMessage`
-   - In "Params," fill in the following values:
-     - `channel`: `task-notifications`
-     - `text`: Fill in a nice message
-   - In "Headers," add this new key-value pair:
-     - `Authorization`: `"Bearer xoxb-150..."`, where `xoxb-150...` is your full Slackbot token
+Open Postman and make a request that mimics the API call to Slack that we just tested.
+
+- Change the method to `POST`
+- Use this as the request URL: `https://slack.com/api/chat.postMessage`
+- In "Params," fill in the following values:
+  - `channel`: `task-notifications`
+  - `text`: Fill in a nice message
+
+![](assets/postman_test_query_params.png)
+
+- In "Headers," add this new key-value pair:
+  - `Authorization`: `"Bearer xoxb-150..."`, where `xoxb-150...` is your full Slackbot token
+
+![](assets/postman_test_headers.png)
+
+Press "Send" and see the Slack message come through!
+
+![](assets/slack_notification_test_postman.png)
 
 #### Tips
 
@@ -111,13 +165,27 @@ then a Slack message is immediately sent to the channel `task-notifications` in 
 
 This feature should not affect other features in other waves, nor should it affect toggling a task incomplete.
 
+### Intentional Slackbot Token Location
+
+Our Slackbot token is an API key that needs to be protected.
+
+Include your Slackbot token in your code in an intentional way, following best practices about API keys in code bases.
+
 #### Tips
 
 - Utilize the Python package `requests`!
   - Remember to import this package
   - Consider using the keyword argument `data`, `json`, and/or `headers`
-- Remember to put your Slackbot token in your code in a meaningful way, following best practices about API keys in code bases.
+- Remember to put your Slackbot token in your code in an intentional way, following best practices about API keys in code bases.
 - In order to get the value of an environment variable, use `os.environ.get()`, just as we used it for the database configuration.
 - Use your work from the Slack API documentation, the Slack tester, and Postman to guide your implementation.
 
-### Verify with Postman (Again)
+### Test and Verify with Postman
+
+Test and verify that your API sends an API call to the Slack web API by using Postman!
+
+Send `PATCH` requests to `localhost:5000/tasks/<book_id>/mark_complete` (use the ID of any existing task), and check if Slack messages were sent.
+
+![](assets/postman_feature.png)
+
+![](assets/slack_notification_feature.png)
