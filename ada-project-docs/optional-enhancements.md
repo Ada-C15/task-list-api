@@ -18,8 +18,8 @@ As inspiration, here are some beginning edge cases to consider:
 
 What should happen if...
 
-- when creating a task, the value of `completed_at` is a string?
-- when updating a task, the value of `completed_at` is a string?
+- when creating a task, the value of `completed_at` is a string that is not a datetime?
+- when updating a task, the value of `completed_at` is a string that is not a datetime?
 - when getting all tasks, and using query params, the value of `sort` is not "desc" or "asc"?
 
 For each of these, consider what the HTTP response should be.
