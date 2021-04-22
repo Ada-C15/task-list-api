@@ -39,8 +39,8 @@ Ensure that you are able to log into Slack's API/Apps dashboard:
 1. Go to "Your Apps"
    - Sign into the workspace that you want the Slackbot to live in
    - You can always go back to the "Your apps" page using the button on the top right
-1. Make a new app by pressing the "Create app" button
-   - The app name doesn't matter, but we recommend including your first name or an identifier in it ("Ada's Bot").
+1. Make a new app by pressing the "Create an App" button
+   - The app name doesn't matter, but we recommend including your first name or an identifier in it, such as "Ada's Bot."
 
 ![](assets/create_slackbot.png)
 
@@ -161,11 +161,11 @@ when I send a `PATCH` request to `/tasks/1/mark_complete`,
 
 then a Slack message is immediately sent to the channel `task-notifications` in the configured Slack workspace, with the text `"Someone just completed the task My Beautiful Task"`. "My Beautiful Task" should be the title of the task.
 
-### Does Not Affect Other Functionality
+### Requirement: Does Not Affect Other Functionality
 
 This feature should not affect other features in other waves, nor should it affect toggling a task incomplete.
 
-### Intentional Slackbot Token Location
+### Requirement: Intentional Slackbot Token Location
 
 Our Slackbot token is an API key that needs to be protected.
 
