@@ -122,6 +122,6 @@ then I want this to behave exactly like `/tasks/1/mark_complete` for an incomple
 
 Given that there are no tasks with the ID `1`,
 
-When I send a `PATCH` request to `/tasks/1/mark_complete` or a `PATCH` request `/tasks/1/mark_incomplete`,
+When I send a `PATCH` request to `/tasks/1/mark_complete` or a `PATCH` request to `/tasks/1/mark_incomplete`,
 
 Then I get a `404 Not Found`, with no response body.
