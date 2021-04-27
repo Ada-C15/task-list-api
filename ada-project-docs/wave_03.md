@@ -21,6 +21,7 @@ The following are required routes for wave 3. Feel free to implement the routes 
 - A test uses a fixture named `completed_task` that is defined in `tests/conftest.py`. This fixture saves a task with a datetime value in `completed_at` to the test database.
 - JSON's value of `true` is similar to Python's value of `True`, and `false` is similar to Python's `False`.
 - SQL's value of `null` is similar to Python's value of `None`.
+- Python has a [datetime library](https://docs.python.org/3/library/datetime.html#module-datetime) which we recommend using to represent dates in model attributes.
 
 ### Mark Complete on an Incompleted Task
 
