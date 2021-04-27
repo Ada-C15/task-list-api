@@ -103,7 +103,7 @@ Given a task that has:
 
 when I send a `PATCH` request to `/tasks/1/mark_incomplete`,
 
-then I want this to behave exactly like `/tasks/1/mark_complete` for an incomplete task. Its `completed_at` value remains as `null`/`None`, and I get this response:
+then I want this to behave exactly like `/tasks/1/mark_incomplete` for a complete task. Its `completed_at` value remains as `null`/`None`, and I get this response:
 
 `200 OK`
 
