@@ -26,11 +26,10 @@ Secondly, we should create our new route, `/goals/<goal_id>/tasks`, so that our 
 
 Use independent research to discover how to set up a one-to-many relationship in Flask.
 
-The Goal model should be have a _relationship_ with the model Task.
+The Goal model should have a _relationship_ with the model Task.
 
 After learning the strategy for creating a one-to-many relationship, in the Goal model, we recommend:
 
-- Setting the `backref` value to `'tasks'`
 - Setting the `lazy` value to `True`
 
 ### Updates to the Task Model
