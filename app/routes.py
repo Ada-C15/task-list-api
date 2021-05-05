@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, make_response, request
 from sqlalchemy import desc
+from datetime import date
 from app import db
 from app.models.task import Task
 
@@ -108,3 +109,33 @@ def update_task(task):
     task.completed_at = request_body["completed_at"]
     db.session.commit()
     return make_response(jsonify({"task": task.task_view()}), 200)
+
+
+@tasks_bp.route("/<int:task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def mark_complete(task_id):
+    """
+    Changes the task.completed_at value to todays date and returns a 200 response
+    with the updated task
+    Returns a 404 with no response body in case the task is not found
+    """
+    task = Task.query.get(task_id)
+    if task:
+        task.completed_at = date.today()
+        db.session.commit()
+        return make_response(jsonify({"task": task.task_view()}), 200)
+    return make_response(jsonify(None), 404)
+
+
+@tasks_bp.route("/<int:task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
+def mark_incomplete(task_id):
+    """
+    Changes the task.completed_at value to None and returns a 200 response
+    with the updated task
+    Returns a 404 with no response body in case the task is not found
+    """
+    task = Task.query.get(task_id)
+    if task:
+        task.completed_at = None
+        db.session.commit()
+        return make_response(jsonify({"task": task.task_view()}), 200)
+    return make_response(jsonify(None), 404)
