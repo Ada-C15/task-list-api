@@ -4,8 +4,8 @@ from app import db
 
 class Task(db.Model):
     task_id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120), nullable=False)
-    description = db.Column(db.String(250), nullable=False)
+    title = db.Column(db.String(120))
+    description = db.Column(db.String(250))
     completed_at = db.Column(db.DateTime, nullable=True)
 
     def to_json(self):

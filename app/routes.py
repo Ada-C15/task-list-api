@@ -5,12 +5,13 @@ from app import db
 
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
-def task_checker(task, request_body):
+def task_checker(request_body, task):
     # so everything should default to is_complete false but i will need some sort of a check on the completed_at variable to determine when to switch that to true. 
-    if task.completed_at:
-        request_body["is_complete"] == True
+        
+    pass
+        
 
-    return request_body
+
 
 @task_bp.route("", methods=["GET", "POST"])
 def get_tasks():
@@ -19,14 +20,17 @@ def get_tasks():
         task_response = []
 
         for task in tasks:
-            task_response.append({ "id": task.task_id, 
+            task_response.append({"id": task.task_id, 
                                 "title": task.title, 
                                 "description": task.description, 
                                 "is_complete": False})
         return jsonify(task_response), 200
     elif request.method == "POST":
         request_body = request.get_json()
-        new_task = Task(title=request_body["title"], description=request_body["description"])
+        try:
+            new_task = Task(title=request_body["title"], description=request_body["description"], completed_at=request_body["completed_at"])
+        except KeyError:
+            return make_response({"details": "Invalid data"}, 400)
         db.session.add(new_task)
         db.session.commit()
 
