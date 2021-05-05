@@ -16,10 +16,10 @@ def handle_tasks_get():
     tasks_response = []
     for task in tasks:
         tasks_response.append({
-            "task_id": task.task_id,
+            "id": task.task_id,
             "title": task.title,
             "description": task.description,
-            "is_complete": task.is_complete
+            "is_complete": task.is_complete()
         })
     return jsonify(tasks_response)
 
@@ -30,21 +30,33 @@ def handle_tasks_post():
     Create a Task: Valid Task With null completed_at
     """
     request_body = request.get_json()
+
+    # task to create must contain: - title, - description, - completed_at,
+    # otherwise 404 + details
+    if ("title" not in request_body.keys()) or (
+        "description" not in request_body.keys()) or \
+            ("completed_at" not in request_body.keys()):
+        return make_response({
+            "details": "Invalid data"
+        }, 400)
+
     new_task = Task(title=request_body["title"],
-                    description=request_body["description"]
+                    description=request_body["description"],
+                    completed_at=request_body["completed_at"]
                     )
 
     db.session.add(new_task)
     db.session.commit()
 
-    retrieve_task = Task.query.get(1)
+    # todo: retrieve committed task to the db, not the one with id 1
+    retrieve_task = Task.query.get(new_task.task_id)
 
     return {
         "task": {
             "id": retrieve_task.task_id,
             "title": retrieve_task.title,
             "description": retrieve_task.description,
-            "is_complete": retrieve_task.is_complete
+            "is_complete": retrieve_task.is_complete()
         }
     }, 201
 
@@ -54,14 +66,14 @@ def handle_one_task_get(task_id):
     task = Task.query.get(task_id)
 
     if task is None:
-        return make_response(404)
+        return make_response(jsonify(None), 404)
 
     if task:
         return ({
             "task": {
-                "task_id": task.task_id,
+                "id": task.task_id,
                 "title": task.title,
                 "description": task.description,
-                "is_complete": task.is_complete
+                "is_complete": task.is_complete()
             }
         }, 200)
