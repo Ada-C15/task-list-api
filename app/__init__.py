@@ -13,6 +13,10 @@ load_dotenv()
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:postgres@localhost:5432/task-list-api'
+
+    db.init_app(app)
+    migrate.init_app(app, db)
 
     if test_config is None:
         app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
@@ -25,9 +29,8 @@ def create_app(test_config=None):
     # Import models here for Alembic setup
     from app.models.task import Task
     from app.models.goal import Goal
+    from .routes import tasks_bp
 
-    db.init_app(app)
-    migrate.init_app(app, db)
 
     # Register Blueprints here
 
