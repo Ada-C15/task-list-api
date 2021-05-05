@@ -12,37 +12,49 @@ def handle_tasks():
         tasks_response = []
         for task in tasks:
             tasks_response.append({
-                "task_id": task.task_id,
+                "id": task.id,
                 "title": task.title,
                 "description": task.description,
-                "completed_at": task.completed_at
+                "is_complete": task.is_complete()
             })
         return jsonify(tasks_response)
 
     elif request.method == "POST":
         request_body = request.get_json()
+
         new_task = Task(title=request_body["title"],
         description=request_body["description"],
         completed_at=request_body["completed_at"])
 
-        db.session.add(new_task)
+        db.session.add(new_task) # should this go in the else statement?
         db.session.commit()
 
-        return make_response(f"Task {new_task.title} successfully created", 201)
+        if validate_input(new_task) == False:
+            return {
+                "details": "Invalid data"
+            }
+        else:
+            return {
+                "task": {
+                    "id": task.id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": task.is_complete()
+            }}
 
-@tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
-def handle_task(task_id):
-    task = Task.query.get(task_id)
+@tasks_bp.route("/<id>", methods=["GET", "PUT", "DELETE"])
+def handle_task(id):
+    task = Task.query.get(id)
     if task is None:
         return make_response("", 404)
 
     if request.method == "GET":
         return {
             "task": {
-                "task_id": task.task_id,
+                "id": task.id,
                 "title": task.title,
                 "description": task.description,
-                "completed_at": task.completed_at
+                "is_complete": task.is_complete()
         }}
     elif request.method == "PUT":
         form_data = request.get_json()
@@ -54,13 +66,15 @@ def handle_task(task_id):
         db.session.commit()
 
         return {
-            "task": {
-                "task_id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "completed_at": task.completed_at
-        }}
+                "task": {
+                    "id": task.id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": task.is_complete()
+            }}
     elif request.method == "DELETE":
         db.session.delete(task)
         db.session.commit()
-        return make_response(f"Task {task.title} successfully deleted")
+        return {
+            "details": (f'Task {task.id} "{task.title}" successfully deleted')
+        }
