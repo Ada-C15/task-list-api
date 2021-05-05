@@ -29,11 +29,21 @@ def create_task():
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks():
-    tasks = Task.query.all()
     tasks_response = []
+
+    query_param_value=request.args.get("sort")
+    if query_param_value == "asc":
+        tasks = Task.query.order_by(Task.title)
+        #tasks_response = sorted(tasks_response, key = lambda item: item['title'])
+    elif query_param_value == "desc":
+        tasks = Task.query.order_by(Task.title.desc())
+    else:
+        tasks = Task.query.all()
+
     for task in tasks:
         tasks_response.append(task.to_json())
     return jsonify(tasks_response), 200
+
 
 
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
@@ -80,3 +90,17 @@ def delete_task(task_id):
     return {
         "details" : f"Task 1 \"{task.title}\" successfully deleted"
     }, 200
+
+
+# @tasks_bp.route("", methods=["GET"], strict_slashes=False)
+# def get_tasks():
+#     tasks = Task.query.all()
+#     tasks_response = []
+
+#     # query_param_value = request.args.get("sort")
+#     # if query_param_value :
+#     #     tasks_response = sorted(tasks_response, key = lambda item: item['title']
+
+#     for task in tasks:
+#         tasks_response.append(task.to_json())
+#     return jsonify(tasks_response), 200
