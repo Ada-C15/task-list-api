@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, make_response, request
+from sqlalchemy import desc
 from app import db
 from app.models.task import Task
 
@@ -10,8 +11,18 @@ def list_all_tasks():
     """
     Returns a 200 response with a list of all tasks currently
     in the database as the response body
+    Optional query arguments:
+     * sort = asc or desc
     """
-    tasks = Task.query.all()
+
+    query_param_value = request.args.get("sort")
+    if query_param_value == "desc":
+        tasks = Task.query.order_by(Task.title.desc()).all()
+    elif query_param_value == "asc":
+        tasks = Task.query.order_by(Task.title).all()
+    else:
+        tasks = Task.query.all()
+
     tasks_response = []
     for task in tasks:
         tasks_response.append(task.task_view())
