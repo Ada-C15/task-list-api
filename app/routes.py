@@ -10,7 +10,7 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 @tasks_bp.route("", methods=["GET"])
 def handle_tasks_get():
     """
-    Get Tasks: Getting Saved Tasks
+    Get all saved tasks.
     """
     tasks = Task.query.all()
     tasks_response = []
@@ -24,10 +24,31 @@ def handle_tasks_get():
     return jsonify(tasks_response)
 
 
+@tasks_bp.route("/<task_id>", methods=["GET"])
+def handle_one_task_get(task_id):
+    """
+    Get specific tasks by id.
+    """
+    task = Task.query.get(task_id)
+
+    if task is None:
+        return make_response(jsonify(None), 404)
+
+    if task:
+        return ({
+            "task": {
+                "id": task.task_id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": task.is_complete()
+            }
+        }, 200)
+
+
 @tasks_bp.route("", methods=["POST"])
 def handle_tasks_post():
     """
-    Create a Task: Valid Task With null completed_at
+    Create a Task.
     """
     request_body = request.get_json()
 
@@ -61,19 +82,19 @@ def handle_tasks_post():
     }, 201
 
 
-@tasks_bp.route("/<task_id>", methods=["GET"])
-def handle_one_task_get(task_id):
+@tasks_bp.route("/<task_id>", methods=["DELETE"])
+def handle_one_task_delete(task_id):
+    """
+    Delete task with specific id.
+    """
     task = Task.query.get(task_id)
 
     if task is None:
         return make_response(jsonify(None), 404)
 
     if task:
+        db.session.delete(task)
+        db.session.commit()
         return ({
-            "task": {
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": task.is_complete()
-            }
+            "details": f"Task {task.task_id} '{task.title}' successfully deleted"
         }, 200)
