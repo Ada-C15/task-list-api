@@ -7,12 +7,18 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 @tasks_bp.route("", methods=["POST", "GET"])
 def handle_tasks():
     if request.method == "GET":
-        tasks = Task.query.all()
+        sort_query = request.args.get("sort")
+        if sort_query == "asc":
+            tasks = Task.query.order_by(Task.title)
+        elif sort_query == "desc":
+            tasks = Task.query.order_by(Task.title.desc())
+        else:
+            tasks = Task.query.all()
 
         tasks_response = []
         for task in tasks:
             tasks_response.append({
-                "id": task.id,
+                "id": task.task_id,
                 "title": task.title,
                 "description": task.description,
                 "is_complete": task.is_complete()
@@ -22,36 +28,37 @@ def handle_tasks():
     elif request.method == "POST":
         request_body = request.get_json()
 
-        new_task = Task(title=request_body["title"],
-        description=request_body["description"],
-        completed_at=request_body["completed_at"])
-
-        db.session.add(new_task) # should this go in the else statement?
-        db.session.commit()
-
-        if validate_input(new_task) == False:
-            return {
+        if "title" not in request_body or "description" not in request_body\
+            or "completed_at" not in request_body:
+            return ({
                 "details": "Invalid data"
-            }
+            }, 400)
         else:
-            return {
-                "task": {
-                    "id": task.id,
-                    "title": task.title,
-                    "description": task.description,
-                    "is_complete": task.is_complete()
-            }}
+            new_task = Task(title=request_body["title"],
+            description=request_body["description"],
+            completed_at=request_body["completed_at"])
 
-@tasks_bp.route("/<id>", methods=["GET", "PUT", "DELETE"])
-def handle_task(id):
-    task = Task.query.get(id)
+            db.session.add(new_task)
+            db.session.commit()
+
+            return ({
+                "task": {
+                    "id": new_task.task_id,
+                    "title": new_task.title,
+                    "description": new_task.description,
+                    "is_complete": new_task.is_complete()
+            }}, 201)
+
+@tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
+def handle_task(task_id):
+    task = Task.query.get(task_id)
     if task is None:
         return make_response("", 404)
 
     if request.method == "GET":
         return {
             "task": {
-                "id": task.id,
+                "id": task.task_id,
                 "title": task.title,
                 "description": task.description,
                 "is_complete": task.is_complete()
@@ -67,7 +74,7 @@ def handle_task(id):
 
         return {
                 "task": {
-                    "id": task.id,
+                    "id": task.task_id,
                     "title": task.title,
                     "description": task.description,
                     "is_complete": task.is_complete()
@@ -76,5 +83,5 @@ def handle_task(id):
         db.session.delete(task)
         db.session.commit()
         return {
-            "details": (f'Task {task.id} "{task.title}" successfully deleted')
+            "details": (f'Task {task.task_id} "{task.title}" successfully deleted')
         }
