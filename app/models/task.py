@@ -1,8 +1,9 @@
 from flask import current_app
 from app import db
+from dataclasses import dataclass
 
-
-class Task(db.Model):
+@dataclass
+class Task(db.Model): ### WAVE 1 ###
     task_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)
     description = db.Column(db.String)
