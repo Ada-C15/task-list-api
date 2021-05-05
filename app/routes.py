@@ -25,7 +25,7 @@ def handle_tasks():
         return make_response({"task":task.to_json()
                 
                 },201)
- 
+
 def is_completed_or_no(request_body):
     
     is_complete = False
@@ -35,8 +35,15 @@ def is_completed_or_no(request_body):
     
 @tasks_bp.route("", methods=["GET"])
 def get_all_task():
+    title_sort_query = request.args.get("sort")
     
-    tasks = Task.query.order_by(Task.title).all()
+    if title_sort_query == "desc":
+        tasks = Task.query.order_by(Task.title.desc())
+    elif title_sort_query == "asc":
+        tasks = Task.query.order_by(Task.title.asc())
+    else:
+        tasks = Task.query.all()
+        
     tasks_response = []
     for task in tasks:
             tasks_response.append(task.to_json())
