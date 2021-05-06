@@ -2,6 +2,11 @@ from flask import Blueprint, request, make_response, jsonify
 from app.models.task import Task
 from app import db
 from datetime import datetime
+#import requests
+import os
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
+# from task-list-api.env import SLACK_KEY
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -50,7 +55,7 @@ def handle_tasks():
                     "is_complete": new_task.is_complete()
             }}, 201)
 
-@tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE", "PATCH"])
+@tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
 def handle_task(task_id):
     task = Task.query.get(task_id)
     if task is None:
@@ -95,14 +100,26 @@ def mark_complete(task_id):
 
     task.completed_at = datetime.utcnow()
 
-    db.session.commit()
+    db.session.commit() # Do I need this for PATCH?
+
+    client = WebClient(token=os.environ.get("SLACK_KEY"))
+
+    channel_id = "C021GPYFGKT"
+
+    client.chat_postMessage(
+        channel=channel_id,
+        text=(f"Someone just completed the task {task.title}")
+    )
+
+    # python requests HTTP package
+    #requests.get('https://slack.com/api/chat.postMessage', auth={"Authorization": os.environ.get("SLACK_KEY")})
 
     return {
         "task": {
             "id": task.task_id,
             "title": task.title,
             "description": task.description,
-            "is_complete": task.is_complete() # should this be True?
+            "is_complete": True # is this better if it uses is_complete()?
         }
     }
 
@@ -114,13 +131,13 @@ def mark_incomplete(task_id):
 
     task.completed_at = None
 
-    # db.session.commit()
+    db.session.commit() # Do I need this for PATCH?
 
     return jsonify({
         "task": {
             "id": task.task_id,
             "title": task.title,
             "description": task.description,
-            "is_complete": task.is_complete() # should this be False?
+            "is_complete": False # is this better if it uses is_complete()?
         }
     })
