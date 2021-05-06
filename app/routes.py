@@ -65,3 +65,17 @@ def update_task_by_id(task_id):
         return make_response({"task": task.to_json()})
     
     return make_response("", 404)
+
+# delete one task by id 
+@tasks_bp.route("/<int:task_id>", methods=["DELETE"])
+def delete_task_by_id(task_id):
+    task = Task.query.get(task_id)
+    if task: 
+        db.session.delete(task)
+        db.session.commit()
+        return make_response({
+        "details": 'Task 1 "Go on my daily walk 🏞" successfully deleted'
+    })
+    
+    return make_response("", 404)
+
