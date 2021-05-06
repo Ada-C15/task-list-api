@@ -20,5 +20,23 @@ def get_single_task(task_id):
         return {"task": task.to_json()}, 200
     else:
         return jsonify(None), 404
-    
+      
+
+@tasks_bp.route("", methods=["POST"], strict_slashes=False)
+def create_task():
+    request_body = request.get_json()
+    if all(key in request_body for key in ("title", "description", "completed_at")):
+        new_task = Task(title = request_body["title"],
+                    description = request_body["description"],
+                    completed_at = request_body["completed_at"])
+        
+        db.session.add(new_task)
+        db.session.commit()
+
+        return {
+                "task": new_task.to_json()
+        }, 201
+    else:
+        return {"details": "Invalid data"}, 400
+
 
