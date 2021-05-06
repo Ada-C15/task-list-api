@@ -42,7 +42,7 @@ def handle_tasks():
 
         return jsonify(tasks_response)
 
-@tasks_bp.route("/<task_id>", methods=["GET", "PUT"])
+@tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
 def handle_task(task_id):
     
     task = Task.query.get(task_id)
@@ -78,6 +78,15 @@ def handle_task(task_id):
                 "description": task.description,
                 "is_complete": is_task_complete(task)
             }
+        }
+
+    elif request.method == "DELETE":
+
+        db.session.delete(task)
+        db.session.commit()
+
+        return {
+            "details": f"Task {task.task_id} \"{task.title}\" successfully deleted"
         }
 
 
