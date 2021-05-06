@@ -13,7 +13,7 @@ class Task(db.Model):
             "id": self.task_id,
             "title": self.title,
             "description": self.description,
-            "is_complete": self.completed_at
+            "is_complete": bool(self.completed_at)
         }
 
     def specific_task_to_json(self): 
@@ -22,6 +22,6 @@ class Task(db.Model):
                 "id": self.task_id,
                 "title": self.title,
                 "description": self.description,
-                "is_complete": self.completed_at
+                "is_complete": bool(self.completed_at)
             } 
         }

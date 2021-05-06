@@ -4,18 +4,18 @@ from app.models.task import Task
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
-def null_convert_to_false_for_all_tasks(tasks_response): 
-    for task in tasks_response: 
-        if task["is_complete"] is None: 
-            task["is_complete"] = False
+# def null_convert_to_false_for_all_tasks(tasks_response): 
+#     for task in tasks_response: 
+#         if task["is_complete"] is None: 
+#             task["is_complete"] = False
 
-    return tasks_response
+#     return tasks_response
 
-def null_convert_to_false_for_specific_task(jsonified_task): 
-    if jsonified_task["task"]["is_complete"] is None: 
-        jsonified_task["task"]["is_complete"] = False
+# def null_convert_to_false_for_specific_task(jsonified_task): 
+#     if jsonified_task["task"]["is_complete"] is None: 
+#         jsonified_task["task"]["is_complete"] = False
     
-    return jsonified_task
+#     return jsonified_task
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks():
@@ -24,7 +24,6 @@ def get_tasks():
 
     for task in tasks: 
         tasks_response.append(task.tasks_to_json())
-    null_convert_to_false_for_all_tasks(tasks_response)
 
     return jsonify(tasks_response), 200
 
@@ -33,9 +32,7 @@ def get_one_task(task_id):
     task = Task.query.get(task_id)
     
     if task: 
-        jsonified_task = task.specific_task_to_json()
-        null_convert_to_false_for_specific_task(jsonified_task)
-        return jsonified_task, 200
+        return jsonify(task.specific_task_to_json()), 200
     
     return make_response("", 404)
 
@@ -49,15 +46,9 @@ def post_task():
 
         db.session.add(new_task)
         db.session.commit() 
-
-        task_response = new_task.specific_task_to_json()
-        null_convert_to_false_for_specific_task(task_response) 
-
-        return jsonify(task_response), 201
+        return jsonify(new_task.specific_task_to_json()), 201
     
-    return {
-            "details": "Invalid data"
-        }, 400
+    return {"details": "Invalid data"}, 400
 
 @tasks_bp.route("<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id): 
@@ -70,10 +61,7 @@ def update_task(task_id):
         task.completed_at = update_data["completed_at"]
     
         db.session.commit()
-
-        task_response = task.specific_task_to_json()
-        null_convert_to_false_for_specific_task(task_response) 
-        return jsonify(task_response), 200
+        return jsonify(task.specific_task_to_json()), 200
     
     return make_response("", 404)
 
