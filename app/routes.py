@@ -34,11 +34,20 @@ def is_completed_or_not(request_body):
 @tasks_bp.route("", methods=["GET"])
 def get_all_tasks():
 
-    tasks = Task.query.order_by(Task.title).all()
+    #sort titles by ace and desc order
+    sort_by_title = request.args.get("sort")
+    if sort_by_title == "asc":
+        tasks = Task.query.order_by(Task.title.asc())
+    elif sort_by_title == "desc":
+        tasks = Task.query.order_by(Task.title.desc())
+    else:
+        tasks = Task.query.all()
+
     tasks_response = []
     for task in tasks:
         tasks_response.append(task.to_json())
     return jsonify(tasks_response)
+
 
 #GET PUT DELETE 
 @tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
