@@ -6,8 +6,6 @@ from datetime import datetime
 import requests
 import os
 from dotenv import load_dotenv
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -154,12 +152,21 @@ def is_task_complete(task):
     return True
 
 def post_to_slack(message):
+    """
+    Posts a given message to the task-notifications channel in my Task Manager Slack workspace.
+    """
+    path = "https://slack.com/api/chat.postMessage"
 
-    client = WebClient(token=os.environ.get("SLACK_API_KEY"))
+    SLACK_API_KEY = os.environ.get("SLACK_API_KEY")
 
-    client.chat_postMessage(
-        channel="task-notifications",
-        text=message
-    )
+    auth_header = {
+        "Authorization": f"Bearer {SLACK_API_KEY}"
+    }
 
+    query_params = {
+        "channel": "task-notifications",
+        "text": message
+    }
+
+    requests.post(path, params=query_params, headers=auth_header)
 
