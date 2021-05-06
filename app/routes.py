@@ -18,7 +18,10 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 #     return jsonified_task
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
-def get_tasks():
+def get_tasks_or_tasks_by_title():
+    # requested_title = request.args.get("title")
+    # if requested_title: 
+    #     tasks = Book.query.
     tasks = Task.query.all() 
     tasks_response = [] 
 
@@ -78,3 +81,4 @@ def delete_task(task_id):
         }, 200 
     
     return make_response("", 404)
+

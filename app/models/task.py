@@ -18,10 +18,5 @@ class Task(db.Model):
 
     def specific_task_to_json(self): 
         return {
-            "task":{
-                "id": self.task_id,
-                "title": self.title,
-                "description": self.description,
-                "is_complete": bool(self.completed_at)
-            } 
+            "task": self.tasks_to_json()
         }
