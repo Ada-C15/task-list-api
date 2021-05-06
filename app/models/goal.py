@@ -7,7 +7,7 @@ from app import db
 class Goal(db.Model):
     goal_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
-    task = relationship("Task")
+    tasks = relationship("Task", lazy=True)
 
     def as_dict(self):
         return {"id": self.goal_id,
