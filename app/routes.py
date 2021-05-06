@@ -38,5 +38,19 @@ def create_task():
         }, 201
     else:
         return {"details": "Invalid data"}, 400
-
+      
+@tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
+def update_task(task_id):
+    task = Task.query.get(task_id)
+    if task:
+        form_data = request.get_json()
+        task.title = form_data["title"]
+        task.description = form_data["description"]
+        task.completed_at = form_data["completed_at"]
+        db.session.commit()
+        return {
+                "task": task.to_json()
+        }, 200
+    else:
+        return jsonify(None), 404
 
