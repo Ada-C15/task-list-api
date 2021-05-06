@@ -1,5 +1,6 @@
 from flask import current_app
 from app import db
+from sqlalchemy import DateTime
 
 
 class Task(db.Model):
