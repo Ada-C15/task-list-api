@@ -7,8 +7,8 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @tasks_bp.route("", methods=["POST"])
 def add_task():
-    if request.content_type != 'application/json':
-        return jsonify({"details": "Invalid data"}), 415
+    # if request.content_type != 'application/json':
+    #     return jsonify({"details": "Invalid data"}), 415
 
     request_body = request.get_json()
     title = request_body.get("title")
@@ -18,14 +18,9 @@ def add_task():
     if not title or not description or "completed_at" not in request_body:
         return jsonify({"details": "Invalid data"}), 400
 
-    #   task_id=request_body["task_id"],
     new_task = Task(title=title,
                     description=description,
                     completed_at=completed_at)
-
-    # print(new_task.title)
-    # if not new_task.title:
-    #     return jsonify({"details": "Invalid data"}), 400
     
     db.session.add(new_task)
     db.session.commit()
@@ -38,21 +33,14 @@ def get_task():
     tasks = Task.query.all()
     tasks_response = []
 
+    sort = request.args.get("sort")
+    if sort == "asc":
+        tasks = Task.query.order_by(Task.title).all()
+    elif sort == "desc":
+        tasks = Task.query.order_by(Task.title.desc()).all()
+
     for task in tasks:
         tasks_response.append(task.to_json())
-
-    sort_response = []
-    sort = request.args.get('sort')
-    if sort == 'asc':
-        ascend = Task.query.order_by(Task.title).all()
-        for a in ascend:
-            sort_response.append(a.to_json())
-        return jsonify(sort_response), 200
-    elif sort == 'desc':
-        descend = Task.query.order_by(Task.title.desc()).all()
-        for d in descend:
-            sort_response.append(d.to_json())
-        return jsonify(sort_response), 200
 
     return jsonify(tasks_response), 200
 
@@ -72,25 +60,21 @@ def get_single_task(task_id):
 @tasks_bp.route("/<int:task_id>/mark_complete", methods=["PATCH"])
 def update_completed_at(task_id):
     task = Task.query.get(task_id)
-    # print("**** testing ****", task)
-    # print(task.to_json())
-    # print(task.to_json()["is_complete"])
-    # if task.to_json() is not None:
-    #     print("task", task.to_json())
+    if task is None:
+        return make_response("", 404)
+
     task.completed_at = True
+
     return jsonify({"task" :task.to_json()}), 200
 
 
 @tasks_bp.route("/<int:task_id>/mark_incomplete", methods=["PATCH"])
 def update_not_completed_at(task_id):
     task = Task.query.get(task_id)
-    print("**** testing ****", task.completed_at)
-    print(task.to_json())
-    print(task.to_json()["is_complete"])
-    # if task.to_json() is not None:
-    #     print("task", task.to_json())
+    if task is None:
+        return make_response("", 404)
+
     task.completed_at = None
-    print("task completed_at", task.completed_at)
 
     return jsonify({"task" :task.to_json()}), 200
 
