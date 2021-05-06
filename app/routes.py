@@ -55,8 +55,8 @@ def handle_tasks_post():
     # task to create must contain: - title, - description, - completed_at,
     # otherwise 404 + details
     if ("title" not in request_body.keys()) or (
-        "description" not in request_body.keys()) or \
-            ("completed_at" not in request_body.keys()):
+        "description" not in request_body.keys()) \
+            or ("completed_at" not in request_body.keys()):
         return make_response({
             "details": "Invalid data"
         }, 400)
