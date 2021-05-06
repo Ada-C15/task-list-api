@@ -1,8 +1,13 @@
 from app import db
+import requests
 from app.models.task import Task
 from flask import request, Blueprint, make_response, jsonify
 from sqlalchemy import asc, desc
 from datetime import datetime
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -80,9 +85,19 @@ def delete_task(task_id):
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
 def mark_complete(task_id):
     task = Task.query.get(task_id)
+    access_token = os.environ.get("AUTH_TOKEN")
+    path = "https://slack.com/api/chat.postMessage"
+    query_headers = {
+            "Authorization": f"Bearer {access_token}"
+    }
+    query_params = {
+            "channel": "task-notifications",
+            "text": f"Someone just completed the task {task.title}"
+    }
     if task:
         task.completed_at = datetime.utcnow()
         db.session.commit()
+        response = requests.post(path, headers=query_headers, params=query_params)
         return {
         "task": task.to_json()
         }, 200
