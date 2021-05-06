@@ -31,10 +31,10 @@ def create_tasks():
             "task": task.to_json()
         }, 201
 
-def is_completed(request_body):
-    if "completed_at" in request_body:
-        is_complete = True 
-    return is_complete
+# def is_completed(request_body):
+#     if "completed_at" in request_body:
+#         is_complete = True 
+#     return is_complete
 
 @tasks_bp.route("", methods=["GET"])
 def get_all_tasks():
@@ -87,11 +87,54 @@ def handle_task(task_id):
 
 #wave_3 
 #creating custom endpoints with is_complete: True or False
-@tasks_bp.route("/<task_id>/complete", methods=["PATCH"]) #update
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"]) #update
 def mark_complete(task_id):
     task = Task.query.get(task_id)
 
-    if task.completed_at:
+    if not task:
+        return ("", 404)
+
+    task.completed_at = datetime.now()
+    task.is_complete = True 
+    # task.is_complete()
+
+
+    #db.session.add(task)
+    db.session.commit()
+
+    # return make_response({
+    #     "message": f"Task {task.title} has been marked complete"
+    #     })
+
+    return {
+        "task": task.to_json()
+        }, 200
+
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"]) #update
+def mark_incomplete(task_id):
+
+    task = Task.query.get(task_id)
+    if not task:
+        return ("", 404)
+
+    if task.completed_at != None:
+       task.completed_at = None
+       task.is_complete = False 
+    
+    db.session.commit()
+
+    # return make_response({
+    #     "message": f"Task {task.title} has been marked incomplete"
+    #     })
+
+    return {
+        "task": task.to_json()
+        }, 200
+
+
+
+
+
 
 
 
