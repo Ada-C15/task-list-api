@@ -87,11 +87,11 @@ def handle_task(task_id):
 
 #wave_3 
 #creating custom endpoints with is_complete: True or False
-# @tasks_bp.route("/<task_id>/complete", methods=["PATCH"]) #update
-# def mark_complete(task_id):
-#     task = Task.query.get(task_id)
+@tasks_bp.route("/<task_id>/complete", methods=["PATCH"]) #update
+def mark_complete(task_id):
+    task = Task.query.get(task_id)
 
-#     if task.completed_at:
+    if task.completed_at:
 
 
 
@@ -100,4 +100,38 @@ def handle_task(task_id):
 
 
 #wave_5
-#created second models for goals 
+#created second models for goals
+@goals_bp.route("", methods=["POST"])
+def create_goals():
+    request_body = request.get_json()
+
+    if "title" not in request_body:
+        return jsonify({
+            "details": "Invalid data"
+        }), 400
+    new_goal = Goal(title=request_body["title"])
+
+    di.session.add(new_goal)
+    db.session.commit()
+
+    return {
+        "goal":new_goal()
+    }, 200
+
+
+
+
+
+
+# Wave 6
+# Establishing a One-to-Many Relationship
+
+
+
+#optional- deployment
+
+#enhacements
+
+
+
+
