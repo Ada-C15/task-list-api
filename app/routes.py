@@ -154,7 +154,12 @@ def handle_goals():
     if request.method == "POST":
         request_body = request.get_json()
 
-        new_goal = Goal(title=request_body['title'])
+        try:
+            new_goal = Goal(title=request_body['title'])
+        except KeyError:
+            return make_response({
+                "details": "Invalid data"
+            }, 400)
 
         db.session.add(new_goal)
         db.session.commit()
