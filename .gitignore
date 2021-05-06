@@ -1,5 +1,6 @@
 .vscode
 .DS_Store
+project_notes.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
