@@ -1,8 +1,13 @@
+import requests
 from flask import Blueprint, jsonify, make_response, request
 from sqlalchemy import desc
 from datetime import date
 from app import db
 from app.models.task import Task
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -115,15 +120,37 @@ def update_task(task):
 def mark_complete(task_id):
     """
     Changes the task.completed_at value to todays date and returns a 200 response
-    with the updated task
+    with the updated task and calls the send_task_notification funtion
     Returns a 404 with no response body in case the task is not found
     """
     task = Task.query.get(task_id)
     if task:
         task.completed_at = date.today()
         db.session.commit()
+
+        send_slack_task_notification(task)
+
         return make_response(jsonify({"task": task.task_view()}), 200)
     return make_response(jsonify(None), 404)
+
+
+def send_slack_task_notification(task):
+    """
+    Sends a request to a slack bot to post the
+    "Someone just completed the task <TASK_TITLE>" to the task-notifications channel
+    in the configured slack workspace
+    """
+    SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
+    text = f"Someone just completed the task {task.title}"
+    url = f"https://slack.com/api/chat.postMessage?channel=task-notifications&text={text}"
+
+    payload = ""
+
+    headers = {
+        'Authorization': f'Bearer {SLACK_BOT_TOKEN}'
+    }
+
+    return requests.request("POST", url, headers=headers, data=payload)
 
 
 @tasks_bp.route("/<int:task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
