@@ -40,7 +40,7 @@ def get_task():
 
     for task in tasks:
         tasks_response.append(task.to_json())
-        
+
     sort_response = []
     sort = request.args.get('sort')
     if sort == 'asc':
@@ -61,7 +61,6 @@ def get_task():
 def get_single_task(task_id):
     # if not int(task_id):
     #     return make_response("", 404)
-    
     task = Task.query.get(task_id)
 
     if task:
@@ -70,7 +69,31 @@ def get_single_task(task_id):
     return make_response("", 404)
 
 
-@tasks_bp.route("/<title>", methods=["GET"])
+@tasks_bp.route("/<int:task_id>/mark_complete", methods=["PATCH"])
+def update_completed_at(task_id):
+    task = Task.query.get(task_id)
+    # print("**** testing ****", task)
+    # print(task.to_json())
+    # print(task.to_json()["is_complete"])
+    # if task.to_json() is not None:
+    #     print("task", task.to_json())
+    task.completed_at = True
+    return jsonify({"task" :task.to_json()}), 200
+
+
+@tasks_bp.route("/<int:task_id>/mark_incomplete", methods=["PATCH"])
+def update_not_completed_at(task_id):
+    task = Task.query.get(task_id)
+    print("**** testing ****", task.completed_at)
+    print(task.to_json())
+    print(task.to_json()["is_complete"])
+    # if task.to_json() is not None:
+    #     print("task", task.to_json())
+    task.completed_at = None
+    print("task completed_at", task.completed_at)
+
+    return jsonify({"task" :task.to_json()}), 200
+
 
 
 @tasks_bp.route("/<task_id>", methods=["PUT"])

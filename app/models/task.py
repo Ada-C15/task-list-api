@@ -10,7 +10,7 @@ class Task(db.Model):
 
     def to_json(self):
         is_complete = None
-        if self.completed_at is None:
+        if not self.completed_at:
             is_complete = False
         else:
             is_complete = True
