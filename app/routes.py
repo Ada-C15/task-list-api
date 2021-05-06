@@ -34,12 +34,17 @@ def handle_tasks():
             title=request_body["title"],
             description = request_body["description"],
             completed_at = request_body["completed_at"],
-            is_complete = request_body["is_complete"]
         )
         db.session.add(new_task)
         db.session.commit()
 
-        return make_response(f"{new_task.name} has successfully been added to your task list", 201)
+        return {"task":{
+            "id": new_task.task_id,
+            "title": new_task.title,
+            "description": new_task.description,
+            "is_complete": bool(new_task.completed_at)
+
+            }}, 201
 
 @tasks_bp.route("/<task_id>", methods = ["GET", "PUT", "DELETE"])
 def handle_task(task_id):
