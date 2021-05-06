@@ -9,7 +9,8 @@ class Task(db.Model):
     completed_at = db.Column(db.DateTime, nullable=True)
 
     
-    # helper method to return dictionary and report if task has been completed or not
+    # helper method to return dictionary and simultaneously 
+    # report if task has been completed or not
     def to_dict(self):
         return {
             "id": self.task_id, 
