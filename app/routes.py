@@ -96,5 +96,31 @@ def handle_one_task_delete(task_id):
         db.session.delete(task)
         db.session.commit()
         return ({
-            "details": f"Task {task.task_id} '{task.title}' successfully deleted"
+            "details": f'Task {task.task_id} "{task.title}" successfully deleted'
         }, 200)
+
+
+@tasks_bp.route("/<task_id>", methods=["PUT"])
+def handle_one_task_update(task_id):
+    """
+    Update task with specific id.
+    """
+    task = Task.query.get(task_id)
+
+    if task is None:  # task not found
+        return make_response(jsonify(None), 404)
+
+    data_to_update_with = request.get_json()
+    task.title = data_to_update_with["title"]
+    task.description = data_to_update_with["description"]
+    task.completed_at = data_to_update_with["completed_at"]
+
+    db.session.commit()
+
+    return ({
+        "task": {
+            "id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": task.is_complete()
+        }}, 200)
