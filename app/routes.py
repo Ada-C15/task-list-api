@@ -2,6 +2,7 @@ from app import db
 from app.models.task import Task
 from flask import request, Blueprint, make_response, jsonify
 from sqlalchemy import asc, desc
+from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -76,16 +77,32 @@ def delete_task(task_id):
     else:
         return jsonify(None), 404
       
-@tasks_bp.route("", methods=["GET"], strict_slashes=False)
-def sort_task():
-    order_query = request.args.get("sort")
-    if order_query == "asc":
-        # tasks = Task.query.order_by(asc(model.Task.title))
-        tasks = {"a", "b", "c"}
-    elif order_query == "desc":
-        # tasks = Task.query.order_by(desc(model.Task.title))
-        tasks = {"d", "e", "f"}
-    task_response = []
-    for task in tasks:
-        task_response.append(task.to_json())
-    return jsonify(task_response), 200
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def mark_complete(task_id):
+    task = Task.query.get(task_id)
+    if task:
+        task.completed_at = datetime.utcnow()
+        db.session.commit()
+        return {
+        "task": task.to_json()
+        }, 200
+    else:
+        return jsonify(None), 404
+      
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
+def mark_incomplete(task_id):
+    task = Task.query.get(task_id)
+    if task:
+        task.completed_at = None
+        db.session.commit()
+        return {
+        "task": task.to_json()
+        }, 200
+    else:
+        return jsonify(None), 404
+
+
+      
+
+    
+      
