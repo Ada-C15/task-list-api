@@ -4,22 +4,28 @@ from app.models.task import Task
 from flask import request
 from flask import request, Blueprint, make_response
 from flask import jsonify
+from sqlalchemy import asc, desc
+import time
+from datetime import date
+
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @tasks_bp.route("", methods=["POST", "GET"], strict_slashes=False)
 def tasks():
-    
-    if request.method == "GET":
-        # task.query.order_by(Task.title).all()
-        task_title = request.args.get("title")
-        if task_title != None:
-            tasks = Task.query.filter_by(title=task_title)
-        else:
-            tasks = Task.query.all()
+
+    if request.method == "GET":  
+        task_order = request.args.get("sort") 
+        if task_order == None:
+            tasks = Task.query.all() # Task is the model and query is a class method (query is like go get my info)
+        elif task_order == "asc":
+            tasks = Task.query.order_by(asc(Task.title))
+        elif task_order == "desc":
+            tasks = Task.query.order_by(desc(Task.title))
+
         tasks_response = []
-        for task in tasks:
+        for task in tasks: 
             complete=task.convert_complete()
             tasks_response.append({
                 "id": task.task_id,
