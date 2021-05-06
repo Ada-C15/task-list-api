@@ -44,11 +44,18 @@ def handle_tasks():
 @tasks_bp.route("/<task_id>", methods = ["GET", "PUT", "DELETE"])
 def handle_task(task_id):
     task = Task.query.get(task_id)
+    if task is None:
+        return make_response("", 404)
     if request.method == "GET":
+        if task.completed_at:
+            task["is_complete"]: True
+        else:
+            task["is_complete"]: False
+        
         return {"task":{
             "id": task.task_id,
             "title": task.title,
             "description": task.description,
-            "is_complete": True
+            "is_complete": bool(task.completed_at)
 
-        }}
+            }}
