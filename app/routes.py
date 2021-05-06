@@ -48,3 +48,20 @@ def get_task_by_id(task_id):
         return task_response 
     
     return make_response("Task not found. Less to do then :)", 404)
+
+# update one task by id 
+@tasks_bp.route("/<int:task_id>", methods=["PUT"])
+def update_task_by_id(task_id): 
+    task = Task.query.get(task_id)
+    if task: 
+        request_body = request.get_json()
+
+        task.title = request_body["title"]
+        task.description = request_body["description"]
+        task.completed_at = request_body["completed_at"]
+
+        db.session.commit()
+
+        return make_response({"task": task.to_json()})
+    
+    return make_response("", 404)
