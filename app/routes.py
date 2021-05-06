@@ -26,7 +26,7 @@ def create_tasks():
             "task": task.to_json()
         }, 201
 
-def is_completed_or_not(request_body):
+def is_completed(request_body):
     if "completed_at" in request_body:
         is_complete = True 
     return is_complete
@@ -56,7 +56,7 @@ def handle_task(task_id):
     if task is None:
         return make_response("", 404)
 
-    if request.method == "GET":
+    elif request.method == "GET":
         return make_response({"task": task.to_json()}, 200)
 
     elif request.method == "PUT":
