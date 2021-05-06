@@ -1,12 +1,22 @@
 from app import db
 from app.models.task import Task
 from flask import request, Blueprint, make_response, jsonify
+from sqlalchemy import asc, desc
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks():
-    tasks = Task.query.all()
+    order_query = request.args.get("sort")
+    if order_query:
+        if order_query == "asc":
+            tasks = Task.query.order_by(asc(Task.title))
+            # tasks = {"a", "b", "c"}
+        elif order_query == "desc":
+            tasks = Task.query.order_by(desc(Task.title))
+            # tasks = {"d", "e", "f"}
+    else:
+        tasks = Task.query.all()
     tasks_response = []
     for task in tasks:
         tasks_response.append(task.to_json())
@@ -65,3 +75,17 @@ def delete_task(task_id):
         }
     else:
         return jsonify(None), 404
+      
+@tasks_bp.route("", methods=["GET"], strict_slashes=False)
+def sort_task():
+    order_query = request.args.get("sort")
+    if order_query == "asc":
+        # tasks = Task.query.order_by(asc(model.Task.title))
+        tasks = {"a", "b", "c"}
+    elif order_query == "desc":
+        # tasks = Task.query.order_by(desc(model.Task.title))
+        tasks = {"d", "e", "f"}
+    task_response = []
+    for task in tasks:
+        task_response.append(task.to_json())
+    return jsonify(task_response), 200
