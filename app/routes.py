@@ -13,3 +13,12 @@ def get_tasks():
     
     return jsonify(tasks_response), 200
   
+@tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
+def get_single_task(task_id):
+    task = Task.query.get(task_id)
+    if task:
+        return {"task": task.to_json()}, 200
+    else:
+        return jsonify(None), 404
+    
+
