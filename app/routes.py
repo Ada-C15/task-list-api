@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response, jsonify
 from sqlalchemy import asc, desc
 from app import db 
 from app.models.task import Task
+from datetime import datetime
 
 tasks_bp = Blueprint(
     "tasks",
@@ -72,8 +73,31 @@ def update_task_by_id(task_id):
         db.session.commit()
 
         return make_response({"task": task.to_json()})
-    
+
     return make_response("", 404)
+
+# mark compelte on an incompleted task
+@tasks_bp.route("/<int:task_id>/<complete_status>", methods=["PATCH"])
+# status is a route paramter
+# how to know if it a query param
+# 
+def patch_task_by_id(task_id, complete_status): 
+    task = Task.query.get(task_id)
+    # status = request.args.get("complete_status")
+    if task is None: 
+        return make_response("", 404)
+
+    if complete_status == "mark_complete": 
+        date = datetime.today()
+        task.completed_at = date
+    else:
+        task.completed_at = None
+
+    db.session.commit()
+
+    return make_response({"task": task.to_json()})
+
+
 
 # delete one task by id 
 @tasks_bp.route("/<int:task_id>", methods=["DELETE"])
