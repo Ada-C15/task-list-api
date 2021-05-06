@@ -14,16 +14,26 @@ def tasks():
     db.session.add(new_task)
     db.session.commit()
 
-    completed_at_view = False
-    if (new_task.completed_at is not None):
-        completed_at_view = True
-
     return {
-        "task": {
-            "id": new_task.task_id,
-            "title": new_task.title,
-            "description": new_task.description,
-            "is_complete": completed_at_view
-        }
+        "task": new_task.to_json()
     }, 201
 
+#Returns a list of all the tasks in the database
+@tasks_bp.route("", methods=["GET"], strict_slashes=False)
+def get_tasks():
+    title_from_url = request.args.get("title")
+
+    if title_from_url:
+        tasks = Task.query.filter_by(title = title_from_url)
+    else:
+        tasks = Task.query.all()
+    
+    tasks_response = []
+    for task in tasks:
+        tasks_response.append(task.to_json())
+
+    return jsonify(tasks_response), 200
+
+@tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes = False)
+def get_task_by_id():
+    
