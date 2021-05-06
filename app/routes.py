@@ -4,6 +4,10 @@ from app.models.task import Task
 from sqlalchemy import desc, asc 
 from datetime import datetime
 
+#why don't I need to say from ... import ... here???
+import requests
+import os
+
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @tasks_bp.route("", methods=["GET", "POST"])
@@ -57,19 +61,36 @@ def handle_task(task_id):
     else:
         return make_response("", 404)
 
-@tasks_bp.route("/<task_id>/<mark_info>", methods=["PATCH"])
-def handle_task_completion(task_id, mark_info):
+@tasks_bp.route("/<task_id>/<mark_status>", methods=["PATCH"])
+def handle_task_completion(task_id, mark_status):
     task = Task.query.get(task_id)
     if task:
-        if mark_info == "mark_incomplete":
+        if mark_status == "mark_incomplete":
             task.completed_at = None
             db.session.commit()
             return make_response({"task": task.to_dict()}, 200)
-        elif mark_info == "mark_complete":
+        elif mark_status == "mark_complete":
             task.completed_at = datetime.utcnow()
             db.session.commit()
+            #call to function that sends slack message
+            send_slack_message(task.title)
             return make_response({"task": task.to_dict()}, 200)
     else:
         return make_response("", 404)
 
 
+#WAVE 4 -- for organization sake should this go somewhere else?
+PATH = "https://slack.com/api/chat.postMessage"
+
+#define a function that sends a slack message 
+def send_slack_message(task_title):
+    query_params = {
+        "channel": "task-notifications",
+        "text": f"Someone just completed the task {task_title}"
+    }
+    slackbot_token = os.environ.get('SLACK_API_KEY')
+    header = {
+        "Authorization": f"Bearer {slackbot_token}"
+    }
+    # why use .POST and not .PATCH
+    requests.post(PATH, params=query_params, headers=header)
