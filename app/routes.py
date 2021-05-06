@@ -134,3 +134,44 @@ def handle_one_task_update(task_id):
             "description": task.description,
             "is_complete": task.is_complete()
         }}, 200)
+
+
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
+def handle_one_task_complete_patch(task_id):
+    """
+    Mark Complete on an Incompleted Task
+    """
+    task = Task.query.get(task_id)
+
+    if task is None:  # task not found
+        return make_response(jsonify(None), 404)
+
+    task.completed_at = True
+
+    return ({
+        "task": {
+            "id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": task.is_complete()
+        }}, 200)
+
+
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
+def handle_one_task_incomplete_patch(task_id):
+    """
+    Mark InComplete on an Completed Task
+    """
+    task = Task.query.get(task_id)
+
+    if task is None:  # task not found
+        return make_response(jsonify(None), 404)
+
+    task.completed_at = None
+    return ({
+        "task": {
+            "id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": task.is_complete()
+        }}, 200)
