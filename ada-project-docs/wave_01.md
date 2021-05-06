@@ -26,7 +26,7 @@ Tasks should contain these attributes. Feel free to change the name of the `task
 - `completed_at`: a datetime that has the date that a task is completed on. **Can be _nullable_,** and contain a null value. A task with a `null` value for `completed_at` has not been completed.
 
 ### Tips
-
+Register Blueprints here
 - SQLAlchemy's column type for text is `db.String`. The column type for datetime is `db.DateTime`.
 - SQLAlchemy supports _nullable_ columns with specific syntax.
 - Don't forget to run:
