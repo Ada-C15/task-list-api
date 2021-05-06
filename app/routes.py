@@ -209,17 +209,6 @@ def create_a_goal():
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def get_goals():
     
-    #sort_by_title_order = request.args.get("sort")
-    
-    #tasks_list = []
-    
-    # if sort_by_title_order is not None:
-    #     if (sort_by_title_order == "asc"):
-    #         tasks_list = db.session.query(Task).order_by(asc(Task.title)) 
-    #     else:
-    #         tasks_list = db.session.query(Task).order_by(desc(Task.title)) 
-    
-    #else:
     goal_list = Goal.query.all()
     
     goal_response = [] 
