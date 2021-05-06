@@ -30,7 +30,7 @@ def create_app(test_config=None):
     # from app.models.goal import Goal
     from .routes import task_bp # ADDED THIS, uncomment and run db upgrade when routes done
     # from .routes import goal_bp  # ADDED THIS
-  
+
     db.init_app(app)
     migrate.init_app(app, db)
 

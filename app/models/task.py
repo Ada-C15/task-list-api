@@ -15,5 +15,10 @@ class Task(db.Model):
                         "description": self.description,
                         "is_complete": bool(self.completed_at)}
                 } 
+    def task_to_json_response(self):
+        return {"id": self.id,
+                        "title": self.title,
+                        "description": self.description,
+                        "is_complete": bool(self.completed_at)}
     
 
