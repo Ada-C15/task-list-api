@@ -11,22 +11,44 @@ def handle_tasks():
         tasks = Task.query.all()
         tasks_response = []
         for task in tasks:
-            task_response.append({
-                "id" : task.id,
+            if task.completed_at:
+                tasks_response.append({
+                "id" : task.task_id,
                 "title" : task.title,
                 "description" : task.description,
-                "completed at" : task.completed_at
+                "is_complete" : True
             })
-        return jsonify(tasks_response)
+            else:
+                tasks_response.append({
+                "id" : task.task_id,
+                "title" : task.title,
+                "description" : task.description,
+                "is_complete" : False
+            })
+   
+        return jsonify(tasks_response), 200
+
     elif request.method == "POST":
         request_body = request.get_json()
-        new_task = Task (
-            title = request_body["title"],
+        new_task = Task(
+            title=request_body["title"],
             description = request_body["description"],
-            completed_at = request_body["completed at"]
+            completed_at = request_body["completed_at"],
+            is_complete = request_body["is_complete"]
         )
         db.session.add(new_task)
         db.session.commit()
 
-        return make_response(f"{new_task.name} has successfully been added to your task list", 200)
+        return make_response(f"{new_task.name} has successfully been added to your task list", 201)
 
+@tasks_bp.route("/<task_id>", methods = ["GET", "PUT", "DELETE"])
+def handle_task(task_id):
+    task = Task.query.get(task_id)
+    if request.method == "GET":
+        return {"task":{
+            "id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": True
+
+        }}
