@@ -42,24 +42,46 @@ def handle_tasks():
 
         return jsonify(tasks_response)
 
-@tasks_bp.route("/<task_id>", methods=["GET"])
+@tasks_bp.route("/<task_id>", methods=["GET", "PUT"])
 def handle_task(task_id):
     
     task = Task.query.get(task_id)
 
     if task is None:
         return make_response("", 404)
+
+    if request.method == "GET":
     
-    return {
-        "task": {
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": is_task_complete(task)
+        return {
+            "task": {
+                "id": task.task_id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": is_task_complete(task)
+            }
         }
-    }
+
+    elif request.method == "PUT":
+
+        request_body = request.get_json()
+
+        task.title = request_body['title']
+        task.description = request_body['description']
+        task.completed_at = request_body['completed_at']
+
+        db.session.commit()
+
+        return {
+            "task": {
+                "id": task.task_id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": is_task_complete(task)
+            }
+        }
 
 
+# Helper functions
 def is_task_complete(task):
     if not task.completed_at:
         return False
