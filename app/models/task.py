@@ -3,9 +3,11 @@ from app import db
 
 
 class Task(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True) #autoincrement=True
     title = db.Column(db.String)
     description = db.Column(db.String)
-    #confirm extra steps to make this accept null
-    #how can i set to none?
     completed_at = db.Column(db.DateTime)
+    is_complete = False
+
+    if completed_at is True:
+        is_complete = True
