@@ -12,13 +12,11 @@ class Task(db.Model):
     def is_complete(self):
         return self.completed_at != None
 
-    # Lindsey remember to remove completed_at before submitting T_T
     # Included completed_at to check if nullable is working
     def to_json(self):
         return {
             "id": self.task_id,
             "title": self.title,
             "description": self.description,
-            "completed_at": self.completed_at,
             "is_complete": self.is_complete()
         }

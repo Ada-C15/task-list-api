@@ -42,19 +42,18 @@ def task(task_id):
     if task is None:
         return make_response("", 404)
     elif request.method == "GET":
-        return task.to_json()
+        return make_response({"task": task.to_json()}), 200
     
     elif request.method == "PUT":
         task_data = request.get_json()
-
         task.title = task_data["title"]
         task.description = task_data["description"]
 
         db.session.commit()
 
-        return make_response(f"Task #{task.task_id} successfully updated")
+        return make_response({"task": task.to_json()}), 200
 
     elif request.method == "DELETE":
         db.session.delete(task)
         db.session.commit()
-        return make_response(f"Task #{task.task_id} successfully deleted")
+        return make_response({"details": f'Task {task.task_id} "{task.title}" successfully deleted'})
