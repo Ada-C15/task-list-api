@@ -1,8 +1,8 @@
 from app import db
 from .models.task import Task
 from flask import request, Blueprint, make_response, jsonify, Response
-
 from sqlalchemy import desc, asc
+from datetime import date
 
 #WAVE 1 CRUD
 task_list_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -135,17 +135,57 @@ def delete_single_task(task_id):
                          #"details : Task {task_id} {task_title} successfully deleted".format(task_id=task.task_id,task_title = task.title) 
                          #}),200
 
+    
+
+#WAVE 3 Mark Complete on a Completed Task , Mark Complete on a Completed Task
+@task_list_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)    
+def patch_single_task(task_id):
+    
+    if not is_int(task_id):
+        #return Response("",status=404)
+        return {
+            "message": "id must be an integer",
+            "success": False
+        },400
+    
+    
+    task = Task.query.get(task_id)
+    
+    if task == None:
+        return Response("", status=404)
+    
+    task.completed_at = date.today()
+    task.is_complete = True
+    
+    db.session.commit()
+    
+    return task.to_json(), 200
 
 
+# WAVE 3 Mark Incomplete on an Incompleted Task , Mark Incomplete on an Incompleted Task
+@task_list_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)    
+def patch_task_incomplete(task_id):
+    
+    if not is_int(task_id):
+        #return Response("",status=404)
+        return {
+            "message": "id must be an integer",
+            "success": False
+        },400 
 
     
-#WAVE 3 PATCH REQUEST MARK COMPLETE ON INCOMPLETE TASK
-#WAVE 3 PATCH REQUESR MARCH INCOMPLETE ON COMPLETE TASK
-#WAVE 3 PATCH REQUESR MARCH COMPLETE ON COMPLETE TASK
-#WAVE 3 PATCH REQUESR MARCH INCOMPLETE ON INCOMPLETE TASK
-#WAVE 3 PATCH MARCK COMPLETE AND INCOMPLETE ON MISSING TASK
-
-
+    task = Task.query.get(task_id)
+    
+    if task == None:
+        return Response("", status=404)
+    
+    if task.completed_at is not None:
+        task.completed_at = None
+        task.is_complete = False
+    
+    db.session.commit()
+    
+    return task.to_json(), 200
 
 #WAVE 5 - CRUD goal 
 #create new blueprint for goal
