@@ -1,4 +1,5 @@
 from flask import Blueprint, request, make_response, jsonify
+from sqlalchemy import asc, desc
 from app import db 
 from app.models.task import Task
 
@@ -30,10 +31,18 @@ def add_new_task():
 
     return make_response({"task": new_task.to_json()}, 201)
 
-# get all tasks 
+# get all tasks asc, desc, unsorted
 @tasks_bp.route("", methods=["GET"])
 def list_all_tasks(): 
-    tasks = Task.query.all()
+    sort_query = request.args.get("sort")
+    if sort_query == "asc":
+        tasks = Task.query.order_by(asc("title"))
+    elif sort_query == "desc": 
+        tasks = Task.query.order_by(desc("title"))
+    else: 
+        tasks = Task.query.all()
+        # matt asked in order to google 
+        # find out what type of data tasks is so i can look at methods for that in documentation 
     tasks_response = []
     for task in tasks: 
         tasks_response.append(task.to_json())
