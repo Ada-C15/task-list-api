@@ -1,5 +1,6 @@
 from app import db
 from app.models.task import Task
+from app.models.goal import Goal
 from flask import Blueprint, make_response, request, jsonify
 from sqlalchemy import desc
 from datetime import datetime
@@ -146,6 +147,30 @@ def mark_task_complete(task_id):
             "is_complete": is_task_complete(task)   # False
         }
     }
+
+
+@goals_bp.route("", methods=['POST'])
+def handle_goals():
+    request_body = request.get_json()
+
+    new_goal = Goal(title=request_body['title'])
+
+    response = {
+        "goal": {
+            "id": new_goal.goal_id,
+            "title": new_goal.title
+        }
+    }
+
+    return make_response(jsonify(response), 201)
+
+
+
+
+
+
+
+
 # Helper functions
 def is_task_complete(task):
     if not task.completed_at:
