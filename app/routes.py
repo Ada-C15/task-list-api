@@ -47,7 +47,7 @@ def retrieve_single_task(task_id):
     return make_response('', 404)
 
 #Update a task
-@task_bp.route("/<task_id>", methods=["PUT"])
+@task_bp.route("/<task_id>", methods=["PUT"])  ## DO A TRY EXCEPT WITH DATAERROR
 def update_task(task_id):
     task = Task.query.get(task_id)
     if task: # successful updating task
@@ -58,4 +58,20 @@ def update_task(task_id):
         db.session.commit()
         return task.to_json_response(), 200
     return make_response(""), 404
-# try:
+
+# Delete a task
+@task_bp.route("/<task_id>", methods=["DELETE"])
+def delete_task(task_id):  # dict_task = task.task_to_json_response()  ==> dict_task["title"]
+    task = Task.query.get(task_id) # an object, no format so if I want that, I need to jsonify? {title: "x", "description": "xyz", "completed_at": null}
+    if task != None:
+        db.session.delete(task)
+        db.session.commit()
+        details_str = f"Task {task_id} \"{task.title}\" successfully deleted"
+    
+        return jsonify(details = details_str), 200
+        
+        # {"success": True,
+        #         "message": f"Task {task.id}{task.details} successfully deleted" }, 201
+    return make_response(""), 404
+    # {"success": False,
+    #         "message": f"Task {task_id} was not found" }, 404
