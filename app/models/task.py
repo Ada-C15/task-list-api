@@ -8,17 +8,17 @@ class Task(db.Model):
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable = True, default = None)
 
+    # Use is_complete as the output for completed_at
     def is_complete(self):
-        if task.completed_at == None:
-            is_complete = False
-        else:
-            is_complete = True
-        return is_complete
+        return self.completed_at != None
 
+    # Lindsey remember to remove completed_at before submitting T_T
+    # Included completed_at to check if nullable is working
     def to_json(self):
         return {
             "id": self.task_id,
             "title": self.title,
             "description": self.description,
-            "is_complete": self.completed_at()
+            "completed_at": self.completed_at,
+            "is_complete": self.is_complete()
         }
