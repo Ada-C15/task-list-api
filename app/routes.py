@@ -39,3 +39,12 @@ def list_all_tasks():
         tasks_response.append(task.to_json())
     return jsonify(tasks_response)
 
+# get one task by id 
+@tasks_bp.route("/<int:task_id>", methods=["GET"])
+def get_task_by_id(task_id):
+    task = Task.query.get(task_id)
+    if task: 
+        task_response = {"task": task.to_json()}
+        return task_response 
+    
+    return make_response("Task not found. Less to do then :)", 404)
