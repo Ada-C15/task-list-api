@@ -46,6 +46,9 @@ def handle_tasks():
 def handle_task(task_id):
     
     task = Task.query.get(task_id)
+
+    if task is None:
+        return make_response("", 404)
     
     return {
         "task": {
