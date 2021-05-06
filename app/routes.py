@@ -182,7 +182,7 @@ def handle_goals():
         return jsonify(goals_response)
 
 
-@goals_bp.route("/<goal_id>", methods=["GET", "PUT"])
+@goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
 def handle_goal(goal_id):
 
     goal = Goal.query.get(goal_id)
@@ -212,6 +212,13 @@ def handle_goal(goal_id):
             }
         }
 
+    elif request.method == "DELETE":
+        db.session.delete(goal)
+        db.session.commit()
+
+        return {
+            "details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"
+        }
 
 # Helper functions
 def is_task_complete(task):
