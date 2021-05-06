@@ -1,9 +1,12 @@
 from flask import request, Blueprint, make_response
-from app import db
+from app import db, slack_client
 from .models.task import Task
+from .models.goal import Goal
 from flask import jsonify
+from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 @tasks_bp.route("", methods=["POST"])
 def add_task():
@@ -63,7 +66,22 @@ def update_completed_at(task_id):
     if task is None:
         return make_response("", 404)
 
-    task.completed_at = True
+    task.completed_at = datetime.utcnow()
+
+    db.session.commit()
+
+    slack_client.chat_postMessage(
+        channel="C021RGYNY48",
+        text=f"Someone just completed the task {task.title}"
+    )
+
+    # slack_client.api_call(
+    #     "chat.postMessage",
+    #     channel="C021RGYNY48",
+    #     text=f"Someone just completed the task {task.title}",
+    # )
+
+    # request.post(url="https://slack.com/api/chat.postMessage")
 
     return jsonify({"task" :task.to_json()}), 200
 
@@ -107,4 +125,19 @@ def delete_task(task_id):
         "details": f'Task {task_id} \"Go on my daily walk 🏞\" successfully deleted'
     })
 
+
+@goals_bp.route("", methods=["POST"])
+def add_goal():
+    request_body = request.get_json()
+
+    new_goal = Goal(title=request_body["title"],)
+    
+    db.session.add(new_goal)
+    db.session.commit()
+
+    return jsonify({"goal": new_goal.to_json()}), 201
+
+
+
+    
 
