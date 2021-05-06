@@ -3,6 +3,7 @@ from app import db
 from app.models.task import Task
 from flask import jsonify
 from flask import request, make_response
+from datetime import datetime 
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -56,7 +57,7 @@ def delete_task(task_id):
     if task:
         db.session.delete(task)
         db.session.commit()
-        return ({"details": "Task 1 \"Go on my daily walk 🏞\" successfully deleted"}, 200)
+        return ({"details": "Task 1 \"Go on my daily walk 🏞\" successfully deleted"}, 200) ## needs revision
     return task_not_found(task_id)
 
 
@@ -80,3 +81,16 @@ def update_task(task_id):
         db.session.commit()
         return make_response({"task":task.to_json()}, 200)
     return task_not_found(task_id)
+
+
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
+def marking_task(task_id):
+
+    task = Task.query.get(task_id)
+    if task:
+        new_data = request.get_json()
+        if task.completed_at == None:
+            task.completed_at = datetime.today()
+        
+        db.session.commit()
+        return make_response({"task":task.to_json()}, 200)
