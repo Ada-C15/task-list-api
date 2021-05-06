@@ -32,10 +32,10 @@ def retrieve_tasks_data():
     if tasks != None:
         for task in tasks:
             tasks_response.append(task.task_to_json_response())
-        return jsonify(tasks_response), 200  # returning the list of all planets
+        return jsonify(tasks_response), 200  # returning the list of all tasks
         # return {task 
         #                 {"id": self.id,
-    return tasks_response, 200
+    return make_response(tasks_response, 200) ## also works as #return tasks_response, 200
 
 # Retrieve one /task/1     
 @task_bp.route("/<task_id>", methods=["GET"])
@@ -45,3 +45,17 @@ def retrieve_single_task(task_id):
         return task.to_json_response(), 200
 
     return make_response('', 404)
+
+#Update a task
+@task_bp.route("/<task_id>", methods=["PUT"])
+def update_task(task_id):
+    task = Task.query.get(task_id)
+    if task: # successful updating task
+        form_data = request.get_json() # save user input form_data as json format 
+        task.title = form_data["title"] # updating model? title field language?
+        task.description = form_data["description"] # updating model description field for task = task_id
+        task.completed_at = form_data["completed_at"]
+        db.session.commit()
+        return task.to_json_response(), 200
+    return make_response(""), 404
+# try:
