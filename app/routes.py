@@ -187,6 +187,9 @@ def handle_goal(goal_id):
 
     goal = Goal.query.get(goal_id)
 
+    if goal is None:
+        return make_response("", 404)
+
     return {
         "goal": {
             "id": goal.goal_id,
