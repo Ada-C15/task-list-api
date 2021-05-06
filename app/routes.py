@@ -117,7 +117,7 @@ def update_task(task):
 
 
 @tasks_bp.route("/<int:task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
-def mark_complete(task_id):
+def mark_task_complete(task_id):
     """
     Changes the task.completed_at value to todays date and returns a 200 response
     with the updated task and calls the send_task_notification funtion
@@ -154,7 +154,7 @@ def send_slack_task_notification(task):
 
 
 @tasks_bp.route("/<int:task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
-def mark_incomplete(task_id):
+def mark_task_incomplete(task_id):
     """
     Changes the task.completed_at value to None and returns a 200 response
     with the updated task
