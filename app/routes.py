@@ -10,9 +10,18 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 @tasks_bp.route("", methods=["GET"])
 def handle_tasks_get():
     """
-    Get all saved tasks.
+    - Get all saved tasks.
+    - Get all saved tasks filtered by title in asc and desc order.
     """
-    tasks = Task.query.all()
+    title_query = request.args.get("sort")
+
+    if title_query == "desc":
+        tasks = Task.query.order_by(Task.title.desc())
+    elif title_query == "asc":
+        tasks = Task.query.order_by(Task.title.asc())
+    else:
+        tasks = Task.query.all()
+
     tasks_response = []
     for task in tasks:
         tasks_response.append({
@@ -21,6 +30,7 @@ def handle_tasks_get():
             "description": task.description,
             "is_complete": task.is_complete()
         })
+
     return jsonify(tasks_response)
 
 
