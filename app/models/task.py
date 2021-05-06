@@ -13,3 +13,9 @@ class Task(db.Model):
                 "title": self.title, 
                 "description": self.description, 
                 "is_complete": False}
+
+    def is_complete(self):
+        if self.completed_at:
+            return True
+        else:
+            return False

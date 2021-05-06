@@ -3,16 +3,12 @@ from app.models.task import Task
 from flask import Blueprint, make_response, jsonify, request
 from app import db
 from sqlalchemy import asc, desc
+from datetime import datetime
+from datetime import date
 
 
 
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
-
-def task_checker(request_body, task):
-    # so everything should default to is_complete false but i will need some sort of a check on the completed_at variable to determine when to switch that to true. 
-        
-    pass
-        
 
 
 
@@ -32,7 +28,7 @@ def get_tasks():
             task_response.append({"id": task.task_id, 
                                 "title": task.title, 
                                 "description": task.description, 
-                                "is_complete": False})
+                                "is_complete": task.is_complete()})
         return jsonify(task_response), 200
     elif request.method == "POST":
         request_body = request.get_json()
@@ -66,3 +62,20 @@ def get_single_task(task_id):
         db.session.commit()
         return make_response({"details": f'Task {task.task_id} "{task.title}" successfully deleted'}, 200)
 
+
+@task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
+def update_task_with_completion(task_id):
+    task = Task.query.get(task_id)
+
+    if task is None:
+        return make_response("", 404)
+    else: 
+        local_date = date.today()
+        today = local_date.strftime("%m%d%y")
+        task.completed_at = today
+        db.session.commit()
+        updated_task = task.to_json()
+        updated_task["is_complete"] = task.is_complete()
+
+
+    return{"task": updated_task}
