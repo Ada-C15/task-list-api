@@ -182,7 +182,7 @@ def handle_goals():
         return jsonify(goals_response)
 
 
-@goals_bp.route("/<goal_id>", methods=["GET"])
+@goals_bp.route("/<goal_id>", methods=["GET", "PUT"])
 def handle_goal(goal_id):
 
     goal = Goal.query.get(goal_id)
@@ -190,13 +190,27 @@ def handle_goal(goal_id):
     if goal is None:
         return make_response("", 404)
 
-    return {
-        "goal": {
-            "id": goal.goal_id,
-            "title": goal.title
+    if request.method == "GET":
+        return {
+            "goal": {
+                "id": goal.goal_id,
+                "title": goal.title
+            }
         }
-    }
 
+    elif request.method == "PUT":
+        request_body = request.get_json()
+
+        goal.title = request_body["title"]
+
+        db.session.commit()
+
+        return {
+            "goal": {
+                "id": goal.goal_id,
+                "title": goal.title
+            }
+        }
 
 
 # Helper functions
