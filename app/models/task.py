@@ -5,14 +5,19 @@ class Task(db.Model):
     task_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
     description = db.Column(db.String)
-    completed_at = db.Column(db.DateTime, nullable = True, default = None)
+    completed_at = db.Column(db.DateTime, nullable = True)
 
     def is_complete(self):
-        if task.completed_at == None:
-            is_commplete = False
+        if is_complete == None:
+            is_complete = False
         else: 
-            is_complete = True 
+            is_complete == True 
+        return is_complete
         
-
-
-    
+    def to_json(self):
+        return {
+            "id": self.task_id,
+            "title": self.title,
+            "description": self.description,
+            "is_complete": self.completed_at !=None
+        }
