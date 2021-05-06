@@ -7,8 +7,10 @@ from flask import request, make_response
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
+
 def missing_data():
     return ({"details": "Invalid data"}, 400)
+
 
 @tasks_bp.route("", methods=["POST"])
 def handle_tasks():
@@ -20,7 +22,6 @@ def handle_tasks():
         return missing_data()
     if "completed_at" not in request_body:
         return missing_data()
-    
     new_task = Task(title=request_body["title"], 
     description=request_body["description"], 
     completed_at=request_body["completed_at"])
@@ -32,7 +33,13 @@ def handle_tasks():
 
 @tasks_bp.route("", methods=["GET"])
 def get_tasks():
-    tasks = Task.query.all()
+    title_query_sort = request.args.get("sort")
+    if title_query_sort == "asc":
+        tasks = Task.query.order_by(Task.title.asc()).all()    
+    elif title_query_sort == "desc":
+        tasks = Task.query.order_by(Task.title.desc()).all()
+    else:        
+        tasks = Task.query.all() 
     tasks_response = []
     for task in tasks:
         tasks_response.append(task.to_json())
