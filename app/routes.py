@@ -41,7 +41,7 @@ def handle_tasks():
             tasks_response.append({
                 "id": task.task_id,
                 "title": task.title,
-                "descroption":task.description,
+                "description":task.description,
                 "is_complete": is_task_complete(task)
             })
 
