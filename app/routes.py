@@ -207,3 +207,14 @@ def handle_task(goal_id):
         return {
             "details": (f'Goal {goal.goal_id} "{goal.title}" successfully deleted')
         }
+
+# @goals_bp.route("/<goal_id>/tasks", methods=["GET", "POST"])
+# def handle_goals_tasks(goal_id):
+#         goals_tasks = Goal.query.get(goal_id)
+#         if goals_tasks is None:
+#             return make_response("", 404)
+
+#     if request.method == "GET":
+#         pass
+#     elif request.method == "POST":
+#         pass
