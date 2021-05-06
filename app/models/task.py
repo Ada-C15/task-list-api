@@ -8,7 +8,7 @@ class Task(db.Model):
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
     
-    def compute_completed_at(self, completed_at):
+    def compute_is_complete(self):
         if self.completed_at == None:
             return False
         else:
@@ -16,15 +16,25 @@ class Task(db.Model):
     
     #Create an instance method in Task named to_json()
     def to_json(self):
+        
         return {
-                "task": 
-                 {
-                    "id": self.task_id,
-                    "title": self.title,
-                    "description": self.description,
-                    "is_complete":self.completed_at
-                 }
-        }
+                "task":     
+                       {
+                            "id": self.task_id,
+                            "title": self.title,
+                            "description": self.description,
+                            "is_complete":False
+                        }
+                     }
+        
+    def to_json_no_key(self):    
+                return {
+                            "id": self.task_id,
+                            "title": self.title,
+                            "description": self.description,
+                            "is_complete":False
+                        }
+    
     #optional enhancement Create a class method in Task named from_json(): Converts JSON into a new instance of Task
     
     
