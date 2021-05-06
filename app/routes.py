@@ -9,9 +9,14 @@ def handle_tasks():
     if request.method == "POST":
         request_body = request.get_json()
 
-        new_task = Task(title=request_body['title'],
-                        description=request_body['description'],
-                        completed_at=request_body['completed_at'])
+        try:
+            new_task = Task(title=request_body['title'],
+                            description=request_body['description'],
+                            completed_at=request_body['completed_at'])
+        except KeyError:
+            return make_response({
+                "details": "Invalid data"
+            }, 400)
 
         db.session.add(new_task)
         db.session.commit()
