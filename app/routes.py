@@ -149,22 +149,38 @@ def mark_task_complete(task_id):
     }
 
 
-@goals_bp.route("", methods=['POST'])
+@goals_bp.route("", methods=['POST', 'GET'])
 def handle_goals():
-    request_body = request.get_json()
 
-    new_goal = Goal(title=request_body['title'])
+    if request.method == "POST":
+        request_body = request.get_json()
 
-    response = {
-        "goal": {
-            "id": new_goal.goal_id,
-            "title": new_goal.title
+        new_goal = Goal(title=request_body['title'])
+
+        db.session.add(new_goal)
+        db.session.commit()
+
+        response = {
+            "goal": {
+                "id": new_goal.goal_id,
+                "title": new_goal.title
+            }
         }
-    }
 
-    return make_response(jsonify(response), 201)
+        return make_response(jsonify(response), 201)
 
+    elif request.method == "GET":
+        goals = Goal.query.all()
 
+        goals_response = []
+
+        for goal in goals:
+            goals_response.append({
+                "id": goal.goal_id,
+                "title": goal.title,
+            })
+
+        return jsonify(goals_response)
 
 
 
