@@ -54,3 +54,14 @@ def update_task(task_id):
     else:
         return jsonify(None), 404
 
+@tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
+def delete_task(task_id):
+    task = Task.query.get(task_id)
+    if task:
+        db.session.delete(task)
+        db.session.commit()
+        return {
+              "details": f"Task {task.task_id} \"{task.title}\" successfully deleted"
+        }
+    else:
+        return jsonify(None), 404
