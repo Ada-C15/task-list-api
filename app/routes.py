@@ -21,7 +21,7 @@ def handle_tasks():
                 "id": new_task.task_id,
                 "title": new_task.title,
                 "description": new_task.description,
-                "is_complete": False
+                "is_complete": is_task_complete(new_task)
             }
         }
 
@@ -41,6 +41,21 @@ def handle_tasks():
             })
 
         return jsonify(tasks_response)
+
+@tasks_bp.route("/<task_id>", methods=["GET"])
+def handle_task(task_id):
+    
+    task = Task.query.get(task_id)
+    
+    return {
+        "task": {
+            "id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": is_task_complete(task)
+        }
+    }
+
 
 def is_task_complete(task):
     if not task.completed_at:
