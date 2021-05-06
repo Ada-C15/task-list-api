@@ -1,4 +1,4 @@
-from flask import current_app
+# from flask import current_app
 from app import db
 
 
@@ -7,3 +7,11 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
+
+    def to_json(self):
+        return {
+            "id": self.task_id,
+            "title": self.title,
+            "description": self.description,
+            "is_complete": bool(self.completed_at)
+        }
