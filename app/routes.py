@@ -8,10 +8,19 @@ tasks_bp = Blueprint(
     url_prefix="/tasks"
 )
 
-
+# create a new task 
 @tasks_bp.route("", methods=["POST"])
 def add_new_task():
     request_body = request.get_json()
+    try:
+        request_body["title"] 
+        request_body["description"] 
+        request_body["completed_at"] 
+    except: 
+        return make_response(jsonify({
+        "details": "Invalid data"
+        }),400)
+
     new_task = Task(title=request_body["title"],
                     description=request_body["description"],
                     completed_at=request_body["completed_at"])
@@ -19,4 +28,14 @@ def add_new_task():
     db.session.add(new_task)
     db.session.commit()
 
-    return make_response(new_task.to_json(), 201)
+    return make_response({"task": new_task.to_json()}, 201)
+
+# get all tasks 
+@tasks_bp.route("", methods=["GET"])
+def list_all_tasks(): 
+    tasks = Task.query.all()
+    tasks_response = []
+    for task in tasks: 
+        tasks_response.append(task.to_json())
+    return jsonify(tasks_response)
+

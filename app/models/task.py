@@ -15,3 +15,4 @@ class Task(db.Model):
             "description": self.description, 
             "is_complete": self.completed_at != None 
         }
+        # self.completed_at != None predicate to determine whether task is complete or not 
