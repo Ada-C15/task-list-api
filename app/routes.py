@@ -3,6 +3,11 @@ from app.models.task import Task
 from flask import Blueprint, make_response, request, jsonify
 from sqlalchemy import desc
 from datetime import datetime
+import requests
+import os
+from dotenv import load_dotenv
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -132,6 +137,8 @@ def mark_task_complete(task_id):
 
     task.completed_at = datetime.now()
 
+    post_to_slack(f"Someone just completed the task {task.title}")
+
     return {
         "task": {
             "id": task.task_id,
@@ -145,3 +152,14 @@ def is_task_complete(task):
     if not task.completed_at:
         return False
     return True
+
+def post_to_slack(message):
+
+    client = WebClient(token=os.environ.get("SLACK_API_KEY"))
+
+    client.chat_postMessage(
+        channel="task-notifications",
+        text=message
+    )
+
+
