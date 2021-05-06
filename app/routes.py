@@ -151,7 +151,6 @@ def mark_task_complete(task_id):
 
 @goals_bp.route("", methods=['POST', 'GET'])
 def handle_goals():
-
     if request.method == "POST":
         request_body = request.get_json()
 
@@ -183,7 +182,17 @@ def handle_goals():
         return jsonify(goals_response)
 
 
+@goals_bp.route("/<goal_id>", methods=["GET"])
+def handle_goal(goal_id):
 
+    goal = Goal.query.get(goal_id)
+
+    return {
+        "goal": {
+            "id": goal.goal_id,
+            "title": goal.title
+        }
+    }
 
 
 
