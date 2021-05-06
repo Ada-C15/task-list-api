@@ -1,5 +1,6 @@
 from flask import current_app
 from app import db
+from datetime import datetime
 
 
 class Task(db.Model):
@@ -19,8 +20,8 @@ class Task(db.Model):
             "id": self.id,
             "title": self.title,
             "description": self.description,
-            #"is_complete": self.completed_at
             "is_complete" : is_complete
         }
+        is_complete = None
 
     

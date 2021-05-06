@@ -3,6 +3,7 @@ from app.models.task import Task
 from flask import request, Blueprint, make_response
 from flask import jsonify
 from .models.task import Task
+from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -11,7 +12,7 @@ def create_task():
     #Reads the HTTP request boby with:
     request_body = request.get_json()
     if len(request_body) == 3:
-        new_task = Task(title = request_body["title"], description = request_body["description"], completed_at = None )
+        new_task = Task(title = request_body["title"], description = request_body["description"], completed_at = request_body["completed_at"] )
         
         db.session.add(new_task)
         db.session.commit()
@@ -92,15 +93,20 @@ def delete_task(task_id):
     }, 200
 
 
-# @tasks_bp.route("", methods=["GET"], strict_slashes=False)
-# def get_tasks():
-#     tasks = Task.query.all()
-#     tasks_response = []
+@tasks_bp.route("/<task_id>/<complete_status>",methods=["PATCH"], strict_slashes=False)
+def mark_status_task(task_id, complete_status):
+    task = Task.query.get(task_id)
+    if task is None:
+        return make_response("",404)
+    
+    if complete_status == "mark_complete":
+        completed_date = datetime.today()
+        task.completed_at = completed_date
+    else:
+        task.completed_at = None
+    
+    db.session.commit()
 
-#     # query_param_value = request.args.get("sort")
-#     # if query_param_value :
-#     #     tasks_response = sorted(tasks_response, key = lambda item: item['title']
-
-#     for task in tasks:
-#         tasks_response.append(task.to_json())
-#     return jsonify(tasks_response), 200
+    return {
+            "task" : task.to_json()
+    }, 200
