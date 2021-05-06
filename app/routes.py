@@ -1,28 +1,21 @@
 from flask import Blueprint, request, jsonify, make_response
 from app import db 
 from app.models.task import Task 
+from sqlalchemy import asc, desc
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
-# def null_convert_to_false_for_all_tasks(tasks_response): 
-#     for task in tasks_response: 
-#         if task["is_complete"] is None: 
-#             task["is_complete"] = False
-
-#     return tasks_response
-
-# def null_convert_to_false_for_specific_task(jsonified_task): 
-#     if jsonified_task["task"]["is_complete"] is None: 
-#         jsonified_task["task"]["is_complete"] = False
-    
-#     return jsonified_task
-
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks_or_tasks_by_title():
-    # requested_title = request.args.get("title")
-    # if requested_title: 
-    #     tasks = Book.query.
-    tasks = Task.query.all() 
+    requested_title = request.args.get("sort")
+    
+    if requested_title == "asc": 
+        tasks = Task.query.order_by(Task.title.asc())
+    elif requested_title == "desc":
+        tasks = Task.query.order_by(Task.title.desc())
+    else: 
+        tasks = Task.query.all() 
+    
     tasks_response = [] 
 
     for task in tasks: 
