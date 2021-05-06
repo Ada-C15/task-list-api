@@ -2,8 +2,9 @@ from app import db
 from .models.task import Task
 from flask import request, Blueprint, make_response, jsonify, Response
 
-#WAVE 1 CRUD
+from sqlalchemy import desc, asc
 
+#WAVE 1 CRUD
 task_list_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 def is_int(value):
@@ -41,18 +42,24 @@ def create_task():
     #     }), 201
     # else:    
     #     return make_response(jsonify(new_task, 201)
+    
     #Optional enhancement : when creating a task, the value of completed_at is a string that is not a datetime?                        
 
 @task_list_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks():
     
-    # task_filter = request.args.get("completed_at")
+    sort_by_title_order = request.args.get("sort")
     
-    # if task_filter is not None:
-    #     task_title = task_filter
-    #     tasks_list = Task.query.filter_by(completed_at=None)
-
-    tasks_list = Task.query.all()
+    tasks_list = []
+    
+    if sort_by_title_order is not None:
+        if (sort_by_title_order == "asc"):
+            tasks_list = db.session.query(Task).order_by(asc(Task.title)) 
+        else:
+            tasks_list = db.session.query(Task).order_by(desc(Task.title)) 
+    
+    else:
+        tasks_list = Task.query.all()
     
     task_response = [] 
     for task in tasks_list:
@@ -83,17 +90,8 @@ def get_single_task(task_id):
         "success": False
     }, 404 
 
-''' #wave 2 : sort the tasks by ascending and descending order
+#wave 2 : sort the tasks by ascending and descending order
 #when getting all tasks, and using query params, the value of sort is not "desc" or "asc"?
-@task_list_bp.route("/tasks", methods=["GET"], strict_slashes=False)
-def get_tasks_asc(title):
-    tasks_list = []
-    
-    task_filter_asc = sessions.query(Tasks).order_by(Tasks.title.asc()).all()
-    task_filter_desc = sessions.query(Tasks).order_by(Tasks.title.desc()).all()
-    
-    if task_filter_asc:
-        return  '''
     
 @task_list_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
