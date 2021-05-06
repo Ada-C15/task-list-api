@@ -7,3 +7,7 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime)
+
+    # is_complete = None
+    # if completed_at == None:
+    #     is_complete == False
