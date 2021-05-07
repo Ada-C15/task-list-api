@@ -1,9 +1,11 @@
 from app import db
 from app.models.task import Task
+from app.models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify
 from datetime import datetime
 
 tasks_bp = Blueprint("tasks",__name__,url_prefix="/tasks")
+goals_bp = Blueprint("goals",__name__,url_prefix="/goals")
 
 @tasks_bp.route("", methods=["POST"])
 def handle_tasks():
@@ -72,7 +74,7 @@ def handle_task(task_id):
 
         
     
-@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
+@tasks_bp.route("/task_id/mark_complete", methods=["PATCH"])
 def mark_completed(task_id):
     task = Task.query.get(task_id)
     if task:
@@ -84,8 +86,8 @@ def mark_completed(task_id):
     else:
         return make_response(" ", 404)
     
-
-
+# @tasks_bp.route("/<task_id>/mark_status", methods=["PATCH"])
+# if else mark_status
     
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
@@ -102,3 +104,57 @@ def mark_incompleted(task_id):
 
 
 
+@goals_bp.route("", methods=["POST"])
+def handle_goals():
+
+    request_body = request.get_json()
+    
+
+    if "title" not in request_body: 
+        return ({
+            "details":"Invalid data"
+        },400)
+    else:
+        goal = Goal(title=request_body["title"],
+                    )
+
+        db.session.add(goal)
+        db.session.commit()
+
+        return make_response({"goal":goal.goals_to_json()},201)
+
+@goals_bp.route("", methods=["GET"])
+def get_all_goal():
+    
+    goals = Goal.query.all()
+
+    goals_response = []
+    for goal in goals:
+            goals_response.append(goal.goals_to_json())
+    return jsonify(goals_response)
+
+
+@goals_bp.route("/<goal_id>", methods=["GET","PUT","DELETE","PATCH"])
+def handle_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response(" ", 404)
+
+    if request.method == "GET":
+        return make_response({"goal":
+            goal.goals_to_json()},200)
+
+    elif request.method == "PUT":
+        form_data = request.get_json()
+        goal.title = form_data["title"]
+    
+        db.session.commit()
+        return make_response({"goal":goal.goals_to_json()},200)
+
+    elif request.method == "DELETE":
+        db.session.delete(goal)
+        db.session.commit()
+        return make_response({
+                    
+                    "details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'
+                    })
