@@ -6,7 +6,7 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 #Creates a task object using provided request body information
-def tasks():
+def create_task():
     request_body = request.get_json()
     new_task = Task(title = request_body["title"],
                     description = request_body["description"],
@@ -45,4 +45,13 @@ def is_int(value):
 def get_task_by_id(task_id):
     task = Task.query.get(task_id)
 
+    if task is None:
+        return ("", 404)
+
+    if not is_int(task_id):
+        return ("", 404)
+
+    return {"task": task.to_json()}, 200
+
+@tasks_bp.route("/<task_id>", methods = ["UPDATE"], strict_slashes = False)
 
