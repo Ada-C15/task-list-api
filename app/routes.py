@@ -3,6 +3,7 @@ from flask import Blueprint
 from .models.task import Task
 from flask import request
 from flask import jsonify, make_response
+from sqlalchemy import asc, desc
 
 # creating instance of the class, first arg is name of app's module
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -22,20 +23,43 @@ def create_task():
     except KeyError:
         return {"details": "Invalid data"}, 400
 
-#Retrieve all /tasks  
+#Retrieve all /tasks  asc or desc
 @task_bp.route("", methods = ["GET"], strict_slashes = False)
 def retrieve_tasks_data():
-    # return make_response("I'm a teapot!", 418)  # to fail first test intentionally!
-    #request.method == "GET":
-    tasks = Task.query.all()
+    tasks = Task.query.all() 
+    sort_by = request.args.get("sort") # query parameters
     tasks_response = []
-    if tasks != None:
+
+    if tasks != None: 
+        if sort_by != None and sort_by == "asc": # there are query params (still I need to add that part)
+            tasks_asc = Task.query.all().order_by(Task.title.asc()) # this is a list in asc order
+            # this puts it in the right order for the response body:
+            tasks_response_asc = [task_asctask.task_to_json_response() for task_asc in tasks_asc]
+            return jsonify(tasks_response_asc), 200
+        
+        elif sort_by != None and sort_by == "desc":
+            tasks_asc = Task.query.all().order_by(Task.title.desc()) # this is a list in asc order
+            # this puts it in the right order for the response body:
+            tasks_response_desc = [task_asctask.task_to_json_response() for task_asc in tasks_asc]
+            return jsonify(tasks_response_desc), 200
+
         for task in tasks:
             tasks_response.append(task.task_to_json_response())
-        return jsonify(tasks_response), 200  # returning the list of all tasks
-        # return {task 
-        #                 {"id": self.id,
-    return make_response(tasks_response, 200) ## also works as #return tasks_response, 200
+            return jsonify(tasks_response), 200  # returning the list of all tasks
+    return jsonify(tasks_response), 200 ## also works as #return tasks_response, 200 ### DOESN'T WORK WITH MAKE RESPONSE!!!!!
+
+# #Retrieve all /tasks 
+# @task_bp.route("", methods = ["GET"], strict_slashes = False)
+# def retrieve_tasks_data():
+#     # return make_response("I'm a teapot!", 418)  # to fail first test intentionally!
+#     #request.method == "GET":
+#     tasks = Task.query.all()
+#     tasks_response = []
+#     if tasks != None:
+#         for task in tasks:
+#             tasks_response.append(task.task_to_json_response())
+#         return jsonify(tasks_response), 200  # returning the list of all tasks
+#     return make_response(tasks_response, 200) ## also works as #return tasks_response, 200 
 
 # Retrieve one /task/1     
 @task_bp.route("/<task_id>", methods=["GET"])
@@ -45,6 +69,8 @@ def retrieve_single_task(task_id):
         return task.to_json_response(), 200
 
     return make_response('', 404)
+
+
 
 #Update a task
 @task_bp.route("/<task_id>", methods=["PUT"])  ## DO A TRY EXCEPT WITH DATAERROR
