@@ -8,6 +8,7 @@ class Task(db.Model):
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
 
+    # consider making separate function to determine if complete or not**
     
     # helper method to return dictionary and simultaneously 
     # report if task has been completed or not

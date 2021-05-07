@@ -1,6 +1,7 @@
 from app import db
 from flask import Blueprint, request, make_response, jsonify
 from app.models.task import Task
+from app.models.goal import Goal
 from sqlalchemy import desc, asc 
 from datetime import datetime
 
@@ -9,6 +10,7 @@ import requests
 import os
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 @tasks_bp.route("", methods=["GET", "POST"])
 def handle_tasks():
@@ -94,3 +96,42 @@ def send_slack_message(task_title):
     }
     # why use .POST and not .PATCH
     requests.post(PATH, params=query_params, headers=header)
+
+
+#WAVE 5 
+@goals_bp.route("", methods=["GET", "POST"])
+def handle_goals():
+    if request.method == "GET":
+        goals = Goal.query.all()
+        goals_response = []
+        for goal in goals:
+            goals_response.append(goal.to_dict())
+        return make_response(jsonify(goals_response), 200)
+
+    else: 
+        request_body = request.get_json()
+        if "title" in request_body:
+            new_goal = Goal(title = request_body["title"])
+            db.session.add(new_goal)
+            db.session.commit()
+            return make_response({"goal": new_goal.to_dict()}, 201) 
+        else:
+            return make_response({"details": "Invalid data"}, 400)
+
+@goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
+def handle_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal:
+        if request.method == "GET":
+            return {"goal": goal.to_dict()}, 200
+        elif request.method == "PUT":
+            form_data = request.get_json()
+            goal.title = form_data["title"]
+            db.session.commit()
+            return make_response({"goal": goal.to_dict()}, 200) 
+        elif request.method == "DELETE":
+            db.session.delete(goal)
+            db.session.commit()
+            return make_response({"details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"}, 200)
+    else:
+        return make_response("", 404)

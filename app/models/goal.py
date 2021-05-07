@@ -4,3 +4,11 @@ from app import db
 
 class Goal(db.Model):
     goal_id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String)
+
+    # should this have a different name than the similar function in the Task class?
+    def to_dict(self):
+        return {
+            "id": self.goal_id, 
+            "title": self.title,
+        }
