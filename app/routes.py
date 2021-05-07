@@ -5,28 +5,39 @@ from sqlalchemy import desc, asc
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+# def task_dict():
+#     order = request.args.get("sort")
+#     if order == "asc":
+#         tasks_query = Task.query.order_by(Task.title)
+#     else:
+#         tasks_query = Task.query.order_by(Task.title.desc())
+#     tasks_response = []
+#     for task in tasks_query:
+#         tasks_response.append({
+#             "id" : task.task_id,
+#             "title" : task.title,
+#             "description" : task.description,
+#             "is_complete" : bool(task.completed_at)
+#             })
+#     return jsonify(tasks_response)
+
 
 @tasks_bp.route("", methods = ["GET", "POST"])
 def handle_tasks():
+    tasks_response = []
     if request.method == "GET":
         order = request.args.get("sort")
         if order == "asc":
-            tasks_query = Task.query.order_by(Task.title).all()
+            tasks_query = Task.query.order_by(Task.title)
         else:
             tasks_query = Task.query.order_by(Task.title.desc())
-        tasks_response = []
         for task in tasks_query:
-            tasks_response.append({
-                "id" : task.task_id,
-                "title" : task.title,
-                "description" : task.description,
-                "is_complete" : bool(task.completed_at)
-            })
+            tasks_response.append(task.build_dict())
         return jsonify(tasks_response), 200
 
     elif request.method == "POST":
         request_body = request.get_json()
-        if "title" not in request_body.keys() or "description" not in request_body.keys() or "is_complete" not in request_body.keys():
+        if "title" not in request_body.keys() or "description" not in request_body.keys() or "completed_at" not in request_body.keys():
             return make_response({"details": "Invalid data"}, 400)
         
         new_task = Task(
@@ -37,13 +48,7 @@ def handle_tasks():
         db.session.add(new_task)
         db.session.commit()
 
-        return {"task":{
-            "id": new_task.task_id,
-            "title": new_task.title,
-            "description": new_task.description,
-            "is_complete": bool(new_task.completed_at)
-
-            }}, 201
+        return jsonify({"task":new_task.build_dict()}, 201)
 
 @tasks_bp.route("/<task_id>", methods = ["GET", "PUT", "DELETE", "PATCH"])
 def handle_task(task_id):
@@ -51,13 +56,7 @@ def handle_task(task_id):
     if task is None:
         return make_response("", 404)
     if request.method == "GET":
-        return {"task":{
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": bool(task.completed_at)
-
-            }}
+        return make_response(jsonify({"task":task.build_dict()}))
     elif request.method == "PUT":
         form_data = request.get_json()
         task.title = form_data["title"]
@@ -66,17 +65,31 @@ def handle_task(task_id):
 
         db.session.commit()
 
-        return {"task":{
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": bool(task.completed_at)
-
-            }}
-    
+        return make_response(jsonify({"task":task.build_dict()}))
     elif request.method == "DELETE":
         db.session.delete(task)
         db.session.commit()
 
         return {"details": f"Task {task_id} \"{task.title}\" successfully deleted"}
     
+@tasks_bp.route("/<task_id>/mark_complete", methods = ["PATCH"])
+def mark_complete(task_id):
+    task = Task.query.get(task_id)
+    if task:
+        if not bool(task.completed_at):
+            task.completed_at = True
+        return {"task": task.build_dict()}, 200
+    else:
+        return jsonify(None), 404
+
+
+@tasks_bp.route("/<task_id>/mark_incomplete", methods = ["PATCH"])
+def mark_incomplete(task_id):
+    task = Task.query.get(task_id)
+    if task:
+        if bool(task.completed_at):
+            task.completed_at = None
+        return jsonify({"task": task.build_dict()}), 200
+    else:
+        return jsonify(None), 404
+      

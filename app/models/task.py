@@ -1,4 +1,4 @@
-from flask import current_app
+from flask import current_app, jsonify
 from app import db
 
 
@@ -9,3 +9,13 @@ class Task(db.Model):
     completed_at = db.Column(db.DateTime, nullable=True)
 
 
+
+
+
+    def build_dict(self):
+        return {
+            "id": self.task_id,
+            "title": self.title,
+            "description": self.description,
+            "is_complete": bool(self.completed_at)
+        }
