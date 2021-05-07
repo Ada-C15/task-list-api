@@ -30,7 +30,7 @@ def handle_tasks():
                 "id" : task.task_id,
                 "title" : task.title,
                 "description" : task.description,
-                "is_complete" : task.is_complete
+                "is_complete" : bool(task.completed_at)
             })
 
         return jsonify(tasks_response)
