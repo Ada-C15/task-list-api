@@ -4,8 +4,8 @@ from app.models.goal import Goal
 from app import db
 from datetime import datetime
 import os
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
+# from slack_sdk import WebClient
+# from slack_sdk.errors import SlackApiError
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
@@ -111,6 +111,9 @@ def mark_complete(task_id):
     task.completed_at = datetime.utcnow()
 
     db.session.commit() # Do I need this for PATCH?
+
+    from slack_sdk import WebClient
+    from slack_sdk.errors import SlackApiError
 
     client = WebClient(token=os.environ.get("SLACK_KEY"))
 
