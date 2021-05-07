@@ -14,5 +14,5 @@ class Task(db.Model):
             "id": self.task_id,
             "title": self.title,
             "description": self.description,
-            "is_complete": False if self.completed_at is None else self.completed_at
+            "is_complete": False if self.completed_at is None else True
         }

@@ -34,6 +34,15 @@ def get_tasks():
 
     return jsonify(tasks_response), 200
 
+def is_int(value):
+    try:
+        return int(value)
+    except ValueError:
+        return False
+
+
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes = False)
-def get_task_by_id():
-    
+def get_task_by_id(task_id):
+    task = Task.query.get(task_id)
+
+
