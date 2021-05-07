@@ -1,11 +1,12 @@
 from flask import current_app
 from app import db
-
+#from .models.task import Task #wave 6
 
 class Goal(db.Model):
     goal_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
-
+    
+    #new_tasks = db.relationship('Task', backref='goal') #wave 6
     
     def to_json_goal(self):
         

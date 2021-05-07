@@ -4,6 +4,9 @@ from .models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify, Response
 from sqlalchemy import desc, asc
 from datetime import date
+import os
+import requests
+import json
 
 #WAVE 1 CRUD
 task_list_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -34,17 +37,7 @@ def create_task():
     db.session.commit()
     
     return new_task.to_json(), 201
-    
-    #if task_completed == False:
-    #     return make_response("task_id": self.task_id,
-    #         "title": self.title,
-    #         "description": self.description,
-    #         "is_complete": False 
-    #     }), 201
-    # else:    
-    #     return make_response(jsonify(new_task, 201)
-    
-    #Optional enhancement : when creating a task, the value of completed_at is a string that is not a datetime?                        
+                         
 
 @task_list_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks():
@@ -139,7 +132,6 @@ def delete_single_task(task_id):
 def patch_single_task(task_id):
     
     if not is_int(task_id):
-        #return Response("",status=404)
         return {
             "message": "id must be an integer",
             "success": False
@@ -153,13 +145,21 @@ def patch_single_task(task_id):
     
     task.completed_at = date.today()
     task.is_complete = True
-    #form_data = request.get_json()
-    task.title = task.title #Wave 4
-
-    
     db.session.commit()
     
+    # send notification to slack channel -  Wave #4
+    post_message_to_slack(f"Someone just completed the task {task.title}")
+    
     return task.to_json(), 200
+
+# WAVE 4
+def post_message_to_slack(text):
+    return requests.post('https://slack.com/api/chat.postMessage', {
+        'token': os.environ.get("SLACK_TOKEN"),
+        'channel': os.environ.get("SLACK_CHANNEL_ID"),
+        'text': text
+    }).json()
+
 
 
 # WAVE 3 Mark Incomplete on an Incompleted Task , Mark Incomplete on an Incompleted Task
@@ -271,3 +271,6 @@ def delete_goal(goal_id):
         
         return jsonify(details=goal_details
                          ),200
+        
+
+#WAVE 6 

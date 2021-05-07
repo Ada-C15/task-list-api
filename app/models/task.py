@@ -1,6 +1,6 @@
 from flask import current_app
 from app import db
-
+#from .models.goal import Goal #wave 6
 
 class Task(db.Model):
     task_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -8,7 +8,9 @@ class Task(db.Model):
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
     
-    is_complete = False
+    #new_goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=False) #wave 6
+    
+    is_complete = False #wave 3
     
     def compute_is_complete(self):
         if self.completed_at == None:
