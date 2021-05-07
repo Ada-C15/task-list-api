@@ -5,21 +5,6 @@ from sqlalchemy import desc, asc
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
-# def task_dict():
-#     order = request.args.get("sort")
-#     if order == "asc":
-#         tasks_query = Task.query.order_by(Task.title)
-#     else:
-#         tasks_query = Task.query.order_by(Task.title.desc())
-#     tasks_response = []
-#     for task in tasks_query:
-#         tasks_response.append({
-#             "id" : task.task_id,
-#             "title" : task.title,
-#             "description" : task.description,
-#             "is_complete" : bool(task.completed_at)
-#             })
-#     return jsonify(tasks_response)
 
 
 @tasks_bp.route("", methods = ["GET", "POST"])
@@ -48,7 +33,7 @@ def handle_tasks():
         db.session.add(new_task)
         db.session.commit()
 
-        return jsonify({"task":new_task.build_dict()}, 201)
+        return {"task":new_task.build_dict()}, 201
 
 @tasks_bp.route("/<task_id>", methods = ["GET", "PUT", "DELETE", "PATCH"])
 def handle_task(task_id):
