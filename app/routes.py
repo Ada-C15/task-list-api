@@ -3,7 +3,6 @@ from app.models.task import Task
 from app.models.goal import Goal
 from app import db
 from datetime import datetime
-#import requests
 import os
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -63,14 +62,23 @@ def handle_task(task_id):
         return make_response("", 404)
 
     if request.method == "GET":
-        return {
-            "task": {
-                "id": task.task_id,
-                "goal_id": task.goal_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": task.is_complete()
-        }}
+        if task.goal_id:
+            return {
+                "task": {
+                    "id": task.task_id,
+                    "goal_id": task.goal_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": task.is_complete()
+            }}
+        else:
+            return {
+                "task": {
+                    "id": task.task_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": task.is_complete()
+            }}
     elif request.method == "PUT":
         form_data = request.get_json()
 
