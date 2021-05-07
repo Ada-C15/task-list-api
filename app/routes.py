@@ -1,12 +1,14 @@
 from app import db
 from app.models.task import Task
 from flask import Blueprint, request, jsonify
+from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @tasks_bp.route("", methods = ["POST"], strict_slashes = False)
 def create_task():
     response_body = request.get_json()
+    
     if len(response_body) < 3:
         return jsonify({"details": f'Invalid data'}), 400
 
@@ -22,6 +24,7 @@ def create_task():
 @tasks_bp.route("", methods = ["GET"], strict_slashes = False)
 def view_all_tasks():
     query_param_value = request.args.get("sort")
+
     if query_param_value == "desc":
         tasks = Task.query.order_by(Task.title.desc()).all()
     elif query_param_value == "asc":
@@ -30,6 +33,7 @@ def view_all_tasks():
         tasks = Task.query.all()
 
     tasks_view = []
+
     if tasks:
         for task in tasks:
             tasks_view.append(task.task_to_json())
@@ -38,6 +42,7 @@ def view_all_tasks():
 @tasks_bp.route("/<task_id>", methods = ["GET"], strict_slashes = False)
 def view_task(task_id):
     task = Task.query.get(task_id)
+
     if not task:
         return jsonify(None), 404
     return jsonify({"task": task.task_to_json()})
@@ -46,6 +51,7 @@ def view_task(task_id):
 def update_task(task_id):
     task = Task.query.get(task_id)
     updated_data = request.get_json()
+
     if not task or not updated_data:
         return jsonify(None), 404
 
@@ -59,6 +65,7 @@ def update_task(task_id):
 @tasks_bp.route("/<task_id>", methods = ["DELETE"], strict_slashes = False)
 def delete_task(task_id):
     task = Task.query.get(task_id)
+
     if not task:
         return jsonify(None), 404
 
@@ -66,4 +73,20 @@ def delete_task(task_id):
     db.session.commit()
     return jsonify({"details": f'Task {task.task_id} "{task.title}" successfully deleted'})
 
-    
+@tasks_bp.route("/<task_id>/mark_incomplete", methods = ["PATCH"], strict_slashes = False)
+def mark_incomplete(task_id):
+    return mark_task(task_id, False)
+
+@tasks_bp.route("/<task_id>/mark_complete", methods = ["PATCH"], strict_slashes = False)
+def mark_complete(task_id,):
+    return mark_task(task_id, True)
+
+def mark_task(task_id, completed):
+    task = Task.query.get(task_id)
+    status = datetime.utcnow() if completed else None
+
+    if task:
+        task.completed_at = status
+        db.session.commit()
+        return jsonify({"task": task.task_to_json()})
+    return jsonify(None), 404
