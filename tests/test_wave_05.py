@@ -1,3 +1,4 @@
+
 def test_get_goals_no_saved_goals(client):
     # Act
     response = client.get("/goals")
