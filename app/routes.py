@@ -94,6 +94,7 @@ def marking_complete(task_id):
         return make_response({"task":task.to_json()}, 200)
     return task_not_found(task_id)
 
+# = os.environ.get("SLACK_KEY")
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"]) 
 def marking_incomplete(task_id):
@@ -105,3 +106,4 @@ def marking_incomplete(task_id):
             db.session.commit()
         return make_response({"task":task.to_json()}, 200)
     return task_not_found(task_id)
+
