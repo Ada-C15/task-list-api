@@ -1,6 +1,7 @@
 from app import db
 from app.models.task import Task
 from flask import Blueprint, request, make_response, jsonify
+from datetime import datetime
 
 task_list_bp = Blueprint("task_list", __name__, url_prefix = "/tasks")
 
@@ -27,12 +28,11 @@ def create_task():
 @task_list_bp.route("", methods = ["GET"]) 
 def get_all_tasks():
     # tasks = Task.query.all()
-    task_query = request.args.get("sort")
-    # tasks = Task.query.all()
-    if task_query == "asc":
+    sort_method = request.args.get("sort")
+    if sort_method == "asc":
         tasks = Task.query.order_by(Task.title.asc())
         # SELECT * FROM task ORDER BY title ASC
-    elif task_query == "desc":
+    elif sort_method == "desc":
         tasks = Task.query.order_by(Task.title.desc())
     else:
         tasks = Task.query.all()
@@ -68,3 +68,28 @@ def get_task(task_id):
         db.session.commit()
 
         return jsonify({"task": task.to_json()}), 200
+
+
+@task_list_bp.route("/<task_id>/mark_complete", methods = ["PATCH"])
+def mark_complete(task_id):
+    task = Task.query.get(task_id)
+
+    if task == None:
+        return make_response(), 404
+    
+    task.completed_at = datetime.utcnow()
+    db.session.commit()
+
+    return jsonify({"task": task.to_json()}), 200
+
+@task_list_bp.route("/<task_id>/mark_incomplete", methods = ["PATCH"])
+def mark_incomplete(task_id):
+    task = Task.query.get(task_id)
+
+    if task == None:
+        return make_response(), 404
+
+    task.completed_at = None
+    db.session.commit()
+
+    return jsonify({"task": task.to_json()}), 200

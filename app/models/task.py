@@ -20,5 +20,5 @@ class Task(db.Model):
             "id": self.task_id,
             "title": self.title,
             "description": self.description,
-            "is_complete": is_complete
+            "is_complete": is_complete,
         }
