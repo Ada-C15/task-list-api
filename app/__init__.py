@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
 from dotenv import load_dotenv
+# from slack_sdk import WebClient
+# from slack_sdk.errors import SlackApiError
 
 
 db = SQLAlchemy()

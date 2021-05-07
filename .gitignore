@@ -1,6 +1,7 @@
 .vscode
 .DS_Store
 project_notes.md
+slack.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

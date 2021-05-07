@@ -4,6 +4,10 @@ from app.models.task import Task
 from app.models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify
 from datetime import datetime
+from app.slack import slack_message
+import os
+import requests
+
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -114,11 +118,38 @@ def handle_one_task_update(task_id):
     return ({"task": retrieve_task.to_dict()}, 200)
 
 
+def slack_send_message():
+    path = "https://slack.com/api/chat.postMessage"
+    auth = f'Bearer {os.environ.get("SLACK_BOT_TOKEN")}'
+
+    print(auth)
+
+    query_params = {
+        "channel": "task-notifications",
+        "text": f"Hello! Current date: {datetime.now()}"
+    }
+
+    headers = {
+        "Authorization": auth
+    }
+
+    slask_request = requests.post(path,
+                                  params=query_params,
+                                  headers=headers)
+    print(slask_request)
+    # print(slask_request.json())
+    return slask_request
+
+
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def handle_one_task_complete_patch(task_id):
     """
     Mark Complete on an Incompleted Task
     """
+
+    if True:
+        slack_message()
+
     task = Task.query.get(task_id)
 
     if task is None:  # task not found
