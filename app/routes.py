@@ -1,10 +1,13 @@
 from app import db
+import requests
 from app.models.task import Task
 from flask import request, Blueprint, make_response
 from flask import jsonify
 from .models.task import Task
 from datetime import datetime
+from dotenv import load_dotenv
 import re
+import os
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -102,6 +105,20 @@ def delete_task(task_id):
     }, 200
 
 
+def slack_send_message():
+    path = "https://slack.com/api/chat.postMessage"
+    query_params = {
+        "channel" : "task-notifications",
+        "text" : "Test from VSCode"
+    }
+    authorization = os.environ.get('SLACK_URI')
+    headers = {
+        "Authorization": f"Bearer {authorization}"
+    }
+    response = requests.post(path, data=query_params, headers=headers)
+
+
+
 @tasks_bp.route("/<task_id>/<complete_status>",methods=["PATCH"], strict_slashes=False)
 def mark_status_task(task_id, complete_status):
     task = Task.query.get(task_id)
@@ -111,6 +128,8 @@ def mark_status_task(task_id, complete_status):
     if complete_status == "mark_complete":
         completed_date = datetime.today()
         task.completed_at = completed_date
+        slack_send_message()
+        print("I made it to this point")
     else:
         task.completed_at = None
     
@@ -119,3 +138,6 @@ def mark_status_task(task_id, complete_status):
     return {
             "task" : task.to_json()
     }, 200
+
+
+
