@@ -2,6 +2,11 @@ from flask import Blueprint, request, jsonify, make_response
 from app import db 
 from app.models.task import Task 
 from sqlalchemy import asc, desc
+from datetime import datetime
+import os, requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -75,3 +80,51 @@ def delete_task(task_id):
     
     return make_response("", 404)
 
+@tasks_bp.route("<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def task_mark_complete(task_id): 
+    task = Task.query.get(task_id)
+
+    if task:
+        task.completed_at = datetime.utcnow()
+        slack_post_message(task.title)
+        return jsonify(task.specific_task_to_json()), 200 
+    
+    return make_response("", 404) 
+
+def slack_post_message(title):
+
+    path = "https://slack.com/api/chat.postMessage"
+    slack_api_key = os.environ.get("SLACK_API_KEY")
+    message = f"Someone just completed the task {title} Task"
+    
+    query_params = {
+        "channel": "task-notifications",
+        "text": message
+    }
+    headers = {"authorization": slack_api_key}
+
+    response = requests.post(path, params=query_params, headers=headers)
+    return response.json()
+    
+@tasks_bp.route("<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
+def task_mark_incomplete(task_id):
+    task = Task.query.get(task_id)
+
+    if task:
+        task.completed_at = None
+        return jsonify(task.specific_task_to_json()), 200 
+    
+    return make_response("", 404)
+
+# @tasks_bp.route("<task_id>/<completion_status>", methods=["PATCH"], strict_slashes=False)
+# def task_mark_complete_or_incompe(task_id, completion_status=None): 
+#     task = Task.query.get(task_id)
+
+#     if task and completion_status == "mark_complete":
+#         task.completed_at = datetime.utcnow()
+#         return jsonify(task.specific_task_to_json()), 200
+#     elif task and completion_status == "mark_incomplete":
+#         task.completed_at = None
+#         return jsonify(task.specific_task_to_json()), 200
+
+#     return make_response("", 404)
