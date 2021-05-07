@@ -2,6 +2,7 @@ from flask import request, Blueprint, make_response, jsonify
 
 from app import db
 from app.models.task import Task
+from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix= "/tasks")
 
@@ -85,32 +86,40 @@ def specific_task(task_id):
         db.session.commit()
         return jsonify({"details": f'Task {task.task_id} "{task.title}" successfully deleted'}), 200 
 
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
+def mark_complete(task_id):
+    task = Task.query.get(task_id)
+    
+    if task == None:
+        return make_response(), 404
+    
+    task.completed_at = datetime.utcnow()
+    db.session.commit()
 
+    return jsonify({
+        "task": {
+        "id": task.task_id,
+        "title": task.title,
+        "description": task.description,
+        "is_complete": task.task_completed()
+        }
+        }), 200
+    
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
+def mark_incomplete(task_id):
+    task = Task.query.get(task_id)
 
-        
+    if task == None:
+        return make_response(), 404
+    
+    task.completed_at = None
+    db.session.commit()
 
-
-
-
-# SELECT task, title
-# FROM tasks
-# ORDER BY title; 
-
-# SELECT task, title
-# FROM tasks
-# ORDER BY title DESC; 
-
-# task_query = request.args.get("sort")
-# if task_query == "asc":
-#     Task.query.order_by(Task.title.asc()).all()
-# elif task_query == "desc":
-#     Task.query.order_by(Task.title.desc()).all() 
-# else:
-
-
-# # sort task titles by desc
-# Task.query.order_by(Task.title.desc()).all()
-
-# # sort task titles by asc
-# Task.query.order_by(Task.title.asc()).all()
-
+    return jsonify({
+            "task": {
+            "id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": task.task_completed()
+            }
+            }), 200
