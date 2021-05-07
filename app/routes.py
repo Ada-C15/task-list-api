@@ -1,4 +1,6 @@
 from app.models.task import Task
+from app.models.goal import Goal
+
 from app import db
 from flask import request, Blueprint, make_response, jsonify
 from datetime import datetime
@@ -6,10 +8,11 @@ import os
 import requests
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
+
 
 @tasks_bp.route("/<task_id>/<status>", methods=["PATCH"], strict_slashes=False)
 def patch_status(task_id, status):
-    
     '''
     
     '''
@@ -67,13 +70,11 @@ def get_single_task(task_id):
             "details":f'Task {task.task_id} "{task.title}" successfully deleted'
         }, 200
 
-
 @tasks_bp.route("", methods=["GET", "POST"])
 def handle_tasks():
     if request.method == "GET":
         sort_query = request.args.get("sort")
-        # if sort_query:
-        #     tasks = Task.query.order_by(f"title {sort_query}")
+        
         if sort_query == 'asc':
             tasks = Task.query.order_by(Task.title.asc())
         elif sort_query == 'desc':
@@ -100,3 +101,45 @@ def handle_tasks():
         db.session.commit()
         return {"task": new_task.get_resp()}, 201
 
+@goals_bp.route("", methods=["GET","POST"])
+def handle_goals():
+    if request.method == "GET":
+        goals = Goal.query.all()
+        goal_response = []
+        for goal in goals:
+            goal_response.append(goal.get_resp())
+        return jsonify(goal_response), 200
+
+    elif request.method == "POST":    
+        request_body = request.get_json()
+        if "title" not in request_body:
+            return {"details":"Invalid data"}, 400
+        else:
+            new_goal = Goal(title=request_body["title"])
+
+            db.session.add(new_goal)
+            db.session.commit()
+            return {"goal": new_goal.get_resp()}, 201
+
+@goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
+def get_single_goal(goal_id):
+
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return jsonify(None),404
+
+    if request.method == "GET":
+        return {"goal": goal.get_resp()}, 200
+
+    elif request.method == "PUT":
+        form_data = request.get_json()
+        goal.title = form_data["title"]
+        db.session.commit()
+        return {"goal": goal.get_resp()}, 200
+
+    elif request.method == "DELETE":
+        db.session.delete(goal)
+        db.session.commit()
+        return {
+            "details":f'Goal {goal.goal_id} "{goal.title}" successfully deleted'
+        }, 200
