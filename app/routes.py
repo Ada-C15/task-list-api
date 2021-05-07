@@ -59,3 +59,20 @@ def dealing_with_id(task_id):
         return {
             "details": f"Task {a_task.task_id} \"{a_task.title}\" successfully deleted"
         }, 200
+
+@tasks_bp.route("/tasks?sort=asc", methods="GET")
+def ascending_order():
+    ascending = request.args.get("sort")
+    response_body = []
+    if ascending == "asc":
+        new_order = Task.query.order_by(Task.title.asc())
+        return new_order.to_json(), 200
+
+
+
+
+#asks_bp.route("/tasks?sort=desc", methods="GET")
+#def descending_order():
+    # descending = request.args.get("sort")
+    # response_body = []
+    # if descending == "desc":
