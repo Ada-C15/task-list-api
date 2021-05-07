@@ -4,6 +4,7 @@ from app.models.goal import Goal
 from app import db
 from datetime import datetime
 import os
+import requests
 # from slack_sdk import WebClient
 # from slack_sdk.errors import SlackApiError
 
@@ -112,20 +113,22 @@ def mark_complete(task_id):
 
     db.session.commit() # Do I need this for PATCH?
 
-    from slack_sdk import WebClient
-    from slack_sdk.errors import SlackApiError
+    # from slack_sdk import WebClient
+    # from slack_sdk.errors import SlackApiError
 
-    client = WebClient(token=os.environ.get("SLACK_KEY"))
+    # client = WebClient(token=os.environ.get("SLACK_KEY"))
 
     channel_id = "C021GPYFGKT"
 
-    client.chat_postMessage(
-        channel=channel_id,
-        text=(f"Someone just completed the task {task.title}")
-    )
+    # client.chat_postMessage(
+    #     channel=channel_id,
+    #     text=(f"Someone just completed the task {task.title}")
+    # )
 
     # python requests HTTP package
-    #requests.get('https://slack.com/api/chat.postMessage', auth={"Authorization": os.environ.get("SLACK_KEY")})
+    requests.get('https://slack.com/api/chat.postMessage',
+    headers={"Authorization": os.environ.get("SLACK_KEY")},
+    data={"channel": channel_id, "text": f"Someone just completed the task {task.title}"})
 
     return {
         "task": {
