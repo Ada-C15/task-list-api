@@ -108,7 +108,7 @@ def mark_task_complete(task_id):
     if task is None:
         return ("", 404)
 
-    task.completed_at = datetime.now()
+    task.completed_at = datetime.utcnow()
 
     db.session.commit()
 
