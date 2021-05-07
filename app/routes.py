@@ -20,15 +20,16 @@ def handle_task(task_id):
 
     # Get OR Update OR Delete One Task: No Matching Task (Returns 404 Not Found)
     if not saved_task:
-        return make_response("", 404)
+        return ("", 404)
 
     # Get One Task: One Saved Task (Returns 200 OK)
     if request.method == "GET":
+
         return { "task": {
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": bool(task.completed_at)
+            "id": saved_task.task_id,
+            "title": saved_task.title,
+            "description": saved_task.description,
+            "is_complete": bool(saved_task.completed_at)
         }}, 200
 
     # Update One Task (Returns 200 OK)
@@ -72,10 +73,6 @@ def handle_tasks():
                 "description": task.description,
                 "is_complete": bool(task.completed_at)
             })
-
-        # Get Tasks: No Saved Tasks (Returns 200 OK)
-        if len(tasks_response) == 0:
-            return make_response("", 200)
 
         return jsonify(tasks_response), 200
 
