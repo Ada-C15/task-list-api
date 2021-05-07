@@ -11,6 +11,7 @@ class Task(db.Model):
     __tablename__ = "tasks"
 
     def to_json(self):
+        # refactor to format {task: {dict}}, then change all return statements
         complete = False
         if self.completed_at:
             complete = True
