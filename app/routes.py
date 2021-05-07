@@ -1,6 +1,7 @@
 from flask import Blueprint
 from app import db
 from app.models.task import Task
+from app.models.goal import Goal
 from flask import jsonify
 from flask import request, make_response
 from datetime import datetime 
@@ -8,6 +9,7 @@ import os
 import requests
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goasl", __name__, url_prefix="/goals")
 
 
 def missing_data():
@@ -58,7 +60,7 @@ def delete_task(task_id):
     if task:
         db.session.delete(task)
         db.session.commit()
-        return ({"details": "Task 1 \"Go on my daily walk 🏞\" successfully deleted"}, 200) # look at thi later
+        return ({"details":f"Task {task_id} \"{task.title}\" successfully deleted"}, 200) 
     return task_not_found(task_id)
 
 
@@ -121,4 +123,60 @@ def marking_incomplete(task_id):
             db.session.commit()
         return make_response({"task":task.to_json()}, 200)
     return task_not_found(task_id)
+
+
+
+
+@goals_bp.route("", methods=["POST"])
+def handle_goals():
+    request_body = request.get_json()
+    if not "title" in request_body or not request_body.get("title"): 
+        return missing_data()
+    new_goal = Goal(title=request_body["title"])
+    db.session.add(new_goal)
+    db.session.commit()
+    return make_response({"goal":new_goal.to_json()}, 201)
+
+
+@goals_bp.route("", methods=["GET"])
+def get_goals():        
+    goals = Goal.query.all() 
+    goals_response = []
+    for goal in goals:
+        goals_response.append(goal.to_json())
+    return jsonify(goals_response), 200 
+
+
+def goal_not_found(goal_id):
+    return make_response("", 404)
+
+
+@goals_bp.route("/<goal_id>", methods=["GET"])
+def get_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal:
+        return make_response({"goal":goal.to_json()}, 200)
+    return goal_not_found(goal_id)
+
+
+@goals_bp.route("/<goal_id>", methods=["DELETE"])
+def delete_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal:
+        db.session.delete(goal)
+        db.session.commit()
+        return ({"details":f"Goal {goal_id} \"{goal.title}\" successfully deleted"}, 200)
+    return goal_not_found(goal_id)
+
+
+@goals_bp.route("/<goal_id>", methods=["PUT"])
+def update_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal:
+        new_data = request.get_json()
+        goal.title = new_data["title"]
+
+        db.session.commit()
+        return make_response({"goal":goal.to_json()}, 200)
+    return goal_not_found(goal_id)
 
