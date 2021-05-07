@@ -38,24 +38,38 @@ def post_tasks():
 @tasks_bp.route("", methods=["GET"])
 def get_tasks():
 
+    title_query = request.args.get("sort")
+    if title_query == "asc":
+        tasks = Task.query.order_by(Task.title).all()
+    elif title_query == "desc":
+        tasks = Task.query.order_by(Task.title.desc()).all()
+    else:
         tasks = Task.query.all()
-        tasks_response = []
-        for task in tasks:
-            tasks_response.append({
-                "id": task.id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": task.is_complete
-            })
+    tasks_response = []
+    for task in tasks:
+        tasks_response.append({
+            "id": task.id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": task.is_complete
+        })
 
-        return jsonify(tasks_response), 200
+    return jsonify(tasks_response), 200
+
+
+#filter
+# Q1=Task.query.filter(db)....
+# Q1.order_by(...)
 
 @tasks_bp.route("/<task_id>", methods=["GET"])
 def get_task(task_id):
     task = Task.query.get(task_id)
 
     if task is None:
-        return Response(None),404
+        return make_response(jsonify(None), 404)
+        # return make_response("",404)
+        # return Response(None),404
+        # return jsonify(None), 404
 
     return jsonify(
         {"task": {
