@@ -8,6 +8,7 @@ class Task(db.Model):
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
     goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True)
+    # should goal_id be showing up in the tasks table?
 
     def is_complete(self):
         if self.completed_at is None:
