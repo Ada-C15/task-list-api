@@ -77,7 +77,8 @@ def handle_task(task_id):
                 "id": task.task_id,
                 "title": task.title,
                 "description": task.description,
-                "is_complete": is_task_complete(task)
+                "is_complete": is_task_complete(task),
+                "goal_id": task.goal_id
             }
         }
 
@@ -147,7 +148,6 @@ def mark_task_complete(task_id):
             "is_complete": is_task_complete(task)   # False
         }
     }
-
 
 @goals_bp.route("", methods=['POST', 'GET'])
 def handle_goals():
@@ -224,6 +224,50 @@ def handle_goal(goal_id):
         return {
             "details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"
         }
+
+@goals_bp.route("/<goal_id>/tasks", methods=["POST", "GET"])
+def handle_tasks_for_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return make_response("", 404)
+
+    if request.method == "POST":
+        request_body = request.get_json()
+
+        for task_id in request_body['task_ids']:
+            task = Task.query.get(task_id)
+            task.goal_id = int(goal_id)
+            
+        db.session.commit()
+
+        return {
+            "id": int(goal_id),
+            "task_ids": request_body['task_ids']
+        }
+
+    elif request.method == "GET":
+        associated_tasks = Task.query.filter_by(goal_id=int(goal_id))
+
+        associated_tasks_info = []
+        for task in associated_tasks:
+            task_info = {
+                "id": task.task_id,
+                "goal_id": task.goal_id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": is_task_complete(task)
+            }
+            associated_tasks_info.append(task_info)
+
+        response = {
+            "id": int(goal_id),
+            "title": goal.title,
+            "tasks": associated_tasks_info
+        }
+
+        return response
+
 
 # Helper functions
 def is_task_complete(task):
