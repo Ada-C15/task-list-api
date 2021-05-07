@@ -114,9 +114,15 @@ def mark_task_complete(task_id):
 
     return {"task": task.to_json()}, 200
 
-@tasks_bp.route("/<task_id>/make_incomplete", methods = ["PATCH"], strict_slashes = False)
+@tasks_bp.route("/<task_id>/mark_incomplete", methods = ["PATCH"], strict_slashes = False)
 def mark_task_incomplete(task_id):
     task = Task.query.get(task_id)
 
     if task is None:
         return ("", 404)
+
+    task.completed_at = None
+
+    db.session.commit()
+
+    return {"task": task.to_json()}, 200
