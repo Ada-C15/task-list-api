@@ -32,14 +32,7 @@ def handle_tasks():
         db.session.add(new_task)
         db.session.commit()
 
-        return make_response({
-            "task" : {
-                "id" : new_task.task_id,
-                "title" : new_task.title,
-                "description" : new_task.description,
-                "is_complete" : new_task.is_complete
-            }
-        }, 201)
+        return make_response({"task" : new_task.to_dict()}, 201)
 
 
 @tasks_bp.route("/<active_id>", methods=["GET", "PUT", "DELETE"])
@@ -47,14 +40,7 @@ def handle_task(active_id):
     task = Task.query.get_or_404(active_id)
 
     if request.method == "GET":
-        return {
-            "task" : {
-                "id" : task.task_id,
-                "title" : task.title,
-                "description" : task.description,
-                "is_complete" : task.is_complete
-            }
-        }
+        return {"task" : task.to_dict()}
 
     elif request.method == "PUT":
         update_data = request.get_json()
@@ -65,14 +51,7 @@ def handle_task(active_id):
 
         db.session.commit()
 
-        return {
-            "task" : {
-                "id" : task.task_id,
-                "title" : task.title,
-                "description" : task.description,
-                "is_complete" : task.is_complete
-            }
-        }
+        return {"task" : task.to_dict()}
 
     elif request.method == "DELETE":
         db.session.delete(task)
