@@ -6,7 +6,6 @@ from sqlalchemy import desc
 from datetime import datetime
 import requests
 import os
-from dotenv import load_dotenv
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
