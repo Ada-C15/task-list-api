@@ -7,8 +7,8 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
-    
-    #new_goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=False) #wave 6
+
+    goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True) #wave 6
     
     is_complete = False #wave 3
     
