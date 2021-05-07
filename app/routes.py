@@ -6,7 +6,7 @@ from flask import request, Blueprint, make_response
 from flask import jsonify
 from sqlalchemy import asc, desc
 import time
-from datetime import date
+import datetime
 
 
 
@@ -14,7 +14,7 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @tasks_bp.route("", methods=["POST", "GET"], strict_slashes=False)
 def tasks():
-
+    print(request)
     if request.method == "GET":  
         task_order = request.args.get("sort") 
         if task_order == None:
@@ -26,13 +26,8 @@ def tasks():
 
         tasks_response = []
         for task in tasks: 
-            complete=task.convert_complete()
-            tasks_response.append({
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": complete
-            })
+        
+            tasks_response.append(task.to_json())
             
                 
         return jsonify(tasks_response)
@@ -50,19 +45,12 @@ def tasks():
         db.session.add(task)
         db.session.commit()
 
-        complete=task.convert_complete()
-        
+        return jsonify({"task": task.to_json()}),201
     
-        return make_response({
-                    "task": {
-                        "id": task.task_id,
-                        "title": task.title,
-                        "description": task.description,
-                        "is_complete": complete
-                }}), 201      
+        # return make_response(jsonify({"task": task.to_jason()})),201 
+    
 
 @tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
-# this function get data from one task and also updates data.
 def handle_task(task_id):
     # Try to find the task with the given id
 
@@ -72,14 +60,8 @@ def handle_task(task_id):
         return make_response("", 404)
 
     if request.method == "GET":
-        complete=task.convert_complete()
-        return ({
-            "task": {
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": complete
-        }}), 200
+        
+        return jsonify({"task": task.to_json()}),200
 
     elif request.method == "PUT":
         form_data = request.get_json()
@@ -90,14 +72,7 @@ def handle_task(task_id):
 
         db.session.commit()
 
-        complete=task.convert_complete()
-        return ({
-            "task": {
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": complete
-        }})
+        return jsonify({"task": task.to_json()})
 
     
 
@@ -111,5 +86,37 @@ def handle_task(task_id):
         "message": f"Task with id {task_task_id} was not found",
         "success": False,
     }, 404
+
+
+
+
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def task_complete(task_id):
+    task = Task.query.get(task_id)
+
+    if task is None:
+        return make_response("", 404)
+    elif task:
+        task.completed_at = datetime.datetime.now()
+        
+        db.session.commit() # update task with todays date. So it gets update in the database
+        
+        return jsonify({"task": task.to_json()}),200
+
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
+def task_incomplete(task_id):
+    task = Task.query.get(task_id)
+
+    if task is None:
+        return make_response("", 404)
+    elif task:
+        task.completed_at = None
+        
+        db.session.commit()
+        
+        return jsonify({"task": task.to_json()}),200
+
+
+            
 
 

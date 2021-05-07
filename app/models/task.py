@@ -6,15 +6,22 @@ class Task(db.Model):
     task_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)
     description = db.Column(db.String)
-    completed_at = db.Column(db.DateTime) 
+    completed_at = db.Column(db.DateTime, nullable=True) 
     
     # created a helper function to conver completed_at to is_complete.
-    def convert_complete(self):
-        if self.completed_at == None:
-            complete = False
-        else:
+    def to_json(self):
+        if self.completed_at:
             complete = True
+        else:
+            complete = False
 
-        return complete
+        return {
+            "id": self.task_id,
+            "title": self.title,
+            "description": self.description,
+            "is_complete": complete
+        }
+
+
 
     
