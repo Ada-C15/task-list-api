@@ -31,7 +31,7 @@ def get_all_tasks():
         tasks = Task.query.order_by(Task.title.desc())
     else:
         tasks = Task.query.all()
-        
+
     task_list = []
     for task in tasks:
         task_list.append(task.to_json())
@@ -62,3 +62,25 @@ def handle_task(task_id):
         db.session.commit()
         return make_response({
             "details": f'Task {task.task_id} "{task.title}" successfully deleted'})
+
+@task_list_bp.route("/<task_id>/mark_complete", methods = ["PATCH"], strict_slashes=False)
+def update_completed_task(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return make_response(" ", 404)
+
+    task.completed_at = datetime.now()
+    db.session.commit()
+
+    return make_response(jsonify({"task": task.to_json()}), 200)
+
+@task_list_bp.route("/<task_id>/mark_incomplete", methods = ["PATCH"], strict_slashes=False)
+def update_incompleted_task(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return make_response(" ", 404)
+
+    task.completed_at = None
+    db.session.commit()
+
+    return make_response(jsonify({"task": task.to_json()}), 200)
