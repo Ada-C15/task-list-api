@@ -146,9 +146,8 @@ def handle_one_task_complete_patch(task_id):
     """
     Mark Complete on an Incompleted Task
     """
-
-    if True:
-        slack_message()
+    # if True:
+    #     slack_message()
 
     task = Task.query.get(task_id)
 
@@ -159,6 +158,9 @@ def handle_one_task_complete_patch(task_id):
     db.session.commit()
 
     retrieve_task = Task.query.get(task.task_id)
+
+    message = f"Someone just completed the task '{retrieve_task.title}'."
+    slack_message(message)
 
     return ({"task": retrieve_task.to_dict()}, 200)
 
