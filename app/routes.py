@@ -1,6 +1,5 @@
-from flask import Blueprint
+from flask import Blueprint, request
 from app import db
-from flask import request
 from .models.task import Task
 # from .models.goal import Goal
 from flask import jsonify
@@ -9,7 +8,13 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def tasks_index():
-    tasks = Task.query.all()
+    sort_order = request.args.get('sort')
+    if sort_order == "asc":
+        tasks = Task.query.order_by(Task.title)
+    elif sort_order == "desc":
+        tasks = Task.query.order_by(Task.title.desc())
+    else:
+        tasks = Task.query.all()
     tasks_response = []
     for task in tasks:
         tasks_response.append(task.to_json())
