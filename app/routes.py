@@ -1,5 +1,6 @@
 from flask import Blueprint
 from app.models.task import Task
+from app.models.goal import Goal
 from flask import Blueprint, make_response, jsonify, request
 from app import db
 from sqlalchemy import asc, desc
@@ -11,6 +12,7 @@ import os
 
 
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 
 
@@ -88,7 +90,7 @@ def update_task_with_completion(task_id):
         completion_note = "Someone just completed the task " + str(task.title)
         message = {"channel": "task-notifications", "text": completion_note}
         auth = {"Authorization": token}
-        slackbot_request = requests.get("https://slack.com/api/chat.postMessage", params=message,  headers=auth)
+        slackbot_request = requests.post("https://slack.com/api/chat.postMessage", json=message,  headers=auth)
 
 
 
@@ -108,3 +110,24 @@ def update_task_with_incomplete(task_id):
         updated_task["is_complete"] = task.is_complete()
 
     return {"task": updated_task}
+
+@goal_bp.route("", methods=["POST", "GET"])
+def create_or_get_goal():
+
+    goals = Goal.query.all()
+    if request.method == "GET":
+        goal_response = []
+
+        for goal in goals:
+            goal_response.append({"id": goal.goal_id, 
+                                "title": goal.title})
+        return jsonify(goal_response), 200
+    elif request.method == "POST":
+        request_body = request.get_json()
+        try:
+            new_goal = Goal(title=request_body["title"])
+        except KeyError:
+            return make_response({"details": "Invalid data"}, 400)
+        db.session.add(new_goal)
+        db.session.commit()
+    return make_response({"goal": new_goal.to_json()}, 201)
