@@ -25,11 +25,18 @@ def create_task():
 
 
 @task_list_bp.route("", methods = ["GET"]) 
-# Get all tasks
 def get_all_tasks():
-    tasks = Task.query.all()
+    # tasks = Task.query.all()
+    task_query = request.args.get("sort")
+    # tasks = Task.query.all()
+    if task_query == "asc":
+        tasks = Task.query.order_by(Task.title.asc())
+        # SELECT * FROM task ORDER BY title ASC
+    elif task_query == "desc":
+        tasks = Task.query.order_by(Task.title.desc())
+    else:
+        tasks = Task.query.all()
     task_response = []
-
     for task in tasks:
         task_response.append(task.to_json())
 
