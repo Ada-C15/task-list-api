@@ -9,12 +9,13 @@ class Task(db.Model):
     __tablename__ = "tasks"
 
     def to_json(self):
-        if self.completed_at is None:
-            self.completed_at = False
+        if self.completed_at == None:
+            completed_at = self.completed_at
+            completed_at = False
             
         return {
                 "id": self.task_id,
                 "title": self.title,
                 "description": self.description,
-                "is_complete": self.completed_at
+                "is_complete": completed_at
             }

@@ -31,6 +31,7 @@ def create_task():
         new_task = Task(title=request_body["title"],
                         description=request_body["description"],
                         completed_at=request_body["completed_at"])
+
     except KeyError:
         return make_response({
             "details": "Invalid data"
@@ -40,13 +41,7 @@ def create_task():
     db.session.commit()
 
     return {
-        "task": {
-            "id": new_task.task_id,
-            "title": new_task.title,
-            "description": new_task.description,
-            "is_complete": False
-
-        }
+        "task": new_task.to_json()
     }, 201
 
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
@@ -63,14 +58,9 @@ def update_task(task_id):
 
     db.session.commit()
 
-    return make_response({
-        "task": {
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": False
-        }
-    }, 200)
+    return {
+        "task": task.to_json()
+    }, 200
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
 def delete_task(task_id):
