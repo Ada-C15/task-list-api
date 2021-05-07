@@ -1,5 +1,8 @@
 from app import db
 from app.models.task import Task
+# from flask_sqlalchemy import SQLAlchemy
+# from sqlalchemy import select
+from sqlalchemy import asc, desc
 from flask import request, Blueprint, make_response, jsonify
 
 # Blueprint instance - groups routes that start with /tasks.
@@ -57,13 +60,26 @@ def handle_task(task_id):
 
 
 
+
 @tasks_bp.route("", methods=["GET","POST"])
 def handle_tasks():
 
     # Get Tasks: Getting Saved Tasks (Returns 200 OK)
     if request.method == "GET":
 
-        tasks = Task.query.all()
+        # this code replaces the previous query all code
+        sort_query = request.args.get("sort")
+        if sort_query == "asc":
+            tasks = Task.query.order_by(asc(Task.title))
+            
+        elif sort_query == "desc": 
+            tasks = Task.query.order_by(desc(Task.title))
+
+        else:
+            tasks = Task.query.all()
+        # end of the new code
+
+
         tasks_response = []
 
         for task in tasks:
