@@ -45,7 +45,7 @@ def handle_tasks():
                 "id": task.task_id,
                 "title": task.title,
                 "description": task.description,
-                "is_complete": False
+                "is_complete": task.check_if_complete()
             })
             
         return jsonify(task_list)
