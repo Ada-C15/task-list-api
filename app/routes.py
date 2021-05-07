@@ -58,6 +58,9 @@ def get_task_by_id(task_id):
 def update_task(task_id):
     task = Task.query.get(task_id)
 
+    if task is None:
+        return ("", 404)
+
     form_data = request.get_json()
 
     task.title = form_data["title"]
