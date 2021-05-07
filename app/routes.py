@@ -1,9 +1,106 @@
 
 from app import db
 from app.models.task import Task
+from app.models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify
 import datetime
 
+goal_bp = task_bp = Blueprint("goal", __name__, url_prefix="/goals")
+
+@goal_bp.route("", methods=["GET", "POST"], strict_slashes=False)
+
+def handle_goal():
+
+    if request.method == "GET":
+
+        goals = Goal.query.all()
+        response = []
+
+        if not goals:
+            return jsonify(response), 200
+
+
+        for goal in goals:
+            response.append({
+                "id": goal.goal_id,
+                "title": goal.title
+            })
+        
+        return jsonify(response), 200
+    
+    elif request.method == "POST":
+
+        request_body = request.get_json()
+
+        if request_body:
+            new_goal = Goal(title=request_body["title"])
+
+            db.session.add(new_goal)
+            db.session.commit()
+
+            goal_response = {
+                    "id": new_goal.goal_id,
+                    "title": new_goal.title
+                    }
+            dict_copy = goal_response.copy()
+            response = {"goal": dict_copy}
+
+            return jsonify(response), 201
+        
+        else: 
+            response = {"details": "Invalid data"}
+            return jsonify(response), 400
+
+
+@goal_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
+
+def get_one_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return jsonify(None), 404
+
+    elif request.method == "GET":
+
+        goal_response = {
+                "id": goal.goal_id,
+                "title": goal.title,
+                }
+
+        dict_copy = goal_response.copy()
+        response = {"goal": dict_copy}
+
+        return jsonify(response), 200
+    
+    elif request.method == "PUT":
+
+        form_data = request.get_json()
+
+        goal.title = form_data["title"]
+
+        db.session.commit()
+
+        goal_response = {
+                "id": goal.goal_id,
+                "title": goal.title
+                }
+
+        dict_copy = goal_response.copy()
+        response = {"goal": dict_copy}
+
+        return jsonify(response), 200
+    
+    elif request.method == "DELETE":
+
+        db.session.delete(goal)
+        db.session.commit()
+
+        text = f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"
+        
+        response = {"details": text}
+
+        return jsonify(response), 200 
+    
 
 task_bp = Blueprint("task", __name__, url_prefix="/tasks")
 
@@ -58,7 +155,6 @@ def handle_task():
                     }
             dict_copy = tasks_response.copy()
             response = {"task": dict_copy}
-
 
             return jsonify(response), 201
         
