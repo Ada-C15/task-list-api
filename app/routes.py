@@ -27,10 +27,16 @@ def create_task():
                 }
             }, 201)
     
-    elif request.method == "GET":
-        tasks = Task.query.all()
-        tasks_response = []
+    elif request.method == "GET":       
+        task_query = request.args.get("sort")
+        if task_query == "asc":
+            tasks = Task.query.order_by(Task.title.asc()).all()
+        elif task_query == "desc":
+            tasks = Task.query.order_by(Task.title.desc()).all() 
+        else:
+            tasks = Task.query.all()
 
+        tasks_response = []
         for task in tasks:
             tasks_response.append({
                 "id": task.task_id,
@@ -81,10 +87,30 @@ def specific_task(task_id):
 
 
 
-
-
         
 
 
 
+
+# SELECT task, title
+# FROM tasks
+# ORDER BY title; 
+
+# SELECT task, title
+# FROM tasks
+# ORDER BY title DESC; 
+
+# task_query = request.args.get("sort")
+# if task_query == "asc":
+#     Task.query.order_by(Task.title.asc()).all()
+# elif task_query == "desc":
+#     Task.query.order_by(Task.title.desc()).all() 
+# else:
+
+
+# # sort task titles by desc
+# Task.query.order_by(Task.title.desc()).all()
+
+# # sort task titles by asc
+# Task.query.order_by(Task.title.asc()).all()
 
