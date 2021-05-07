@@ -95,7 +95,7 @@ def mark_complete(task_id):
         return ("", 404)
 
     task.completed_at = datetime.now()
-    task.is_complete = True 
+    # task.is_complete = True 
     # task.is_complete()
 
 
@@ -119,7 +119,7 @@ def mark_incomplete(task_id):
 
     if task.completed_at != None:
        task.completed_at = None
-       task.is_complete = False 
+    #    task.is_complete = False 
     
     db.session.commit()
 
