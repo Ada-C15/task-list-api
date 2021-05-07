@@ -3,6 +3,7 @@ from app import db
 from app.models.task import Task
 from app.models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify
+from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -24,12 +25,7 @@ def handle_tasks_get():
 
     tasks_response = []
     for task in tasks:
-        tasks_response.append({
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": task.is_complete()
-        })
+        tasks_response.append(task.to_dict())
 
     return jsonify(tasks_response)
 
@@ -42,17 +38,10 @@ def handle_one_task_get(task_id):
     task = Task.query.get(task_id)
 
     if task is None:
-        return make_response(jsonify(None), 404)
+        return jsonify(None), 404
 
     if task:
-        return ({
-            "task": {
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": task.is_complete()
-            }
-        }, 200)
+        return ({"task": task.to_dict()}, 200)
 
 
 @tasks_bp.route("", methods=["POST"])
@@ -82,14 +71,7 @@ def handle_tasks_post():
     # todo: retrieve committed task to the db, not the one with id 1
     retrieve_task = Task.query.get(new_task.task_id)
 
-    return {
-        "task": {
-            "id": retrieve_task.task_id,
-            "title": retrieve_task.title,
-            "description": retrieve_task.description,
-            "is_complete": retrieve_task.is_complete()
-        }
-    }, 201
+    return {"task": retrieve_task.to_dict()}, 201
 
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"])
@@ -100,7 +82,7 @@ def handle_one_task_delete(task_id):
     task = Task.query.get(task_id)
 
     if task is None:
-        return make_response(jsonify(None), 404)
+        return jsonify(None), 404
 
     if task:
         db.session.delete(task)
@@ -118,7 +100,7 @@ def handle_one_task_update(task_id):
     task = Task.query.get(task_id)
 
     if task is None:  # task not found
-        return make_response(jsonify(None), 404)
+        return jsonify(None), 404
 
     data_to_update_with = request.get_json()
     task.title = data_to_update_with["title"]
@@ -127,13 +109,9 @@ def handle_one_task_update(task_id):
 
     db.session.commit()
 
-    return ({
-        "task": {
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": task.is_complete()
-        }}, 200)
+    retrieve_task = Task.query.get(task.task_id)
+
+    return ({"task": retrieve_task.to_dict()}, 200)
 
 
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
@@ -144,17 +122,14 @@ def handle_one_task_complete_patch(task_id):
     task = Task.query.get(task_id)
 
     if task is None:  # task not found
-        return make_response(jsonify(None), 404)
+        return jsonify(None), 404
 
-    task.completed_at = True
+    task.completed_at = datetime.utcnow()
+    db.session.commit()
 
-    return ({
-        "task": {
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": task.is_complete()
-        }}, 200)
+    retrieve_task = Task.query.get(task.task_id)
+
+    return ({"task": retrieve_task.to_dict()}, 200)
 
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
@@ -165,13 +140,11 @@ def handle_one_task_incomplete_patch(task_id):
     task = Task.query.get(task_id)
 
     if task is None:  # task not found
-        return make_response(jsonify(None), 404)
+        return jsonify(None), 404
 
     task.completed_at = None
-    return ({
-        "task": {
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": task.is_complete()
-        }}, 200)
+    db.session.commit()
+
+    retrieve_task = Task.query.get(task.task_id)
+
+    return ({"task": retrieve_task.to_dict()}, 200)
