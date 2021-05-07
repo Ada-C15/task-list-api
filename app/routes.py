@@ -28,14 +28,17 @@ def list_all_tasks():
         order = Task.title.desc()
     elif query_param_value == "asc":
         order = Task.title.asc()
+    elif query_param_value == "id_desc":
+        order = Task.task_id.desc()
+    elif query_param_value == "id_asc":
+        order = Task.task_id
     elif query_param_value is None:
         order = None
     else:
         return make_response({"details": "Invalid data"}, 400)
 
-    tasks_response = []
-    for task in Task.query.order_by(order).all():
-        tasks_response.append(task.as_dict())
+    tasks_response = [task.as_dict() for task in Task.query.order_by(order).all()]
+
     return jsonify(tasks_response)
 
 
@@ -207,9 +210,8 @@ def list_all_goals():
     else:
         goals = Goal.query.all()
 
-    goals_response = []
-    for goal in goals:
-        goals_response.append(goal.as_dict())
+    goals_response = [goal.as_dict() for goal in goals]
+
     return jsonify(goals_response)
 
 
@@ -323,9 +325,7 @@ def get_tasks_in_goal(goal_id):
     goal = Goal.query.get(goal_id)
     if goal:
         goal_dict = goal.as_dict()
-        goal_dict["tasks"] = []
-        for task in goal.tasks:
-            goal_dict["tasks"].append(task.as_dict())
+        goal_dict["tasks"] = [task.as_dict() for task in goal.tasks]
 
         return make_response(jsonify(goal_dict), 200)
     return make_response(jsonify(None), 404)
