@@ -18,19 +18,23 @@ def handle_tasks():
             return jsonify(tasks_response)
     elif request.method == "POST":
         request_body = request.get_json()
-        new_task = Task(title=request_body["title"], description=request_body["description"], completed_at=request_body["completed_at"])
+        if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
+            return make_response({
+        "details": "Invalid data"
+    }, 400)
+        else:
+            new_task = Task(title=request_body["title"], description=request_body["description"], completed_at=request_body["completed_at"])
+            db.session.add(new_task)
+            db.session.commit()
+            return make_response(
+                    { "task": {
+                    "id": new_task.task_id,
+                    "title": new_task.title,
+                    "description": new_task.description,
+                    "is_complete": False
+                    }}, 201)
+            
 
-        db.session.add(new_task)
-        db.session.commit()
-    
-    
-        return make_response(
-            { "task": {
-            "id": new_task.task_id,
-            "title": new_task.title,
-            "description": new_task.description,
-            "is_complete": False
-            }}, 201)
 
 @tasks_bp.route("/<task_id>", methods = ["GET", "PUT", "DELETE"])
 def handle_task(task_id):
