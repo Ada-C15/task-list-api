@@ -72,15 +72,19 @@ def handle_task(task_id):
 
     if request.method == "GET":
     
-        return {
+        response = {
             "task": {
                 "id": task.task_id,
                 "title": task.title,
                 "description": task.description,
                 "is_complete": is_task_complete(task),
-                "goal_id": task.goal_id
             }
         }
+
+        if task.goal_id:
+            response['task']['goal_id'] = task.goal_id
+
+        return response
 
     elif request.method == "PUT":
 
