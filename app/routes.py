@@ -4,8 +4,8 @@ from app.models.task import Task
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
+
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
-#Creates a task object using provided request body information
 def create_task():
     request_body = request.get_json()
     new_task = Task(title = request_body["title"],
@@ -18,7 +18,7 @@ def create_task():
         "task": new_task.to_json()
     }, 201
 
-#Returns a list of all the tasks in the database
+
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks():
     title_from_url = request.args.get("title")
@@ -33,6 +33,7 @@ def get_tasks():
         tasks_response.append(task.to_json())
 
     return jsonify(tasks_response), 200
+
 
 def is_int(value):
     try:
@@ -53,5 +54,19 @@ def get_task_by_id(task_id):
 
     return {"task": task.to_json()}, 200
 
-@tasks_bp.route("/<task_id>", methods = ["UPDATE"], strict_slashes = False)
+@tasks_bp.route("/<task_id>", methods = ["PUT"], strict_slashes = False)
+def update_task(task_id):
+    task = Task.query.get(task_id)
+
+    form_data = request.get_json()
+
+    task.title = form_data["title"]
+    task.description = form_data["description"]
+    task.completed_at = form_data["completed_at"]
+
+    db.session.commit()
+
+    return {"task": task.to_json()}, 200
+
+
 
