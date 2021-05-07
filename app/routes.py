@@ -3,6 +3,9 @@ from sqlalchemy import asc, desc
 from app import db 
 from app.models.task import Task
 from datetime import datetime
+import requests
+import os
+
 
 tasks_bp = Blueprint(
     "tasks",
@@ -80,16 +83,28 @@ def update_task_by_id(task_id):
 @tasks_bp.route("/<int:task_id>/<complete_status>", methods=["PATCH"])
 # status is a route paramter
 # how to know if it a query param
-# 
 def patch_task_by_id(task_id, complete_status): 
     task = Task.query.get(task_id)
+    PATH = "https://slack.com/api/chat.postMessage"
+
     # status = request.args.get("complete_status")
+    # dont need bc complete_status is a route parameter 
     if task is None: 
         return make_response("", 404)
 
     if complete_status == "mark_complete": 
         date = datetime.today()
         task.completed_at = date
+        query_params = {
+            "channel": "task-notifications",
+            "text": "u done did it"
+        }
+        
+        headers = {
+            "Authorization" : f"Bearer {os.getenv('SLACK_TOKEN')}"
+        }
+        response = requests.post(PATH, params=query_params, headers=headers)
+
     else:
         task.completed_at = None
 
