@@ -3,7 +3,6 @@ from app.models.task import Task
 from app.models.goal import Goal
 from app import db
 from datetime import datetime
-import requests
 import os
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
