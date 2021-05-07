@@ -2,26 +2,15 @@ import requests
 from app import db
 from flask import request, Blueprint, make_response, jsonify
 from app.models.task import Task
+from app.models.goal import Goal
 from sqlalchemy import desc, asc
 from dotenv import load_dotenv
 import os
-
-
+from app.slack_bot import slack_message
 
 load_dotenv()
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
-
-def slack_message(message):
-    path = 'https://slack.com/api/chat.postMessage'
-    query_params = {
-        "channel": "bot-testing",
-        "text": message
-    }
-    headers = {
-        "Authorization": f'{os.environ.get("SLACK_API_KEY")}'
-    }
-    message = requests.post(path, params=query_params, headers=headers)
-    return message.json()
+goals_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @tasks_bp.route("", methods = ["GET", "POST"])
 def handle_tasks():
