@@ -5,6 +5,8 @@ from app import db
 from sqlalchemy import asc, desc
 from datetime import datetime
 from datetime import date
+import requests
+import os
 
 
 
@@ -82,6 +84,12 @@ def update_task_with_completion(task_id):
         db.session.commit()
         updated_task = task.to_json()
         updated_task["is_complete"] = task.is_complete()
+        token = os.environ.get("SLACK_BOT_TOKEN")
+        completion_note = "Someone just completed the task " + str(task.title)
+        message = {"channel": "task-notifications", "text": completion_note}
+        auth = {"Authorization": token}
+        slackbot_request = requests.get("https://slack.com/api/chat.postMessage", params=message,  headers=auth)
+
 
 
     return{"task": updated_task}
