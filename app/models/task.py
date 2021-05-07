@@ -8,4 +8,4 @@ class Task(db.Model):
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable = True)
 
-    def is_complete(self):
+
