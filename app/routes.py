@@ -2,7 +2,8 @@ from flask import current_app, Blueprint, make_response, jsonify, request, Respo
 from app import db
 from app.models.task import Task
 import requests
-# from SQLAlchemy import asc, desc
+from datetime import datetime
+# from sqlachemy import asc, desc
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -66,7 +67,7 @@ def handle_one_task(task_id):
             "is_complete": bool(task.completed_at)
         }}, 200        
     elif request.method == "PUT":
-        form_data = request.get_json()  #what is form_data?
+        form_data = request.get_json()  #what is request.get_json? 
         task.title = form_data["title"]
         task.description = form_data["description"]
         task.completed_at = form_data["completed_at"]
@@ -81,3 +82,26 @@ def handle_one_task(task_id):
         db.session.delete(task)
         db.session.commit()
         return make_response({"details": f'Task {task.id} "{task.title}" successfully deleted'}), 200
+
+
+@tasks_bp.route("/<task_id>/<completion>", methods=["PATCH"], strict_slashes=False)
+def update_time(task_id, completion):
+    task = Task.query.get(task_id)
+    if task is None:
+        return make_response("", 404)
+    form_data = request.get_json() 
+
+    if completion == "mark_complete":
+        task.completed_at = datetime.utcnow()
+    elif completion == "mark_incomplete":
+        task.completed_at = None
+        
+    db.session.commit()
+
+    return make_response({"task":{
+        "id": task.id,
+        "title": task.title,
+        "description": task.description,
+        "is_complete": bool(task.completed_at)
+    }}, 200)
+
