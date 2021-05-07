@@ -7,10 +7,11 @@ from sqlalchemy import desc, asc
 from dotenv import load_dotenv
 import os
 from app.slack_bot import slack_message
+from datetime import datetime
 
 load_dotenv()
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
-goals_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 @tasks_bp.route("", methods = ["GET", "POST"])
 def handle_tasks():
@@ -66,9 +67,9 @@ def handle_task(task_id):
 def mark_complete(task_id):
     task = Task.query.get(task_id)
     if task:
-        slack_message(f"Someone just completed {task.title}.")
         if not bool(task.completed_at):
-            task.completed_at = True
+            task.completed_at = datetime.now()
+        slack_message(f"Someone just completed {task.title}.")
         return {"task": task.build_dict()}, 200
     else:
         return jsonify(None), 404
@@ -83,6 +84,14 @@ def mark_incomplete(task_id):
         return jsonify({"task": task.build_dict()}), 200
     else:
         return jsonify(None), 404
+
+@goals_bp.route("", methods = ["GET"])
+def handle_goals():
+    goals_query = Goal.query.all()
+    goals_response = []
+    for goal in goals_query:
+        goals_response.append(goal.build_dict())
+    return goals_response
 
 
 
