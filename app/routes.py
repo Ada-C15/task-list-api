@@ -2,6 +2,7 @@ from flask import Blueprint
 from app import db
 from .models.task import Task
 from flask import request, jsonify, make_response
+from datetime import datetime
 
 task_list_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -24,7 +25,13 @@ def create_task():
 
 @task_list_bp.route("", methods = ["GET"])
 def get_all_tasks():
-    tasks = Task.query.all()
+    if request.args.get("sort") == "asc":
+        tasks = Task.query.order_by(Task.title)
+    elif request.args.get("sort") == "desc":
+        tasks = Task.query.order_by(Task.title.desc())
+    else:
+        tasks = Task.query.all()
+        
     task_list = []
     for task in tasks:
         task_list.append(task.to_json())
