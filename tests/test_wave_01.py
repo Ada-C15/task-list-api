@@ -8,9 +8,11 @@ def test_get_tasks_no_saved_tasks(client):
     response_body = response.get_json()
 
     # Assert
-    assert response.status_code == 200
+    assert response.status_code == 200 # success
     assert response_body == []
-# 
+# As a client, I want to be able to make a GET request to /tasks when there are zero saved tasks and get this response:
+# 200 OK
+# []
 
 ## Test 1.2 ## F
 def test_get_tasks_one_saved_tasks(client, one_task):
@@ -19,7 +21,7 @@ def test_get_tasks_one_saved_tasks(client, one_task):
     response_body = response.get_json()
 
     # Assert
-    assert response.status_code == 200
+    assert response.status_code == 200 # success
     assert len(response_body) == 1
     assert response_body == [
         {
