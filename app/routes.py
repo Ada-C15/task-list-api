@@ -1,6 +1,8 @@
-from flask import current_app, Blueprint, make_response, jsonify, request
+from flask import current_app, Blueprint, make_response, jsonify, request, Response
 from app import db
 from app.models.task import Task
+import requests
+# from SQLAlchemy import asc, desc
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -31,7 +33,14 @@ def post_task():
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_all_tasks():
-    tasks = Task.query.all()
+    if request.args.get('sort'):
+        if request.args.get('sort') == "asc":
+            tasks = Task.query.order_by(Task.title.asc()).all()
+        elif request.args.get('sort') == "desc":
+            tasks= Task.query.order_by(Task.title.desc()).all()
+    else:
+        tasks = Task.query.all()
+
     tasks_response = []
     for task in tasks:
         tasks_response.append({
@@ -40,20 +49,22 @@ def get_all_tasks():
             "description": task.description,
             "is_complete": bool(task.completed_at)
         })
+
     return make_response(jsonify(tasks_response), 200)
+
 
 @tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
 def handle_one_task(task_id):
     task = Task.query.get(task_id)
     if task is None:
-        return make_response("", 404)  #what is make_response and why needed only sometimes? 
+        return make_response("", 404)
     if request.method == "GET":
         return {"task":{
             "id": task.id,
             "title": task.title,
             "description": task.description,
             "is_complete": bool(task.completed_at)
-        }}, 200
+        }}, 200        
     elif request.method == "PUT":
         form_data = request.get_json()  #what is form_data?
         task.title = form_data["title"]
