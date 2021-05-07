@@ -15,18 +15,3 @@ class Task(db.Model):
                 "description": self.description,
                 "is_complete": (False if self.completed_at == None else True )
             }
-        # if self.completed_at == None:
-        #     return {
-        #         "id": self.task_id,
-        #         "title": self.title,
-        #         "description": self.description,
-        #         "is_complete": False
-        #     }
-
-        # else:
-        #     return {
-        #         "id": self.task_id,
-        #         "title": self.title,
-        #         "description": self.description,
-        #         "is_complete": True
-        #     }

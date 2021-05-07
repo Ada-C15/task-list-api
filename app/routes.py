@@ -1,8 +1,46 @@
 from app.models.task import Task
 from app import db
 from flask import request, Blueprint, make_response, jsonify
+from datetime import datetime
+import os
+import requests
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+
+@tasks_bp.route("/<task_id>/<status>", methods=["PATCH"], strict_slashes=False)
+def patch_status(task_id, status):
+    
+    '''
+    
+    '''
+    task = Task.query.get(task_id)
+    if task is None:
+        return jsonify(None),404
+
+    if status == 'mark_complete':
+        date = datetime.today()
+        task.completed_at = date
+        slack_post_message(task.title)
+
+    else: 
+        task.completed_at = None
+
+    db.session.commit()
+    return {
+        "task": task.get_resp()
+    },200
+
+def slack_post_message(title):
+    url = 'https://slack.com/api/chat.postMessage'
+    params = {
+        "channel":"task-notification",
+        "text":f"Someone just completed the task {title}"
+    }
+    header={
+        "Authorization": f"Bearer {os.environ.get('API_TOKEN')}" }
+
+    req = requests.post(url, params=params, headers=header)
+    r = req.json()
 
 @tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
 def get_single_task(task_id):
@@ -25,9 +63,9 @@ def get_single_task(task_id):
     elif request.method == "DELETE":
         db.session.delete(task)
         db.session.commit()
-        return make_response({
+        return {
             "details":f'Task {task.task_id} "{task.title}" successfully deleted'
-        }), 200
+        }, 200
 
 
 @tasks_bp.route("", methods=["GET", "POST"])
@@ -46,12 +84,12 @@ def handle_tasks():
         task_response = []
         for task in tasks:
             task_response.append(task.get_resp())
-        return make_response(jsonify(task_response), 200)
+        return jsonify(task_response), 200
     
     elif request.method == "POST":
         request_body = request.get_json()
         if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
-            return jsonify({"details":"Invalid data"}), 400
+            return {"details":"Invalid data"}, 400
 
         else:
             new_task = Task(title=request_body["title"],
@@ -60,5 +98,5 @@ def handle_tasks():
 
         db.session.add(new_task)
         db.session.commit()
-        return make_response(jsonify({"task": new_task.get_resp()}), 201)
+        return {"task": new_task.get_resp()}, 201
 
