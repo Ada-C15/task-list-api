@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response, jsonify
 from sqlalchemy import asc, desc
 from app import db 
 from app.models.task import Task
+from app.models.goal import Goal
 from datetime import datetime
 import requests
 import os
@@ -113,7 +114,6 @@ def patch_task_by_id(task_id, complete_status):
     return make_response({"task": task.to_json()})
 
 
-
 # delete one task by id 
 @tasks_bp.route("/<int:task_id>", methods=["DELETE"])
 def delete_task_by_id(task_id):
@@ -127,3 +127,86 @@ def delete_task_by_id(task_id):
     
     return make_response("", 404)
 
+'''
+goal routes
+'''
+goals_bp = Blueprint(
+    "goals",
+    __name__, 
+    url_prefix="/goals"
+)
+
+# create a new goal 
+@goals_bp.route("", methods=["POST"])
+def add_new_goal():
+    request_body = request.get_json()
+    try:
+        request_body["title"] 
+    except: 
+        return make_response(jsonify({
+        "details": "Invalid data"
+        }),400)
+
+    new_goal = Goal(title=request_body["title"])
+
+    db.session.add(new_goal)
+    db.session.commit()
+
+    return make_response({"goal": new_goal.to_json()}, 201)
+
+# get all goals asc, desc, unsorted
+@goals_bp.route("", methods=["GET"])
+def list_all_goals(): 
+    sort_query = request.args.get("sort")
+    if sort_query == "asc":
+        goals = Goal.query.order_by(asc("title"))
+    elif sort_query == "desc": 
+        goals = Goal.query.order_by(desc("title"))
+    else: 
+        goals = Goal.query.all()
+        # matt asked in order to google 
+        # find out what type of data goals is so i can look at methods for that in documentation 
+    goals_response = []
+    for goal in goals: 
+        goals_response.append(goal.to_json())
+    return jsonify(goals_response)
+
+# get one goal by id 
+@goals_bp.route("/<int:goal_id>", methods=["GET"])
+def get_task_by_id(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal: 
+        goal_response = {"goal": goal.to_json()}
+        return goal_response 
+    
+    return make_response("Goal not found. Less to do then :)", 404)
+
+# update one goal by id 
+@goals_bp.route("/<int:goal_id>", methods=["PUT"])
+def update_goal_by_id(goal_id): 
+    goal = Goal.query.get(goal_id)
+    if goal: 
+        request_body = request.get_json()
+
+        goal.title = request_body["title"]
+
+        db.session.commit()
+
+        return make_response({"goal": goal.to_json()})
+
+    return make_response("", 404)
+
+# delete one goal by id 
+@goals_bp.route("/<int:goal_id>", methods=["DELETE"])
+def delete_goal_by_id(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal: 
+        db.session.delete(goal)
+        db.session.commit()
+        return make_response({
+        "details": 'Goal 1 "Build a habit of going outside daily" successfully deleted'
+    }, 200)
+    
+    return make_response("", 404)
+
+    
