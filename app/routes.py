@@ -21,10 +21,17 @@ def create_task():
 
 @tasks_bp.route("", methods = ["GET"], strict_slashes = False)
 def view_all_tasks():
-    all_tasks = Task.query.all()
+    query_param_value = request.args.get("sort")
+    if query_param_value == "desc":
+        tasks = Task.query.order_by(Task.title.desc()).all()
+    elif query_param_value == "asc":
+        tasks = Task.query.order_by(Task.title).all()
+    else:
+        tasks = Task.query.all()
+
     tasks_view = []
-    if all_tasks:
-        for task in all_tasks:
+    if tasks:
+        for task in tasks:
             tasks_view.append(task.task_to_json())
     return jsonify(tasks_view)
 
