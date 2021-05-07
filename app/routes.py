@@ -1,11 +1,27 @@
+import requests
 from app import db
 from flask import request, Blueprint, make_response, jsonify
 from app.models.task import Task
 from sqlalchemy import desc, asc
+from dotenv import load_dotenv
+import os
 
 
+
+load_dotenv()
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
+def slack_message(message):
+    path = 'https://slack.com/api/chat.postMessage'
+    query_params = {
+        "channel": "bot-testing",
+        "text": message
+    }
+    headers = {
+        "Authorization": f'{os.environ.get("SLACK_API_KEY")}'
+    }
+    message = requests.post(path, params=query_params, headers=headers)
+    return message.json()
 
 @tasks_bp.route("", methods = ["GET", "POST"])
 def handle_tasks():
@@ -61,6 +77,7 @@ def handle_task(task_id):
 def mark_complete(task_id):
     task = Task.query.get(task_id)
     if task:
+        slack_message(f"Someone just completed {task.title}.")
         if not bool(task.completed_at):
             task.completed_at = True
         return {"task": task.build_dict()}, 200
@@ -77,4 +94,8 @@ def mark_incomplete(task_id):
         return jsonify({"task": task.build_dict()}), 200
     else:
         return jsonify(None), 404
+
+
+
+
       
