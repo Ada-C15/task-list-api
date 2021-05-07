@@ -54,6 +54,7 @@ def get_task_by_id(task_id):
 
     return {"task": task.to_json()}, 200
 
+
 @tasks_bp.route("/<task_id>", methods = ["PUT"], strict_slashes = False)
 def update_task(task_id):
     task = Task.query.get(task_id)
@@ -72,4 +73,15 @@ def update_task(task_id):
     return {"task": task.to_json()}, 200
 
 
+@tasks_bp.route("/<task_id>", methods = ["DELETE"], strict_slashes = False)
+def delete_task(task_id):
+    task = Task.query.get(task_id)
+
+    if task is None:
+        return ("", 404)
+
+    db.session.delete(task)
+    db.session.commit()
+
+    return {"details": f"Task {task.task_id} \"{task.title}\" successfully deleted"}, 200
 
