@@ -28,7 +28,20 @@ def handle_task():
                     "is_complete": bool(task.completed_at)
                 })
 
-            return jsonify(tasks_response)
+            sort_by_title = request.args.get("sort")
+
+            if sort_by_title: 
+                if sort_by_title == "asc": 
+                    sorted_asc = sorted(tasks_response, key = lambda i: i["title"])
+                    
+                    return jsonify(sorted_asc), 200
+                elif sort_by_title == "desc":
+                    sorted_desc = sorted(tasks_response, key = lambda i:i["title"], reverse = True)
+
+                    return jsonify(sorted_desc), 200
+            else:
+
+                return jsonify(tasks_response)
 
     elif request.method == "POST":
 
@@ -114,6 +127,62 @@ def get_one_task(task_id):
         response = {"details": text}
 
         return jsonify(response), 200 
+
+@task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
+
+def mark_complete(task_id):
+
+    task = Task.query.get(task_id)
+
+    if task is None:
+        return jsonify(None), 404
+
+    elif request.method == "PATCH":
+
+        task.completed_at = datetime.datetime.now()
+
+        db.session.commit()
+
+        tasks_response = {
+                "id": task.task_id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": bool(task.completed_at)
+                }
+
+        dict_copy = tasks_response.copy()
+        response = {"task": dict_copy}
+
+        return jsonify(response), 200
+
+@task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
+
+def mark_incomplete(task_id):
+
+    task = Task.query.get(task_id)
+
+    if task is None:
+        return jsonify(None), 404
+
+    elif request.method == "PATCH":
+
+        task.completed_at = None
+
+        db.session.commit()
+
+        tasks_response = {
+                "id": task.task_id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": bool(task.completed_at)
+                }
+
+        dict_copy = tasks_response.copy()
+        response = {"task": dict_copy}
+
+        return jsonify(response), 200
+
+
 
 
 
