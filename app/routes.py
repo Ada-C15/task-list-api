@@ -4,7 +4,8 @@ from app.models.task import Task
 from flask import jsonify
 from flask import request, make_response
 from datetime import datetime 
-
+import os
+import requests
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -57,7 +58,7 @@ def delete_task(task_id):
     if task:
         db.session.delete(task)
         db.session.commit()
-        return ({"details": "Task 1 \"Go on my daily walk 🏞\" successfully deleted"}, 200) 
+        return ({"details": "Task 1 \"Go on my daily walk 🏞\" successfully deleted"}, 200) # look at thi later
     return task_not_found(task_id)
 
 
@@ -91,10 +92,24 @@ def marking_complete(task_id):
         if task.completed_at == None:
             task.completed_at = datetime.today()
             db.session.commit()
+
+            TOKEN = os.environ.get("SLACK_KEY")
+            path = "https://slack.com/api/chat.postMessage"
+            
+            channel = "task-notifications"                         # this could just be part of the dict
+            text = f"Someone just completed the task {task.title}" #  ^ 
+            headers = {"authorization": f"Bearer {TOKEN}"}
+            
+            query_params = {
+                "channel": channel,
+                "text": text, 
+            }
+            
+            response = requests.post(path, query_params, headers=headers)
+
         return make_response({"task":task.to_json()}, 200)
     return task_not_found(task_id)
 
-# = os.environ.get("SLACK_KEY")
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"]) 
 def marking_incomplete(task_id):
