@@ -21,8 +21,8 @@ def get_task():
             }, 200)
     return jsonify(tasks_response)
 
-@tasks_bp.route("/tasks", methods=["POST"], strict_slashes=False)
-def create_tasks():
+@tasks_bp.route("", methods=["POST"], strict_slashes=False)
+def create_task():
     request_body = request.get_json()
     new_task = Task(title = request_body["title"], 
                     description = request_body["description"], 
@@ -34,17 +34,13 @@ def create_tasks():
         "task": new_task.to_json()
     }, 201
 
-
-
-
-
 def is_int(value):
     try: 
         return int(value)
     except ValueError:
         return False
 
-@tasks_bp.route("/tasks/<task_id>", methods=["GET, PUT, DELETE"], strict_slashes=False)
+@tasks_bp.route("/tasks/<task_id>", methods=["GET","PUT", "DELETE"], strict_slashes=False)
 def handle_task(task_id):
     task = Task.query.get(task_id)
     
@@ -58,16 +54,14 @@ def handle_task(task_id):
         }, 400
 
     if request.method == "GET":
-
         if task:
             return task.to_json(), 200
 
-
     elif request.method == "PUT":
         if task: 
-            form_data = request.get_json()
-            task.title = form_data["title"]
-            task.description = form_data["description"]
+            task_data = request.get_json()
+            task.title = task_data["title"]
+            task.description = task_data["description"]
             db.session.commit()
 
             return make_response(f"Task #{task_id} successfully updated", 200)
@@ -76,10 +70,21 @@ def handle_task(task_id):
         if task:
             db.session.delete(task)
             db.session.commit()
-
             return make_response(f"Task #{task_id} successfully deleted", 200)
 
     return make_response({
             "message": f"Task with {task_id} was not found", 
             "success": False 
         }, 404)
+
+# @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
+# def single_task(task_id):
+#     task = Task.query.get(task_id)
+#     return make_response({
+#         "task": {
+#             "id": task.task_id,
+#             "title": task.title,
+#             "description": task.description,
+#             "completed_at": task.task_completed()}
+#         }, 200
+#     )
