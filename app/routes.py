@@ -4,6 +4,7 @@ from flask import request, Blueprint, make_response
 from flask import jsonify
 from .models.task import Task
 from datetime import datetime
+import re
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -35,7 +36,6 @@ def get_tasks():
     query_param_value=request.args.get("sort")
     if query_param_value == "asc":
         tasks = Task.query.order_by(Task.title)
-        #tasks_response = sorted(tasks_response, key = lambda item: item['title'])
     elif query_param_value == "desc":
         tasks = Task.query.order_by(Task.title.desc())
     else:
@@ -49,10 +49,9 @@ def get_tasks():
 
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def get_one_task(task_id):
-    if not isinstance(int(task_id), int):
+    if not(re.match("[0-9]",task_id)): 
         return {
-            "message": f"ID {task_id} must be an integer",
-            "success": False
+            "message": f"Task ID {task_id} must be an integer"
         }, 400
 
     task = Task.query.get(task_id)
@@ -65,6 +64,11 @@ def get_one_task(task_id):
 
 @tasks_bp.route("/<task_id>",methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
+    if not(re.match("[0-9]",task_id)): 
+        return {
+            "message": f"Task ID {task_id} must be an integer"
+        }, 400
+
     task = Task.query.get(task_id)
     if task is None:
         return make_response("",404)
@@ -82,6 +86,11 @@ def update_task(task_id):
 
 @tasks_bp.route("/<task_id>",methods=["DELETE"], strict_slashes=False)
 def delete_task(task_id):
+    if not(re.match("[0-9]",task_id)): 
+        return {
+            "message": f"Task ID {task_id} must be an integer"
+        }, 400
+    
     task = Task.query.get(task_id)
     if task == None:
         return make_response("",404)
