@@ -13,35 +13,30 @@ def handle_task():
 
     if request.method == "GET":
 
-        tasks = Task.query.all()
+        sort_by_title = request.args.get("sort")
+
+        if sort_by_title == "asc": 
+            # sorted_asc = sorted(tasks_response, key = lambda i: i["title"])
+            tasks = Task.query.order_by(Task.title.asc())
+            
+        elif sort_by_title == "desc":
+            # sorted_desc = sorted(tasks_response, key = lambda i:i["title"], reverse = True)
+            tasks = Task.query.order_by(Task.title.desc())
+                
+        else:
+            tasks = Task.query.all()
+
         tasks_response = []
 
-        if tasks is None:
-            return make_response(f"{tasks_response}", 200)
+        for task in tasks:
+            tasks_response.append({
+                "id": task.task_id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": bool(task.completed_at)
+            })
 
-        else:
-            for task in tasks:
-                tasks_response.append({
-                    "id": task.task_id,
-                    "title": task.title,
-                    "description": task.description,
-                    "is_complete": bool(task.completed_at)
-                })
-
-            sort_by_title = request.args.get("sort")
-
-            if sort_by_title: 
-                if sort_by_title == "asc": 
-                    sorted_asc = sorted(tasks_response, key = lambda i: i["title"])
-                    
-                    return jsonify(sorted_asc), 200
-                elif sort_by_title == "desc":
-                    sorted_desc = sorted(tasks_response, key = lambda i:i["title"], reverse = True)
-
-                    return jsonify(sorted_desc), 200
-            else:
-
-                return jsonify(tasks_response)
+        return jsonify(tasks_response)
 
     elif request.method == "POST":
 
