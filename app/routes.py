@@ -5,8 +5,7 @@ from app import db
 from datetime import datetime
 import os
 import requests
-# from slack_sdk import WebClient
-# from slack_sdk.errors import SlackApiError
+
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
@@ -30,7 +29,7 @@ def handle_tasks():
                 "description": task.description,
                 "is_complete": task.is_complete()
             })
-        return jsonify(tasks_response)
+        return jsonify(tasks_response) # why does this need to use jsonify? because it's a list?
 
     elif request.method == "POST":
         request_body = request.get_json()
@@ -48,7 +47,7 @@ def handle_tasks():
             db.session.add(new_task)
             db.session.commit()
 
-            return ({
+            return make_response({
                 "task": {
                     "id": new_task.task_id,
                     "title": new_task.title,
@@ -111,24 +110,14 @@ def mark_complete(task_id):
 
     task.completed_at = datetime.utcnow()
 
-    db.session.commit() # Do I need this for PATCH?
+    headers = {"Authorization": os.environ.get("SLACK_KEY")}
+    data = {
+        "channel": "C021GPYFGKT",
+        "text": f"Someone just completed the task {task.title}"
+    }
 
-    # from slack_sdk import WebClient
-    # from slack_sdk.errors import SlackApiError
-
-    # client = WebClient(token=os.environ.get("SLACK_KEY"))
-
-    channel_id = "C021GPYFGKT"
-
-    # client.chat_postMessage(
-    #     channel=channel_id,
-    #     text=(f"Someone just completed the task {task.title}")
-    # )
-
-    # python requests HTTP package
-    requests.get('https://slack.com/api/chat.postMessage',
-    headers={"Authorization": os.environ.get("SLACK_KEY")},
-    data={"channel": channel_id, "text": f"Someone just completed the task {task.title}"})
+    requests.patch('https://slack.com/api/chat.postMessage',
+    headers=headers, data=data)
 
     return {
         "task": {
@@ -147,16 +136,14 @@ def mark_incomplete(task_id):
 
     task.completed_at = None
 
-    db.session.commit() # Do I need this for PATCH?
-
-    return jsonify({
+    return {
         "task": {
             "id": task.task_id,
             "title": task.title,
             "description": task.description,
             "is_complete": False # is this better if it uses is_complete()?
         }
-    })
+    }
 
 @goals_bp.route("", methods=["POST", "GET"])
 def handle_goals():
