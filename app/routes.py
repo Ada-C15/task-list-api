@@ -1,13 +1,23 @@
 from flask import Blueprint, request, make_response, jsonify
 from app import db
 from app.models.task import Task
+from sqlalchemy import asc, desc
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @tasks_bp.route("", methods=["GET","POST"])
 def handle_tasks():
     if request.method == "GET":
-        tasks = Task.query.all()
+        sort = request.args.get("sort")
+
+        if sort == "asc":
+            tasks = Task.query.order_by(asc("title"))
+        
+        elif sort == "desc":
+            tasks = Task.query.order_by(desc("title"))
+        
+        else:
+            tasks = Task.query.all()
 
         tasks_response = []
         for task in tasks:
@@ -21,8 +31,7 @@ def handle_tasks():
 
     elif request.method == "POST":
         request_body = request.get_json()
-        # if request_body["title", "description", "completed_at"] == None:
-        # if request_body["title"] == None or request_body["description"] == None:
+
         if "title" not in request_body.keys() or "description" not in request_body.keys() or "completed_at" not in request_body.keys():
             invalid_data = {"details": "Invalid data"}
             return make_response(invalid_data, 400)
