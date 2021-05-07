@@ -7,22 +7,33 @@ class Task(db.Model):
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
 
-    def to_json(self):
+    def check_if_complete(self):
+        if self.completed_at == None:
+            return False
+        else:
+            return True
 
-        # Task.completed_at != None
-        # use return to return dictionaries
-        # use jsonify to return arrays
-        # make_resp should work similarly to jsonify
+    def to_json(self):
 
         return {
             "task": {
                 "id": self.task_id,
                 "title": self.title,
                 "description": self.description,
-                "is_complete": self.completed_at != None
+                "is_complete": self.check_if_complete() # self.completed at != None
                 }
-        }, 201
+        }
 
+
+
+# return jsonify({
+#     "task": {
+#         "id": new_task.task_id,
+#         "title": new_task.title,
+#         "description": new_task.description,
+#         "is_complete": False
+#         }
+# }), 201
 
 
 

@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response
 from flask import jsonify
 from app import db
 from app.models.task import Task
+import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -25,35 +26,21 @@ def handle_tasks():
         db.session.add(new_task)
         db.session.commit()
 
-        return new_task.to_json()
-
-        # return jsonify({
-        #     "task": {
-        #         "id": new_task.task_id,
-        #         "title": new_task.title,
-        #         "description": new_task.description,
-        #         "is_complete": False
-        #         }
-        # }), 201
+        return new_task.to_json(), 201
 
     if request.method == "GET":
 
         task_list=[]
-
         sort_query = request.args.get("sort")
 
-        if sort_query == 'asc': # returns as dict w/arg as key or None, whereas other method reads as ["sort"]
-                tasks = Task.query.order_by(Task.title) # can add .all() to end
+        if sort_query == 'asc':
+                tasks = Task.query.order_by(Task.title)
         elif sort_query == 'desc':
-        # elif 'desc' in request.args.get("sort"):, preferable to args["sort"] but breaks remainder of code in else: statement
-        # elif 'desc' in request.args["sort"]:
                 tasks = Task.query.order_by(Task.title.desc())
-
-
-        else: # argument of NoneType is not iterable using alternative if and elif statements
+        else: 
             tasks = Task.query.all()
 
-        for task in tasks:
+        for task in tasks: 
             task_list.append({
                 "id": task.task_id,
                 "title": task.title,
@@ -61,7 +48,7 @@ def handle_tasks():
                 "is_complete": False
             })
             
-        return jsonify(task_list) # default 200 OK
+        return jsonify(task_list)
 
 
 @tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
@@ -70,16 +57,10 @@ def handle_task(task_id):
     task = Task.query.get(task_id)
 
     if task is None:
-        return "", 404 # http requests and responses are sent as strings
+        return "", 404
 
     if request.method == "GET":
-        return jsonify({
-            "task": {
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": False
-        }})
+        return task.to_json()
     
     if request.method == "PUT":
 
@@ -91,14 +72,7 @@ def handle_task(task_id):
 
         db.session.commit()
 
-        return jsonify({
-            "task": {
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": False
-            }
-        })
+        return task.to_json()
 
     if request.method == "DELETE":
 
@@ -106,11 +80,40 @@ def handle_task(task_id):
         db.session.commit()
 
         return jsonify({
-            "details": 'Task {task.task_id} \'{task.description}\' successfully deleted.'
-        }) # why isn't my escape sequence working? -_-
+            "details": f'Task {task.task_id} "{task.title}" successfully deleted'
+        }) 
 
 
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
+def mark_task_complete(task_id):
+
+    task = Task.query.get(task_id)
+
+    if task is None:
+        return "", 404 
+
+    if request.method == "PATCH":
+        
+        task.completed_at = datetime.datetime.now()
+        # task.is_complete = task.check_if_complete()
+        db.session.commit()
+
+        return task.to_json()
 
 
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
+def mark_task_incomplete(task_id):
+
+    task = Task.query.get(task_id)
+
+    if task is None:
+        return "", 404 
+
+    if request.method == "PATCH":
+        
+        task.completed_at = None
+        db.session.commit()
+
+        return task.to_json()
 
 
