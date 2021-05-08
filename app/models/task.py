@@ -11,12 +11,12 @@ class Task(db.Model):
 
     def to_json(self):
         if self.completed_at:
-            completed_at = True
+            is_completed = True
         else:
-            completed_at = False
+            is_completed = False
         return{
             "id": self.task_id,
             "title": self.title,
             "description": self.description,
-            "is_complete": completed_at
+            "is_complete": is_completed
         }

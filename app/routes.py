@@ -3,6 +3,7 @@ from flask import Blueprint
 from flask import request, Blueprint, make_response
 from flask import jsonify
 from .models.task import Task
+from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -23,6 +24,21 @@ def tasks_functions():
         return jsonify(response_body), 201
 
     elif request.method == "GET":
+        order = request.args.get("sort")
+        if order == "asc":
+            new_order = Task.query.order_by(Task.title.asc())
+            response = []
+            for task in new_order:
+                response.append(task.to_json())
+            return jsonify(response), 200
+
+        elif order == "desc":
+            new_order = Task.query.order_by(Task.title.desc())
+            response = []
+            for task in new_order:
+                response.append(task.to_json())
+            return jsonify(response), 200
+
         all_tasks = Task.query.all()
         response_body = []
         for any_task in all_tasks:
@@ -60,19 +76,34 @@ def dealing_with_id(task_id):
             "details": f"Task {a_task.task_id} \"{a_task.title}\" successfully deleted"
         }, 200
 
-@tasks_bp.route("/tasks?sort=asc", methods="GET")
-def ascending_order():
-    ascending = request.args.get("sort")
-    response_body = []
-    if ascending == "asc":
-        new_order = Task.query.order_by(Task.title.asc())
-        return new_order.to_json(), 200
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
+def make_task_complete(task_id):
+    print(task_id)
+    id = Task.query.get(task_id)
 
+    if id is None:
+        return make_response("", 404)
 
+    id.completed_at = datetime.now()
+    db.session.commit()
+    response_body = {
+        "task": id.to_json()
+    }
 
+    return jsonify(response_body), 200
 
-#asks_bp.route("/tasks?sort=desc", methods="GET")
-#def descending_order():
-    # descending = request.args.get("sort")
-    # response_body = []
-    # if descending == "desc":
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
+def make_task_incomplete(task_id):
+    id = Task.query.get(task_id)
+
+    if id is None:
+        return make_response("", 404)
+
+    id.completed_at = None
+    db.session.commit()
+    response_body = {
+        "task": id.to_json()
+    }
+    return jsonify(response_body), 200
+    
+    
