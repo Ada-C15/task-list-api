@@ -7,9 +7,17 @@ class Goal(db.Model):
     tasks = db.relationship('Task', backref="goal", lazy=True)
 
     def to_json_goal(self):
-        return {
-            "id": self.goal_id,
-            "title": self.title
-        }
+        if self.tasks:
+            return {
+                "id": self.goal_id,
+                "title": self.title,
+                "tasks": self.tasks
+            }
+        else:
+            return {
+                "id": self.goal_id,
+                "title": self.title
+            }
+
 
     
