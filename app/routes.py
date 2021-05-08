@@ -6,6 +6,9 @@ from app.models.task import Task
 from app.models.goal import Goal
 from app import db 
 from datetime import datetime
+import os
+import time
+from slack import WebClient
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
@@ -16,9 +19,9 @@ goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 def create_tasks():
     request_body = request.get_json()
     if not "title" in request_body or not "description" in request_body or not "completed_at" in request_body:
-        return jsonify({
-            "details": "Invalid data"
-        }), 400
+        return jsonify(
+                {"details": "Invalid data"}
+                ), 400
     else: 
         task = Task(title = request_body["title"],
             description = request_body["description"],
@@ -93,15 +96,15 @@ def mark_complete(task_id):
 
     db.session.commit()
 
+    message_to_slack("#task-notifications", f"Someone just completed the task {task.title}")
     return {
         "task": task.to_json()
-        }, 200
+    }, 200
 
 # Slack API - lets send some messages from here 
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"]) #update
 def mark_incomplete(task_id):
-
     task = Task.query.get(task_id)
     if not task:
         return ("", 404)
@@ -110,21 +113,36 @@ def mark_incomplete(task_id):
         task.completed_at = None
     
     db.session.commit()
+
+    message_to_slack("#task-notifications", f"Someone just completed the task {task.title}")
     return {
         "task": task.to_json()
         }, 200
 
-
 #wave 4 
-    # def message_to_slack(message): 
-    #     os.environ.get(SlACK_TOKEN)
-    #     return requests.post("https://slack.com/api/chat.postMessage", {
-    #         data
-    #             "text": text 
-    #         }
-    #     }).json() 
+client = WebClient(token=os.environ["SLACK_API_TOKEN"])
 
-    # message_to_slack(f"Someone just completed the task {task.title}")
+# wrapper for sending a Slack message
+def message_to_slack(channel, message):
+    return client.chat_postMessage(
+        channel=channel,
+        text=message
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #wave_5
