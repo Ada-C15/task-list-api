@@ -8,8 +8,13 @@ from flask import Blueprint, request, make_response, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import asc, desc
 from datetime import datetime
+import os 
+from dotenv import load_dotenv
 
 tasks_bp = Blueprint("task", __name__, url_prefix="/tasks")
+
+load_dotenv()
+slack_path = 'https://slack.com/api/chat.postMessage'
 
 # ============== All Tasks ========================
 
@@ -76,6 +81,7 @@ def handle_task(active_id):
         return jsonify({"details": f"Task {task.task_id} \"{task.title}\" successfully deleted"})
 
 # ================= Task by id change completeness ======================
+import requests
 
 @tasks_bp.route("/<active_id>/mark_complete", methods=["PATCH"])
 def update_to_complete(active_id):
@@ -83,6 +89,15 @@ def update_to_complete(active_id):
 
     task.completed_at = datetime.now()
     db.session.commit()
+
+    slack_payload = {"channel" : "task-notifications",
+                    "text" : f"Someone just completed the task {task.title}"
+                    }
+    slack_header = {"Authorization" : os.environ.get("SLACKBOT_API_AUTH")}
+    slack_response = requests.post(slack_path, headers=slack_header, params=slack_payload)
+
+    print(slack_response.url)
+    print(slack_response.status_code)
 
     return {"task" : task.to_dict()}
 
