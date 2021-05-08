@@ -2,8 +2,11 @@ from flask import request, Blueprint, make_response
 from app import db
 from flask import jsonify
 from .models.task import Task
+from datetime import datetime
+import requests
+import os
 
-task_bp = Blueprint("task", __name__, url_prefix="/tasks")
+task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 
 @task_bp.route("", methods=["POST"], strict_slashes=False)
@@ -32,10 +35,18 @@ def add_task():
 @task_bp.route("", methods=["GET"], strict_slashes=False)
 def task_index():
     tasks = Task.query.all()
+    sort_order = request.args.get("sort")
     task_response = []
     for task in tasks:
-        task_response.append(task.to_json())
+            task_response.append(task.to_json())
+    
+    if sort_order == "asc":
+        task_response = sorted(task_response, key=lambda k: k['title'])
+    if sort_order == "desc":
+        task_response = sorted(task_response, key=lambda k: k['title'], reverse = True)
+
     return jsonify(task_response), 200
+
 
 @task_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def get_task(task_id):
@@ -50,6 +61,7 @@ def get_task(task_id):
             }
             }), 200
     return "", 404
+
 
 @task_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
@@ -80,3 +92,49 @@ def delete_task(task_id):
             "details": (f'Task {task.task_id} "{task.title}" successfully deleted')
         }), 200
     return "", 404
+
+@task_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def mark_complete_task(task_id):
+    task = Task.query.get(task_id)
+    if task: # only send part that i am substituting 
+        task.completed_at = datetime.utcnow()   #add current date using datetime method
+        db.session.commit()
+
+        SLACK_ENDPOINT = "https://slack.com/api/chat.postMessage"
+        api_key = os.environ.get("SLACK_API_KEY")
+        channel_id = "C021G7PULMS"
+
+        query_params = {
+            "token": api_key,
+            "channel": channel_id,
+            "text": f"Someone just completed the task {task.title}"
+        }
+        requests.post(SLACK_ENDPOINT, data=query_params)
+
+        return jsonify({
+            "task":{
+            "id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": task.convert_complete()
+            }
+            }), 200
+    return "", 404    
+
+@task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
+def mark_incomplete_task(task_id):
+    task = Task.query.get(task_id)
+    if task:
+        task.completed_at = None
+    # only send part that i am substituting 
+    # need to refractor to make patch all fit on one line
+        db.session.commit()
+        return jsonify({
+            "task":{
+            "id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": task.convert_complete()
+            }
+            }), 200
+    return "", 404    
