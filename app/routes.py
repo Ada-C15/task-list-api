@@ -1,10 +1,11 @@
 from flask import request, Blueprint, make_response
-from app import db, slack_client
+from app import db
 from .models.task import Task
 from .models.goal import Goal
 from flask import jsonify
 from datetime import datetime
 # from slack_sdk.errors import SlackApiError
+import os
 from slack import WebClient
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
