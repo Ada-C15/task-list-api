@@ -1,7 +1,10 @@
 from app import db
 from app.models.task import Task
+from app.models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify
 import datetime
+import os
+import requests
 
 '''
 Get All Tasks and Post A Task
@@ -29,6 +32,7 @@ def handle_tasks():
                 "description": task.description,
                 "is_complete": task.is_complete
             })
+            # tasks_response.append(task.to_dict())
         return jsonify(tasks_response), 200
 
     elif request.method == "POST":
@@ -53,7 +57,7 @@ def handle_tasks():
             "description": new_task.description,
             "is_complete": True if new_task.completed_at is not None else False
             }), 201
-            # return new_task.as_dict(), 201
+            # return new_task.to_dict(), 201
 
 
 '''
@@ -76,7 +80,7 @@ def handle_single_task(task_id):
         "description": task.description,
         "is_complete": True if task.completed_at is not None else False
         }), 200)
-        # return jsonify(task=task.as_dict())
+        # return jsonify(task=task.to_dict())
     
 
     elif request.method == "PUT":
@@ -95,7 +99,7 @@ def handle_single_task(task_id):
             "is_complete": True if task.completed_at is not None else False
         }), 200
 
-        # return make_response(jsonify(task=task.as_dict()), 200)
+        # return make_response(jsonify(task=task.to_dict()), 200)
     
     elif request.method == 'DELETE':
         db.session.delete(task)
@@ -103,9 +107,9 @@ def handle_single_task(task_id):
 
         return make_response(jsonify(details=f"Task {task.id} \"{task.title}\" successfully deleted"), 200)
 
- '''
-Wave 04: Mark a task as "complete" or "incomplete."
- '''   
+'''
+Wave 03: Mark a tast complete or incomplete
+'''
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
 def mark_complete(task_id):
 
@@ -120,6 +124,8 @@ def mark_complete(task_id):
 
         db.session.commit()
 
+        send_slack(task)
+
         return jsonify(task= {
             "id": task.id,
             "title": task.title,
@@ -127,6 +133,17 @@ def mark_complete(task_id):
             # "is_complete": True if task.completed_at is not None else False
             "is_complete": bool(task.completed_at)
         }), 200
+
+def send_slack(task):
+
+        text = f"Someone just completed the task {task.title}"
+        path = f"https://slack.com/api/chat.postMessage?channel=task-notifications&text={text}"
+        token = os.environ.get("API_KEY")
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.request("POST", path, headers=headers)
+        
+        return response
+
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def mark_incomplete(task_id):
