@@ -85,25 +85,28 @@ def delete_task(task_id):
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
 def mark_complete(task_id):
     task = Task.query.get(task_id)
-    access_token = os.environ.get("AUTH_TOKEN")
-    path = "https://slack.com/api/chat.postMessage"
     if task:
         task.completed_at = datetime.utcnow()
         db.session.commit()
-        query_headers = {
-                  "Authorization": f"Bearer {access_token}"
-        }
-        query_params = {
-                  "channel": "task-notifications",
-                  "text": f"Someone just completed the task {task.title}"
-        }
-        response = requests.post(path, headers=query_headers, params=query_params)
+        send_slack_notifications(task)
         return {
         "task": task.to_json()
         }, 200
     else:
         return jsonify(None), 404
-      
+
+def send_slack_notifications(task):
+    access_token = os.environ.get("AUTH_TOKEN")
+    path = "https://slack.com/api/chat.postMessage"
+    query_headers = {
+          "Authorization": f"Bearer {access_token}"
+    }
+    query_params = {
+          "channel": "task-notifications",
+          "text": f"Someone just completed the task {task.title}"
+    }
+    response = requests.post(path, headers=query_headers, params=query_params)
+
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def mark_incomplete(task_id):
     task = Task.query.get(task_id)
@@ -177,3 +180,4 @@ def update_goal(goal_id):
         }, 200
     else:
         return jsonify(None), 404     
+      
