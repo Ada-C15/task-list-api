@@ -1,14 +1,52 @@
 from app import db
 from app.models.task import Task
 from flask import request, Blueprint, make_response, jsonify
+from sqlalchemy import asc
+from sqlalchemy import desc
+
 
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
+
+
+# @tasks_bp.route("", methods = ["GET"])
+# def task_asc():
+#     tasks = Task.query.order_by(Task.title.asc()).all()
+#     tasks_response = []
+#     for task in tasks:
+#         tasks_response.append({
+#             "id": task.task_id,
+#             "title": task.title,
+#             "description": task.description,
+#             "is_complete": False}
+#         )
+#     return jsonify(tasks_response), 200
+
+# @tasks_bp.route("?sort=desc", methods = ["GET"])
+# def task_desc():
+#     tasks = Task.query.order_by(Task.title.desc()).all()
+#     tasks_response = []
+#     for task in tasks:
+#         tasks_response.append({
+#             "id": task.task_id,
+#             "title": task.title,
+#             "description": task.description,
+#             "is_complete": False}
+#         )
+#     return jsonify(tasks_response), 200
+
 @tasks_bp.route("", methods = ["GET"])
 def task_index():
-    tasks = Task.query.all()
+    sort_query = request.args.get("sort")
+    if sort_query == "asc":
+        tasks = Task.query.order_by(Task.title.asc())
+    elif sort_query == "desc":
+        tasks = Task.query.order_by(Task.title.desc())
+    else:
+        tasks = Task.query.all()
+        
     tasks_response = []
     for task in tasks:
         tasks_response.append({
