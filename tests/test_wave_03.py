@@ -31,6 +31,7 @@ def test_mark_complete_on_incomplete_task(client, one_task):
     assert response_body["task"]["is_complete"] == True
     assert response_body == {
         "task": {
+            
             "id": 1,
             "title": "Go on my daily walk 🏞",
             "description": "Notice something new every day",
@@ -50,6 +51,7 @@ def test_mark_incomplete_on_complete_task(client, completed_task):
     assert response_body["task"]["is_complete"] == False
     assert response_body == {
         "task": {
+            
             "id": 1,
             "title": "Go on my daily walk 🏞",
             "description": "Notice something new every day",
@@ -86,6 +88,7 @@ def test_mark_complete_on_completed_task(client, completed_task):
     assert response_body["task"]["is_complete"] == True
     assert response_body == {
         "task": {
+            
             "id": 1,
             "title": "Go on my daily walk 🏞",
             "description": "Notice something new every day",
@@ -105,6 +108,7 @@ def test_mark_incomplete_on_incomplete_task(client, one_task):
     assert response_body["task"]["is_complete"] == False
     assert response_body == {
         "task": {
+            
             "id": 1,
             "title": "Go on my daily walk 🏞",
             "description": "Notice something new every day",
@@ -150,6 +154,7 @@ def test_create_task_with_valid_completed_at(client):
     assert "task" in response_body
     assert response_body == {
         "task": {
+            
             "id": 1,
             "title": "A Brand New Task",
             "description": "Test Description",
@@ -179,6 +184,7 @@ def test_update_task_with_completed_at_date(client, completed_task):
     assert "task" in response_body
     assert response_body == {
         "task": {
+            
             "id": 1,
             "title": "Updated Task Title",
             "description": "Updated Test Description",
