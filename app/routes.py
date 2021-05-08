@@ -4,6 +4,7 @@
 
 from app import db
 from app.models.task import Task
+from app.models.goal import Goal
 from flask import Blueprint, request, make_response, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import asc, desc
@@ -109,3 +110,64 @@ def update_to_incomplete(active_id):
     db.session.commit()
 
     return {"task" : task.to_dict()}
+
+# ================================================================
+# =========================== GOALS ==============================
+
+goals_bp = Blueprint("goal", __name__, url_prefix="/goals")
+
+# =============== All goals ======================================
+
+@goals_bp.route("", methods=["GET", "POST"])
+def handle_goals():
+    if request.method == "GET":
+        direction = request.args.get("sort")
+        if direction == "asc":
+            goals = Goal.query.order_by(asc("title"))
+        elif direction == "desc":
+            goals = Goal.query.order_by(desc("title"))
+        else:
+            goals = Goal.query.all()
+
+        goals_response = []
+        for goal in goals:
+            goals_response.append({
+                "id" : goal.goal_id,
+                "title" : goal.title,
+            })
+
+        return jsonify(goals_response)
+
+    elif request.method == "POST":
+        request_body = request.get_json()
+        try:
+            new_goal = Goal(title=request_body["title"])
+        except KeyError:
+            return make_response({"details": "Invalid data"}, 400)
+
+        db.session.add(new_goal)
+        db.session.commit()
+
+        return make_response({"goal" : new_goal.to_dict()}, 201)
+
+# ============= Goal by id ==================================
+
+@goals_bp.route("/<active_id>", methods=["GET", "PUT", "DELETE"])
+def handle_goal(active_id):
+    goal = Goal.query.get_or_404(active_id)
+
+    if request.method == "GET":
+        return {"goal" : goal.to_dict()}
+
+    elif request.method == "PUT":
+        update_data = request.get_json()
+        goal.title = update_data["title"]
+
+        db.session.commit()
+
+        return {"goal" : goal.to_dict()}
+
+    elif request.method == "DELETE":
+        db.session.delete(goal)
+        db.session.commit()
+        return jsonify({"details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"})
