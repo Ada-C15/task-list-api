@@ -88,12 +88,21 @@ def mark_incomplete(task_id):
 
 @goals_bp.route("", methods = ["GET"])
 def handle_goals():
-    if request.method == "GET":
-        goals_query = Goal.query.all()
-        goals_response = []
-        for goal in goals_query:
-            goals_response.append(goal.build_dict())
-        return jsonify(goals_response)
+    goals_query = Goal.query.all()
+    goals_response = []
+    for goal in goals_query:
+        goals_response.append(goal.build_dict())
+    return jsonify(goals_response)
+
+@goals_bp.route("/<goal_id>", methods = ["GET"])
+def handle_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
+    else:
+        return ({"goal" : goal.build_dict()}, 200)
+        
+    
 
 
 

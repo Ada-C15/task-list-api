@@ -8,7 +8,6 @@ class Goal(db.Model):
 
     def build_dict(self):
         return {
-            "id": self.task_id,
-            "title": self.title,
-            "description": self.description
+            "id": self.goal_id,
+            "title": self.title
         }
