@@ -11,15 +11,7 @@ class Goal(db.Model):
                         {"id": self.goal_id,
                         "title": self.title}}
 
-# # GOAL ROUTES - MOVE TO ROUTES !!!
-# @goal_bp.route("", methods = ["POST"], strict_slashes = False)
-# def create_goal():
-#     try:
-#         request_body = request.get_json()
-#         new_goal = Goal(title=request_body["title"])
-        
-#         db.session.add(new_goal) # "adds model to the db"
-#         db.session.commit() # does the action above
-#         return new_goal.goal_to_json_response(), 201
-#     except KeyError:
-#         return {"details": "Invalid data"}, 400
+    def simple_response(self):
+        return {"id": self.goal_id,
+                "title": self.title}
+

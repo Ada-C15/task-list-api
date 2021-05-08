@@ -111,7 +111,7 @@ def patch_task_mark_incomplete(task_id):
         return task.to_json_response(), 200
     return make_response(""), 404
 
-# GOAL ROUTES - MOVE TO ROUTES !!!
+# GOAL ROUTES - works 
 @goal_bp.route("", methods = ["POST"], strict_slashes = False)
 def create_goal():
     try:
@@ -122,3 +122,46 @@ def create_goal():
         return new_goal.goal_to_json_response(), 201
     except KeyError:
         return {"details": "Invalid data"}, 400
+
+#Retrieve all /goals 
+@goal_bp.route("", methods = ["GET"], strict_slashes = False)
+def retrieve_goals_data():
+    goals = Goal.query.all() 
+    goals_response = []
+
+    if goals != None:
+        for goal in goals:
+            goals_response.append(goal.simple_response())
+        return jsonify(goals_response), 200  # returning the list of all goals
+    return jsonify(goals_response), 200 ## also works as #return goals_response, 200 ### DOESN'T WORK WITH MAKE RESPONSE!!!!!
+
+# Retrieve one /goal/1     
+@goal_bp.route("/<goal_id>", methods=["GET"])
+def retrieve_single_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal != None:
+        return goal.goal_to_json_response(), 200
+
+    return make_response('', 404)
+
+# Delete a goal
+@goal_bp.route("/<goal_id>", methods=["DELETE"])
+def delete_goal(goal_id):  
+    goal = Goal.query.get(goal_id) # an object, no format so if I want that, I need to jsonify? {title: "x", "description": "xyz", "completed_at": null}
+    if goal != None:
+        db.session.delete(goal)
+        db.session.commit()
+        details_str = f"Goal {goal_id} \"{goal.title}\" successfully deleted"
+        return jsonify(details = details_str), 200    
+    return make_response(""), 404
+
+#Update a goal
+@goal_bp.route("/<goal_id>", methods=["PUT"])  ## DO A TRY EXCEPT WITH DATAERROR
+def update_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal: # successful updating goal
+        form_data = request.get_json() # save user input form_data as json format 
+        goal.title = form_data["title"] # updating model? title field language?
+        db.session.commit()
+        return goal.goal_to_json_response(), 200
+    return make_response(""), 404
