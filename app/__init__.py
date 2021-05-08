@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint # amy said add Blueprint
+from flask import Flask, Blueprint
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
@@ -14,7 +14,7 @@ def create_app(test_config=None):
     app = Flask(__name__)
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    if test_config is None:
+    if test_config is None: # configuring flask server w certain values 
         app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
             "SQLALCHEMY_DATABASE_URI")
     else:
@@ -25,12 +25,12 @@ def create_app(test_config=None):
     # Import models here for Alembic setup
     from app.models.task import Task
     from app.models.goal import Goal
-    from .routes import task_bp # added w Amy
+    from .routes import task_bp 
 
     db.init_app(app)
     migrate.init_app(app, db)
 
     # Register Blueprints here
-    app.register_blueprint(task_bp) # added w Amy
+    app.register_blueprint(task_bp)
 
     return app

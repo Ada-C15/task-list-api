@@ -138,7 +138,7 @@ def test_mark_incomplete_missing_task(client):
 # the completion functionality has been implemented
 def test_create_task_with_valid_completed_at(client):
     # Act
-    response = client.post("/tasks", json={
+    response = client.post("/tasks", json={ # caught here: str given, but only date objs accepted
         "title": "A Brand New Task",
         "description": "Test Description",
         "completed_at": datetime.utcnow()
@@ -167,7 +167,7 @@ def test_create_task_with_valid_completed_at(client):
 # the completion functionality has been implemented
 def test_update_task_with_completed_at_date(client, completed_task):
     # Act
-    response = client.put("/tasks/1", json={
+    response = client.put("/tasks/1", json={ # caught here: getting str, but only date objs accepted
         "title": "Updated Task Title",
         "description": "Updated Test Description",
         "completed_at": datetime.utcnow()
