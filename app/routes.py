@@ -2,6 +2,7 @@ from app import db
 from app.models.task import Task
 from flask import Blueprint, jsonify, request, make_response
 from sqlalchemy import desc, asc
+from datetime import datetime
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -84,3 +85,34 @@ def delete_task(task_id):
     return make_response({
         "details": f'Task {task.task_id} "{task.title}" successfully deleted'
     })
+
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def task_mark_complete(task_id):
+    task = Task.query.get(task_id)
+    current_datetime = datetime.utcnow()
+    
+    if not task:
+        return make_response("", 404)
+
+    task.completed_at = current_datetime
+    
+    db.session.commit()
+
+    return {
+        "task": task.to_json()
+    }, 200
+        
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
+def task_mark_incomplete(task_id):
+    task = Task.query.get(task_id)
+
+    if not task:
+        return make_response("", 404)
+    elif task.completed_at != None:
+        task.completed_at = None
+
+    db.session.commit()
+
+    return {
+        "task": task.to_json()
+    }, 200

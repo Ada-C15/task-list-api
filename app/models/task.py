@@ -12,6 +12,9 @@ class Task(db.Model):
         if self.completed_at == None:
             completed_at = self.completed_at
             completed_at = False
+        elif self.completed_at != None:
+            completed_at = self.completed_at
+            completed_at = True
             
         return {
                 "id": self.task_id,
