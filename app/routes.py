@@ -5,6 +5,7 @@ from .models.goal import Goal
 from flask import jsonify
 from datetime import datetime
 # from slack_sdk.errors import SlackApiError
+from slack import WebClient
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
@@ -90,6 +91,7 @@ def update_completed_at(task_id):
     db.session.commit()
 
     # try:
+    slack_client = WebClient(token=os.environ['SLACK_TOKEN'])
     slack_client.chat_postMessage(
         channel="C021RGYNY48",
         text=f"Someone just completed the task {task.title}"
