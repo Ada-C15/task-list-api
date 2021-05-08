@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 db = SQLAlchemy()
 migrate = Migrate()
 load_dotenv()
+slack_key = os.environ.get("SLACK_API_KEY")
 
 
 def create_app(test_config=None):
