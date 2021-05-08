@@ -1,3 +1,4 @@
+import datetime 
 from app import db
 from app.models.task import Task
 # from flask_sqlalchemy import SQLAlchemy
@@ -69,9 +70,8 @@ def make_patch_request(task_id, mark_action):
 
     if request.method == "PATCH":
         if mark_action == "mark_complete":
-            
-            current_date = '1989-04-21 04:21:21'
-            saved_task.completed_at = current_date
+
+            saved_task.completed_at = datetime.datetime.now()
 
             db.session.commit()
 
