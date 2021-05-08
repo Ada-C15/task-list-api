@@ -6,6 +6,7 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable = True)
+    goal_id = db.Column(db.Integer, db.ForeignKey("goal.goal_id"), nullable=True)
 
     def complete_task(self):
         if self.completed_at == None:
@@ -13,20 +14,19 @@ class Task(db.Model):
         else: 
             return True
 
-
     def to_json(self):
-        return {
-            "id": self.task_id,
-            "title": self.title,
-            "description": self.description,
-            "is_complete": self.complete_task() 
-        }
-
-    # def message_to_slack(message): 
-    #     os.environ.get(SlACK_TOKEN)
-    #     return requests.post("https://slack.com/api/chat.postMessage", {
-    #         data = {
-    #             "text": text 
-    #         }
-    #     }).json() 
-
+        if self.goal_id:
+            return {
+                "id": self.task_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.complete_task(),
+                "goal_id": self.goal_id
+            }
+        else:
+            return {
+                "id": self.task_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.complete_task()
+            }
