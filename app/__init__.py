@@ -1,8 +1,8 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-import os
 from dotenv import load_dotenv
+import os
 
 
 db = SQLAlchemy()
@@ -13,6 +13,14 @@ load_dotenv()
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    # if not test_config:
+    #     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    #     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:postgres@localhost:5432/task_list_development'
+    # else:
+    #     app.config["TESTING"] = True
+    #     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    #     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:postgres@localhost:5432/task_list_development'
 
     if test_config is None:
         app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
@@ -30,5 +38,7 @@ def create_app(test_config=None):
     migrate.init_app(app, db)
 
     # Register Blueprints here
+    from .routes import tasks_bp
+    app.register_blueprint(tasks_bp)
 
     return app
