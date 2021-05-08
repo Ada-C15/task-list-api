@@ -130,78 +130,78 @@ def message_to_slack(channel, message):
     )
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #wave_5
 # created second models for goals
 @goals_bp.route("", methods=["POST"])
 def create_goal():
     request_body = request.get_json()
 
-    if not "title" in request_body:
-        return jsonify({
-            "details": "Invalid data"
-        }), 400
+    if "title" not in request_body:
+        return (
+            {"details": "Invalid data"}
+            ), 400
+    else:
+        add_goal = Goal(title = request_body["title"])
 
-    add_goal = Goal(title = request_body["title"])
+        db.session.add(add_goal)
+        db.session.commit()
 
-    db.session.add(add_goal)
-    db.session.commit()
-    return make_response(add_goal.to_json_goal(), 201)
+        return make_response({
+                "goal": add_goal.to_json_goal()
+            }, 201)
 
 @goals_bp.route("", methods=["GET"])
 def get_goals():
+    goals = Goal.query.all()
 
-    goal = Goal.query.all()
+    goals_response = []
+    for goal in goals: 
+        goals_response.append(goal.to_json_goal())
+
+    return jsonify(goals_response)
+
+@goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
+def handle_goals(goal_id):
+
+    goal = Goal.query.get(goal_id)
     if goal is None:
         return make_response("", 404)
+    
+    if request.method == "GET":
+        return make_response(
+            {"goal": goal.to_json_goal()
+        }, 200)
 
-    if goal:
-        return make_response(goal.to_json_goal(), 200)
+    elif request.method == "PUT":
+        form_data = request.get_json()
+        goal.title = form_data["title"]
 
-@goals_bp.route("/<goal_id>", methods=["PUT", "DELETE"])
-def handle_goals(goal_id):
-    goal = Goal.query.get(goal_id)
-    if request.method == "PUT":
-        if goal is None:
-            return make_response("", 404)
-        else:
-            form_data = request.get_json_goal()
-            goal.title = form_data["title"]
+        db.session.commit()
 
-            db.session.commit()
-
-            return make_response(goal.to_json_goal(), 200)
+        return make_response(
+            {"goal": goal.to_json_goal()}, 200)
 
     elif request.method == "DELETE":
 
         db.session.delete(goal)
         db.session.commit()
+
         return make_response({
             "details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"
             })
 
 
 
+
+
+
+
+
+
+
+
 # Wave 6
 # Establishing a One-to-Many Relationship
-
-
-
-
 
 #optional- deployment
 
