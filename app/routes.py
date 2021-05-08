@@ -4,6 +4,7 @@ from app.models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify
 from datetime import datetime
 
+
 tasks_bp = Blueprint("tasks",__name__,url_prefix="/tasks")
 goals_bp = Blueprint("goals",__name__,url_prefix="/goals")
 
@@ -74,14 +75,20 @@ def handle_task(task_id):
 
         
     
-@tasks_bp.route("/task_id/mark_complete", methods=["PATCH"])
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_completed(task_id):
     task = Task.query.get(task_id)
     if task:
         task.completed_at = datetime.utcnow()
+        
+        an_external_web_api_url = "https://slack.com/api/chat.postMessage"
+        task_params ={
+            "channel" : "task-notifications",
+            "title" : f"Someone just completed the task {task.title}"
+        }
 
         db.session.commit()
-        return make_response({"task":task.to_json() },200)
+        return make_response({"task":task.to_json()},200)
 
     else:
         return make_response(" ", 404)
@@ -155,6 +162,39 @@ def handle_goal(goal_id):
         db.session.delete(goal)
         db.session.commit()
         return make_response({
-                    
                     "details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'
                     })
+
+@goals_bp.route("/<goal_id>/tasks",methods=["POST"])
+def create_goals_tasks(goal_id):
+    request_body = request.get_json()
+
+    num = int(goal_id)
+    for task_id in request_body["task_ids"]:
+        task = Task.query.get(task_id)
+    
+        task.goal_id = num
+    db.session.commit()
+    return {
+        "id":num,
+        "task_ids":request_body["task_ids"]
+    }
+
+@goals_bp.route("/<goal_id>/tasks",methods=["GET"])
+def get_goals_tasks(goal_id):
+    goal = Goal.query.get(goal_id)
+    if not goal:
+        return make_response("",404)
+        
+    else:
+        num = int(goal_id)
+        tasks = Task.query.filter_by(goal_id=num)
+        tasks_list =[]
+        for task in tasks:
+            tasks_list.append(task.to_json())
+
+        return {"id":num,"title":goal.title,"tasks":tasks_list},200
+
+
+
+    
