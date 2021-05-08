@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 import os
 from dotenv import load_dotenv
 from slack import WebClient
+# from slack_sdk.errors import SlackApiError
 
 
 db = SQLAlchemy()

@@ -4,14 +4,13 @@ from .models.task import Task
 from .models.goal import Goal
 from flask import jsonify
 from datetime import datetime
+# from slack_sdk.errors import SlackApiError
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 @tasks_bp.route("", methods=["POST"])
 def add_task():
-    # if request.content_type != 'application/json':
-    #     return jsonify({"details": "Invalid data"}), 415
 
     request_body = request.get_json()
     title = request_body.get("title")
@@ -53,8 +52,28 @@ def get_single_task(task_id):
     # if not int(task_id):
     #     return make_response("", 404)
     task = Task.query.get(task_id)
+    if task is None:
+        return make_response("", 404)
+
+
+    print("*** task: ", task)
+    tasks = Task.query.filter_by(goal_id=Goal.goal_id)
+    # print("*** task goal: ", tasks.to_json())
+    
+    if task.goal_id is not None:
+        task_response =[]
+        for tas in tasks:
+            print("*** tas to _json: ", tas.to_json())
+            tasks_dict = tas.to_json()
+            tasks_dict["goal_id"] = task.goal_id
+            print("*** task dict: ", tasks_dict)
+            return jsonify({"task": tasks_dict})
+            task_response.append(tasks_dict)
+        return jsonify({"task": task_response}), 200
+
 
     if task:
+        print("*** return: ", task.to_json())
         return jsonify({"task": task.to_json()}), 200
 
     return make_response("", 404)
@@ -70,18 +89,18 @@ def update_completed_at(task_id):
 
     db.session.commit()
 
+    # try:
     slack_client.chat_postMessage(
         channel="C021RGYNY48",
         text=f"Someone just completed the task {task.title}"
     )
+    # except SlackApiError as e:
+    #     assert e.response["ok"] is False
+    #     assert e.response["error"]
+    #     print(f"Error posting message: {e.response['error']}")
 
-    # slack_client.api_call(
-    #     "chat.postMessage",
-    #     channel="C021RGYNY48",
-    #     text=f"Someone just completed the task {task.title}",
-    # )
-
-    # request.post(url="https://slack.com/api/chat.postMessage")
+    # channel = request.form.get("C021RGYNY48")
+    # text = request.form.get(f"Someone just completed the task {task.title}")
 
     return jsonify({"task" :task.to_json()}), 200
 
@@ -129,8 +148,12 @@ def delete_task(task_id):
 @goals_bp.route("", methods=["POST"])
 def add_goal():
     request_body = request.get_json()
+    title = request_body.get("title")
 
-    new_goal = Goal(title=request_body["title"],)
+    if not title:
+        return jsonify({"details": "Invalid data"}), 400
+
+    new_goal = Goal(title=title)
     
     db.session.add(new_goal)
     db.session.commit()
@@ -138,6 +161,99 @@ def add_goal():
     return jsonify({"goal": new_goal.to_json()}), 201
 
 
+@goals_bp.route("", methods=["GET"])
+def get_goal():
+    goals = Goal.query.all()
+    goals_response = []
 
+    for goal in goals:
+        goals_response.append(goal.to_json())
+
+    return jsonify(goals_response), 200
+
+
+@goals_bp.route("/<goal_id>", methods=["GET"])
+def get_one_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    # print("*** goal", goal)
+
+    if goal:
+        # print("*** if goal", goal.to_json())
+        return jsonify({"goal": goal.to_json()}), 200
+
+    return make_response("", 404)
+
+
+@goals_bp.route("/<goal_id>", methods=["PUT"])
+def update_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
     
+    request_body = request.get_json()
+    goal.title = request_body["title"]
+
+    db.session.commit()
+
+    return jsonify({"goal": goal.to_json()}), 200    
+
+
+@goals_bp.route("<goal_id>", methods=["DELETE"])
+def delete_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
+
+    db.session.delete(goal)
+    db.session.commit()
+
+    return jsonify({
+        "details": f'Goal {goal_id} \"Build a habit of going outside daily\" successfully deleted'
+    })
+
+
+
+@goals_bp.route("<goal_id>/tasks", methods=["GET", "POST"])
+def goal_to_task(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return make_response("", 404)
+
+    if request.method == "GET":
+        tasks = Task.query.filter_by(goal_id=goal.goal_id)
+        print("*** task goad id: ", tasks)
+        tasks_reponse = []
+        for task in tasks:
+            print("***** task.to_json: ", task.to_json())
+            tasks_dict = task.to_json()
+            tasks_dict["goal_id"] = goal.goal_id
+            print("*** tasks_dict", tasks_dict)
+
+            tasks_reponse.append(tasks_dict)
+            print("*** task_reponse: ", tasks_reponse)
+        print("id: ", goal.goal_id)
+        print("title: ", goal.title)
+        print("task: ", tasks_reponse)
+        return jsonify({
+            "id": goal.goal_id,
+            "title": goal.title,
+            "tasks": tasks_reponse
+        }), 200
+
+    if request.method == "POST":
+        request_body = request.get_json()
+        print("*** request body: ", request_body)
+        for task_id in request_body["task_ids"]:
+            # print("*** task_id: ", task_id)
+            task = Task.query.get(task_id)
+            # print("*** task: ", taskss)
+            task.goal_id = goal.goal_id
+            print("*** task.goal_id: ", task.goal_id)
+        # return jsonify({"id": goal_id,
+        #     "task_ids": request_body["task_ids"]}), 200
+
+
+    return jsonify({"id": goal.goal_id,
+                "task_ids": request_body["task_ids"]}), 200
 
