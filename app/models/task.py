@@ -3,21 +3,19 @@ from app import db
 from dataclasses import dataclass
 import datetime
 
-@dataclass
-class Task(db.Model): ### WAVE 1 ###
+@dataclass # do i need this decorator and what is it doing?
+class Task(db.Model): 
     id: int
     title: str
     description: str
-    completed_at: datetime # turn this into a boolean?
+    completed_at: datetime 
 # you need these four lines in because they provide the necessary format that jsonify can work with???
-# there is some kind of magic going on in the background.
+# there is some kind of magic going on in the background?
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)
     description = db.Column(db.String)
-    completed_at = db.Column(db.DateTime, nullable = True) # what is the data type for date?
-
-    # __tablename__ = "task" # need =ed to remove the __tablename__ it was preventing the jsonify()? there was an error about it    
+    completed_at = db.Column(db.DateTime, nullable = True) 
 
     def to_dictionary(self):
         return {
@@ -27,3 +25,5 @@ class Task(db.Model): ### WAVE 1 ###
             "is_complete": self.completed_at != None
             }
     # this to_dictionary(self) method will format each task instance as a dictionary that can be wrapped/converted in JSON format with the function jsonify()
+    # this is the refactor that Chris did in the 3rd video of Create and Read. 
+    # I found that calling the method "to_dictionary" instead of "to_json(self)" was more accuate and easier to tell apart from get_json() which is a different function that comes in the pytest package
