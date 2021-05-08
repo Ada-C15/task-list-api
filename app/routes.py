@@ -1,7 +1,6 @@
 from app import db
 from app.models.task import Task
 # from flask_sqlalchemy import SQLAlchemy
-# from sqlalchemy import select
 from sqlalchemy import asc, desc
 from flask import request, Blueprint, make_response, jsonify
 
@@ -52,13 +51,44 @@ def handle_task(task_id):
             "is_complete": bool(saved_task.completed_at)
         }}, 200
 
+
+
     # Delete Task: Deleting a Task (Returns 200 OK)
     elif request.method == "DELETE":
         db.session.delete(saved_task)
         db.session.commit()
         return {"details": f"Task {saved_task.task_id} \"{saved_task.title}\" successfully deleted"}, 200
 
+@tasks_bp.route("/<task_id>/<mark_action>", methods=["PATCH"])
+def make_patch_request(task_id, mark_action):
 
+    saved_task = Task.query.get(task_id)
+
+    if not saved_task:
+        return ("", 404)
+
+    if request.method == "PATCH":
+        if mark_action == "mark_complete":
+            
+            current_date = '1989-04-21 04:21:21'
+            saved_task.completed_at = current_date
+
+            db.session.commit()
+
+        elif mark_action == "mark_incomplete":
+
+            saved_task.completed_at = None
+
+            db.session.commit()
+
+        return { "task": {
+                "id": saved_task.task_id,
+                "title": saved_task.title,
+                "description": saved_task.description,
+                "is_complete": bool(saved_task.completed_at)
+            }}, 200
+
+    
 
 
 @tasks_bp.route("", methods=["GET","POST"])
