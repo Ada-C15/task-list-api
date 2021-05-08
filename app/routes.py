@@ -1,14 +1,15 @@
-# from flask import Blueprint
 from app import db
 from app.models.task import Task
-from flask import request
 from flask import request, Blueprint, make_response
 from flask import jsonify
 from sqlalchemy import asc, desc
 import time
 import datetime
+import requests
+from flask import current_app as app
+import os 
 
-
+path = "https://slack.com/api/chat.postMessage"
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -79,7 +80,7 @@ def handle_task(task_id):
     elif request.method == "DELETE":
         db.session.delete(task)
         db.session.commit()
-        return make_response({"details": (f"Task {task.task_id} \"Go on my daily walk 🏞\" successfully deleted")})
+        return make_response({"details": (f"Task {task.task_id} \"{task.title}\" successfully deleted")})
     
     
     return {
@@ -98,8 +99,25 @@ def task_complete(task_id):
         return make_response("", 404)
     elif task:
         task.completed_at = datetime.datetime.now()
+    # if task mark a complete then send a message
+        key = os.environ.get("AUTHORIZATION")
+
+        query_params = {
+                "text": f"Someone just completed the task {task.title}",
+                "channel": "task-notifications"
+                
+            }
+
+        query_headers = {
+            "authorization": f"Bearer {key}"
+        }
+        response = requests.post(path, params=query_params, headers=query_headers )
+        response_body = response.json()
+
+        print(response)
         
-        db.session.commit() # update task with todays date. So it gets update in the database
+        
+        db.session.commit() 
         
         return jsonify({"task": task.to_json()}),200
 
