@@ -64,7 +64,7 @@ def get_single_task(task_id):
             return jsonify({"task": tasks_dict})
 
             # task_response.append(tasks_dict)
-        return jsonify({"task": task_response}), 200
+        # return jsonify({"task": task_response}), 200
 
 
     if task:
