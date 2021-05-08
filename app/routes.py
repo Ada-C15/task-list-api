@@ -36,13 +36,32 @@ def create_task():
 #endpoint for getting tasks
 @task_bp.route("", methods=["GET"])
 def tasks():
-    tasks = Task.query.all()
-    request.method == "GET"
+    
+    # grabbing sort query parameter and its value ex. sort=asc from the client request and storing it in local variable
+    sort_titles = request.args.get('sort')
+    # if sort query param is in the body request of the user, we need to now check what the value of sort parameter. If value is set to sort=asc then.... else if sort=desc do...
+    #if sorts value == asc then ....
     task_response = []
-    for task in tasks:
-    #using to_json helper function 
-        task_response.append(task.to_json())
-    return jsonify(task_response), 200
+    if sort_titles:
+        if sort_titles == "asc":
+            task_by_asc = Task.query.order_by(Task.title.asc())
+            for task in task_by_asc:
+                task_response.append(task.to_json())   
+        
+        if sort_titles == 'desc':
+            task_by_desc = Task.query.order_by(Task.title.desc())
+            for task in task_by_desc:
+                task_response.append(task.to_json())
+        
+        return jsonify(task_response), 200
+    
+    else:
+        tasks = Task.query.all()
+        task_response = []
+        for task in tasks:
+            #using to_json helper function 
+            task_response.append(task.to_json())
+        return jsonify(task_response), 200
 
 
 #endpoint to get response body by task_id
@@ -58,7 +77,7 @@ def task(task_id):
     
     if request.method =='PUT':
         request_body = request.get_json()
-        #assigning edited values to task
+        #assigning updated values to task
         task.title = request_body['title']
         task.description = request_body['description']
         task.completed_at = request_body['completed_at']
