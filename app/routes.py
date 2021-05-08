@@ -23,12 +23,7 @@ def tasks():
     db.session.add(new_task)
     db.session.commit()
 
-    return {"task": {
-    "id": 1,
-    "title": "A Brand New Task",
-    "description": "Test Description",
-    "is_complete": false}
-    }, 201
+    return task.to_json(), 201
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_saved_tasks():
@@ -59,10 +54,7 @@ def get_single_task(task_id):
     if task:
         return task.to_json(), 200
     
-    return {
-        "message": f"Task with id {task_id} was not found",
-        "success": False,
-    }, 404
+    return 404
 
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id):

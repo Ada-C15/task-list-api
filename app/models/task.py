@@ -7,3 +7,17 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
+
+    def to_json(self):
+        return {
+            "task": {
+            "id": self.task_id,
+            "title": self.title,
+            "description": self.description,
+            "completed_at":self.completed_at
+            }        
+        }
+
+    
+    def to_string(self):
+        return f"{self.task_id}: {self.title} Description: {self.description} Completed at: {self.completed_at} "
