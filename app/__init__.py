@@ -3,14 +3,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
 from dotenv import load_dotenv
-# from slack import WebClient
+from slack import WebClient
 # from slack_sdk.errors import SlackApiError
 
 
 db = SQLAlchemy()
 migrate = Migrate()
 load_dotenv()
-# slack_client = WebClient(token=os.environ['SLACK_TOKEN'])
+slack_client = WebClient(token=os.environ['SLACK_TOKEN'])
 
 def create_app(test_config=None):
     app = Flask(__name__)
