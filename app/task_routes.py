@@ -24,9 +24,14 @@ def create_task():
         
         return jsonify(details="Invalid data"),400
     
+    task_goal_id = None
+    if ("goal_id" in request_body):
+        task_goal_id = request_body["goal_id"]
+    
     new_task = Task(title=request_body["title"],
                     description=request_body["description"],
-                    completed_at=request_body["completed_at"])
+                    completed_at=request_body["completed_at"],
+                    goal_id = task_goal_id) #wave 6
 
     db.session.add(new_task)
     db.session.commit()
@@ -36,7 +41,7 @@ def create_task():
 
 @task_list_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks():
-    
+    #WAVE 2
     sort_by_title_order = request.args.get("sort")
     
     tasks_list = []
@@ -137,7 +142,7 @@ def patch_single_task(task_id):
     
     if task == None:
         return Response("", status=404)
-    
+    #WAVE 3
     task.completed_at = date.today()
     task.is_complete = True
     db.session.commit()

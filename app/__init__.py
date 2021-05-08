@@ -21,7 +21,7 @@ def create_app(test_config=None):
         app.config["TESTING"] = True
         app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
             "SQLALCHEMY_TEST_DATABASE_URI")
-        #app.config["SQLALCHEMY_DATABASE_URI"]='sqlite:///relationships.db' #wave 6
+    
 
     # Import models here for Alembic setup
     from app.models.task import Task

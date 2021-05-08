@@ -11,6 +11,63 @@ import os
 #create new blueprint for goal
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
+#WAVE 6 -
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def create_goal_tasks(goal_id):
+    # get the goal for the specified goal_id
+    if not helper.is_int(goal_id):
+        return {
+            "message": "id must be an integer",
+            "success": False
+        },400
+    
+    goal = Goal.query.get(goal_id)
+    
+    if (goal is None):
+        return jsonify(details=f"No Goal found with ID: '{goal_id}'"), 400     
+    
+    # get the tasks from the request body
+    form_data = request.get_json()
+
+    taskids = form_data["task_ids"]
+
+    # get the the tasks with the specified ids
+    for tid in taskids:
+        task = Task.query.get(int(tid))
+        
+        if (task is not None):
+            task.goal_id = goal_id
+            db.session.add(task)    
+        else:
+            # this handles scenarios where specified TaskId in the request body in invalid / does not exist
+            return jsonify(details=f"No Task found with ID: '{tid}'"), 400 
+    
+    db.session.commit()
+    
+    return jsonify(id=goal_id, task_ids=taskids), 200
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_goal_tasks(goal_id):
+    # get the goal for the specified goal_id
+    if not helper.is_int(goal_id):
+        return {
+            "message": "id must be an integer",
+            "success": False
+        },400
+    
+    goal = Goal.query.get(goal_id)
+    
+    if (goal is None):
+        return make_response("", 404)  
+    
+    related_tasks = []
+    
+    for task in goal.tasks:
+        related_tasks.append(task.to_json())
+    
+    return jsonify(id=goal_id, title=goal.title, tasks=related_tasks), 200
+    
+
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
 def create_a_goal():
     request_body = request.get_json()
@@ -25,7 +82,7 @@ def create_a_goal():
     
     return new_goal.to_json_goal(), 201
 
-
+# WAVE 5
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def get_goals():
     
@@ -93,4 +150,3 @@ def delete_goal(goal_id):
                          ),200
         
 
-#WAVE 6 
