@@ -30,9 +30,6 @@ class Task(db.Model):
         complete_time = (datetime.now()).strftime("%c")
         self.completed_at = complete_time ## completed at gets updated to date/time it's right now. 
 
-        ## don't need this (below) because it's already null which is none and in boolean language is False
-        ## self.completed_at = None
-
 
 
 # for reference
