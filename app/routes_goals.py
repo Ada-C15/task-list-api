@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, make_response
 from app import db 
 from app.models.goal import Goal 
+from app.models.task import Task 
 from sqlalchemy import asc, desc
 
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
@@ -62,3 +63,30 @@ def delete_goal(goal_id):
         }, 200 
     
     return make_response("", 404)
+
+@goals_bp.route("<int:goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def post_list_of_tasks(goal_id):
+    request_body = request.get_json()
+    if request_body.get("task_ids"):  
+        task_ids = request_body["task_ids"]
+        for task_id in task_ids: 
+            task = Task.query.get(task_id)
+            task.goal_id = goal_id
+            db.session.commit() 
+        return jsonify({"id": goal_id, "task_ids":task_ids}), 200
+    
+    return make_response("", 404)
+
+@goals_bp.route("<int:goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_list_of_tasks(goal_id): 
+    goal = Goal.query.get(goal_id)
+    
+    if goal: 
+        task = Task.query.get(goal_id)
+        if task: 
+            return jsonify(goal.goal_associated_tasks(task)), 200 
+        return jsonify(goal.goal_no_associated_tasks()), 200
+    
+    return make_response("", 404)
+
+    
