@@ -11,7 +11,7 @@ from datetime import datetime
 
 load_dotenv()
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
-goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals") 
 
 @tasks_bp.route("", methods = ["GET", "POST"])
 def handle_tasks():
@@ -36,6 +36,7 @@ def handle_tasks():
             description = request_body["description"],
             completed_at = request_body["completed_at"],
         )
+        slack_message(f"Someone just added {new_task.title} to the task list.")
         db.session.add(new_task)
         db.session.commit()
 
@@ -67,9 +68,9 @@ def handle_task(task_id):
 def mark_complete(task_id):
     task = Task.query.get(task_id)
     if task:
-        if not bool(task.completed_at):
-            task.completed_at = datetime.now()
+        task.completed_at = datetime.now()
         slack_message(f"Someone just completed {task.title}.")
+        db.session.commit()
         return {"task": task.build_dict()}, 200
     else:
         return jsonify(None), 404
@@ -79,7 +80,7 @@ def mark_complete(task_id):
 def mark_incomplete(task_id):
     task = Task.query.get(task_id)
     if task:
-        if bool(task.completed_at):
+        if task.completed_at:
             task.completed_at = None
         return jsonify({"task": task.build_dict()}), 200
     else:
@@ -87,11 +88,12 @@ def mark_incomplete(task_id):
 
 @goals_bp.route("", methods = ["GET"])
 def handle_goals():
-    goals_query = Goal.query.all()
-    goals_response = []
-    for goal in goals_query:
-        goals_response.append(goal.build_dict())
-    return goals_response
+    if request.method == "GET":
+        goals_query = Goal.query.all()
+        goals_response = []
+        for goal in goals_query:
+            goals_response.append(goal.build_dict())
+        return jsonify(goals_response)
 
 
 
