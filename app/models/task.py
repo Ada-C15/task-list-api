@@ -7,30 +7,35 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime)
-    # is_complete = False
 
-    # if completed_at is True:
-    #     is_complete = True
+    # def mark_complete(self):
+    #     return True
+
+    # def completed(self):
+    #     is_complete = False
+    #     if self.completed_at is True:
+    #         is_complete = True
+    #     return is_complete    
 
     def completed(self):
-        is_complete = False
-        if self.completed_at is True:
-            is_complete = True
-        return is_complete    
+        return bool(self.completed_at)       
     
-    def api_response(self):
-        return (
+    def api_response(self, complete=False):
+        if complete == True:
+            return (
             {
                 "id": self.id,
                 "title": self.title,
                 "description": self.description,
-                "is_complete": self.completed()
+                "is_complete": True
                 }
-            )
-            # {"task": {
-            #     "id": self.id,
-            #     "title": self.title,
-            #     "description": self.description,
-            #     "is_complete": self.completed()
-            #     }
-            # })            
+            ) 
+        else:
+            return (
+                {
+                    "id": self.id,
+                    "title": self.title,
+                    "description": self.description,
+                    "is_complete": self.completed()
+                    }
+                ) 
