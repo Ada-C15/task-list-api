@@ -1,9 +1,9 @@
-from flask import Blueprint
+from flask import Blueprint 
 from flask import request
-from flask import jsonify
+from flask import jsonify 
 from flask import make_response
-from .models.task import Task
-from .models.goal import Goal
+from app.models.task import Task
+from app.models.goal import Goal
 from app import db 
 from datetime import datetime
 
@@ -97,6 +97,8 @@ def mark_complete(task_id):
         "task": task.to_json()
         }, 200
 
+# Slack API - lets send some messages from here 
+
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"]) #update
 def mark_incomplete(task_id):
 
@@ -105,46 +107,74 @@ def mark_incomplete(task_id):
         return ("", 404)
 
     if task.completed_at != None:
-       task.completed_at = None
+        task.completed_at = None
     
     db.session.commit()
-
     return {
         "task": task.to_json()
         }, 200
 
 
+#wave 4 
+    # def message_to_slack(message): 
+    #     os.environ.get(SlACK_TOKEN)
+    #     return requests.post("https://slack.com/api/chat.postMessage", {
+    #         data
+    #             "text": text 
+    #         }
+    #     }).json() 
 
-
-
-
-
-
-#wave_4
-#use external Web API - slack 
+    # message_to_slack(f"Someone just completed the task {task.title}")
 
 
 #wave_5
-#created second models for goals
+# created second models for goals
 @goals_bp.route("", methods=["POST"])
-def create_goals():
+def create_goal():
     request_body = request.get_json()
 
-    if "title" not in request_body:
+    if not "title" in request_body:
         return jsonify({
             "details": "Invalid data"
         }), 400
-    new_goal = Goal(title=request_body["title"])
 
-    di.session.add(new_goal)
+    add_goal = Goal(title = request_body["title"])
+
+    db.session.add(add_goal)
     db.session.commit()
+    return make_response(add_goal.to_json_goal(), 201)
 
-    return {
-        "goal":new_goal()
-    }, 200
+@goals_bp.route("", methods=["GET"])
+def get_goals():
 
+    goal = Goal.query.all()
+    if goal is None:
+        return make_response("", 404)
 
+    if goal:
+        return make_response(goal.to_json_goal(), 200)
 
+@goals_bp.route("/<goal_id>", methods=["PUT", "DELETE"])
+def handle_goals(goal_id):
+    goal = Goal.query.get(goal_id)
+    if request.method == "PUT":
+        if goal is None:
+            return make_response("", 404)
+        else:
+            form_data = request.get_json_goal()
+            goal.title = form_data["title"]
+
+            db.session.commit()
+
+            return make_response(goal.to_json_goal(), 200)
+
+    elif request.method == "DELETE":
+
+        db.session.delete(goal)
+        db.session.commit()
+        return make_response({
+            "details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"
+            })
 
 
 
@@ -153,9 +183,11 @@ def create_goals():
 
 
 
+
+
 #optional- deployment
 
-#enhacements
+#enhancements
 
 
 

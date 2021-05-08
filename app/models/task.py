@@ -21,3 +21,12 @@ class Task(db.Model):
             "description": self.description,
             "is_complete": self.complete_task() 
         }
+
+    # def message_to_slack(message): 
+    #     os.environ.get(SlACK_TOKEN)
+    #     return requests.post("https://slack.com/api/chat.postMessage", {
+    #         data = {
+    #             "text": text 
+    #         }
+    #     }).json() 
+

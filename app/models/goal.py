@@ -6,8 +6,10 @@ class Goal(db.Model):
     goal_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
 
-    def to_json(self):
+    def to_json_goal(self):
         return {
-            "id": self.task_id,
-            "title": self.title,
+            "id": self.goal_id,
+            "title": self.title
         }
+
+    
