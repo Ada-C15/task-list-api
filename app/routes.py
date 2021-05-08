@@ -2,6 +2,9 @@ from app import db
 from app.models.task import Task
 from flask import request, Blueprint, jsonify, Response, make_response
 from datetime import datetime
+import requests
+# from dotenv import load_dotenv, slackbot_path, slackbot_API_KEY
+
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -21,8 +24,6 @@ def post_tasks():
             {"details": "Invalid data"
             }
         ), 400
-
-
 
 @tasks_bp.route("", methods=["GET"])
 def get_tasks():
@@ -64,15 +65,42 @@ def put_task(task_id):
     db.session.commit()
     return jsonify({"task": task.api_response()}), 200 
 
+def slack_bot_complete(task_title):
+    ## not getting the imports above to work
+    # slackbot_path = "https://slack.com/api/chat.postMessage"
+    # slackbot_API_KEY = "xoxb-2042057993413-2051337686356-SACq8v376Pp5eh8mw3kcxKx8"
+
+    # return requests.post(os.environ.get(slackbot_path), {
+    #     'token': os.environ.get(slackbot_API_KEY),
+    #     'channel': "task-notifications",
+    #     'text': f"Someone just completed {task_title}",
+    # }).json()	
+
+    return requests.post(("https://slack.com/api/chat.postMessage"), {
+        'token': "xoxb-2042057993413-2051337686356-SACq8v376Pp5eh8mw3kcxKx8",
+        'channel': "task-notifications",
+        'text': f"Someone just completed {task_title}",
+    }).json()	
+
 
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
-def patch_task(task_id):
+def mark_complete(task_id):
     task = Task.query.get(task_id)
     if task is None:
         return Response(None),404
     task.completed_at = datetime.now()
     db.session.commit()
+    slack_bot_complete(task.title)
     return jsonify({"task": task.api_response(True)}), 200
+
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
+def mark_incomplete(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return Response(None),404
+    task.completed_at = None
+    db.session.commit()
+    return jsonify({"task": task.api_response()}), 200    
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"])
 def delete_task(task_id):
