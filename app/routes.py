@@ -248,3 +248,24 @@ def handle_one_goal_delete(goal_id):
     db.session.commit()
 
     return ({"details": f'Goal {goal_id} \"{goal.title}\" successfully deleted'}, 200)
+
+
+@goals_bp.route("/<goal_id>", methods=["PUT"])
+def handle_one_goal_update(goal_id):
+    """
+    Update goal with specific id.
+    """
+
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return jsonify(None), 404
+
+    data_to_update_with = request.get_json()
+    goal.title = data_to_update_with["title"]
+
+    db.session.commit()
+
+    retrieve_goal = Goal.query.get(goal.goal_id)
+
+    return ({"goal": retrieve_goal.to_dict()}, 200)
