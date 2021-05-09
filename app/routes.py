@@ -2,12 +2,13 @@ from flask import request, Blueprint, make_response
 from app import db
 from flask import jsonify
 from .models.task import Task
+from .models.goal import Goal
 from datetime import datetime
 import requests
 import os
 
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
-
+goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 @task_bp.route("", methods=["POST"], strict_slashes=False)
 def add_task():
@@ -138,3 +139,42 @@ def mark_incomplete_task(task_id):
             }
             }), 200
     return "", 404    
+
+@goal_bp.route("", methods=["POST"], strict_slashes=False)
+def add_goal():
+    request_body = request.get_json()
+    if "title" not in request_body:
+        return jsonify({
+        "details": "Invalid data"
+        }), 400
+
+    new_goal= Goal(title=request_body["title"])
+    db.session.add(new_goal)
+    db.session.commit()
+
+    return jsonify({
+            "goal":{
+            "id": new_goal.goal_id,
+            "title": new_goal.title
+    }}), 201
+
+@goal_bp.route("", methods=["GET"], strict_slashes=False)
+def goal_index():
+    goals = Goal.query.all()
+    goal_response = []
+    for goal in goals:
+            goal_response.append(goal.to_json())
+
+    return jsonify(goal_response), 200
+
+@goal_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
+def get_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal: 
+        return jsonify({
+            "goal":{
+            "id": goal.goal_id,
+            "title": goal.title
+            }
+            }), 200
+    return "", 404
