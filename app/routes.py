@@ -2,6 +2,7 @@ from flask import request,Blueprint,make_response,jsonify
 
 from app import db
 from app.models.task import Task
+from datetime import datetime
 
 task_bp = Blueprint("task", __name__, url_prefix="/tasks")
 
@@ -21,7 +22,7 @@ def handle_tasks():
                 "description": task.description,
                 "is_complete": task.is_complete()
             }) #creates a list of dictionaries
-        
+        #query params dont need a seperate route
         if "asc" in request.full_path:
             
             sort_tasks=sorted(tasks_response, key = lambda i: i['title'])
@@ -32,7 +33,7 @@ def handle_tasks():
             return jsonify(sort_tasks)
         else:
             return jsonify(tasks_response)
-            
+
     elif request.method=="POST":
         
         request_body = request.get_json()
@@ -61,19 +62,9 @@ def handle_tasks():
                     "is_complete": get_task.is_complete()
                 }
             }, 201
-# @task_bp.route("?sort=asc", methods=["GET"])
-# def sort_my_tasks_asc(sort_tasks):
-#     sort_tasks=sorted(handle_tasks, key = lambda i: i['title'])
-#     #print(sort_tasks)
-#     return sort_tasks
 
-# @task_bp.route("?sort=desc", methods=["GET"])
-# def sort_my_tasks_desc():
-#     sort_tasks=sorted(handle_tasks, key = lambda i: i['title'],reverse=True)
-#     #print(sort_tasks)
-#     return sort_tasks
 
-@task_bp.route("/<task_id>", methods=["GET","PUT","DELETE"])
+@task_bp.route("/<task_id>", methods=["GET","PUT","DELETE","PATCH"])
 def handle_task(task_id):
     task = Task.query.get(task_id)
     
@@ -90,6 +81,7 @@ def handle_task(task_id):
         }, 200
     elif request.method == "PUT":
         form_data = request.get_json()
+        
         task.title=form_data["title"]
         task.description=form_data["description"]
         task.completed_at=form_data["completed_at"]
@@ -119,3 +111,40 @@ def handle_task(task_id):
         return make_response({
         "details": f'Task {task.task_id} "Go on my daily walk 🏞" successfully deleted'
         }, 200)
+
+@task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
+def mark_incomplete(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return make_response ("",404)
+    
+    task.completed_at=None
+    db.session.commit() 
+    
+    return {
+        "task": {
+            "id": task.task_id,
+            "title": task.title,
+            "description":task.description,
+            "is_complete": task.is_complete()
+        }
+    }, 200
+
+
+@task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
+def mark_complete(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return make_response ("",404)
+    
+    task.completed_at=datetime.utcnow()
+    db.session.commit()    
+    
+    return {
+        "task": {
+            "id": task.task_id,
+            "title": task.title,
+            "description":task.description,
+            "is_complete": task.is_complete()
+        }
+    }, 200
