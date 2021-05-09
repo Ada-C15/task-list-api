@@ -21,7 +21,18 @@ def handle_tasks():
                 "description": task.description,
                 "is_complete": task.is_complete()
             }) #creates a list of dictionaries
-        return jsonify(tasks_response)
+        
+        if "asc" in request.full_path:
+            
+            sort_tasks=sorted(tasks_response, key = lambda i: i['title'])
+            
+            return jsonify(sort_tasks)
+        elif "desc" in request.full_path:
+            sort_tasks=sorted(tasks_response, key = lambda i: i['title'], reverse=True)
+            return jsonify(sort_tasks)
+        else:
+            return jsonify(tasks_response)
+            
     elif request.method=="POST":
         
         request_body = request.get_json()
@@ -50,6 +61,17 @@ def handle_tasks():
                     "is_complete": get_task.is_complete()
                 }
             }, 201
+# @task_bp.route("?sort=asc", methods=["GET"])
+# def sort_my_tasks_asc(sort_tasks):
+#     sort_tasks=sorted(handle_tasks, key = lambda i: i['title'])
+#     #print(sort_tasks)
+#     return sort_tasks
+
+# @task_bp.route("?sort=desc", methods=["GET"])
+# def sort_my_tasks_desc():
+#     sort_tasks=sorted(handle_tasks, key = lambda i: i['title'],reverse=True)
+#     #print(sort_tasks)
+#     return sort_tasks
 
 @task_bp.route("/<task_id>", methods=["GET","PUT","DELETE"])
 def handle_task(task_id):
