@@ -1,8 +1,13 @@
 from app import db 
 from app.models.task import Task
-from flask import request, Blueprint, make_response, jsonify 
+from flask import request, Blueprint, make_response, jsonify, Flask # added Flask here bc ytube
 from datetime import datetime 
+from flask_sqlalchemy import SQLAlchemy # added from ytube vid, allows us to use the 1-to-many relationship
 from sqlalchemy import desc, asc 
+import os
+# requests allows us to make requests to other APIs. makes a request and returns the response from the external site
+import requests # import here only? other files?
+
 
 task_bp = Blueprint("tasks",__name__,url_prefix="/tasks")
 
@@ -13,7 +18,7 @@ def create_task():
 
     if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
         return make_response({"details": "Invalid data"}, 400)
-    new_task = Task(title=request_body["title"], #value in db column == what user entered on their side
+    new_task = Task(title=request_body["title"], #value in db column reassigned with whatever user entered on their side
                     description=request_body["description"], 
                     completed_at=request_body["completed_at"])
     
@@ -58,7 +63,7 @@ def update_task_element(task_id):
         return make_response("", 404)
 
     request_body = request.get_json()
-    # reassign user's changes to the corresponding db element
+    # reassign user's changes to the corresponding db field > cell
     task.title = request_body["title"]
     task.description = request_body["description"]
     task.completed_at = request_body["completed_at"]
@@ -79,13 +84,22 @@ def delete_task(task_id):
 
 @task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
-
     task = Task.query.get(task_id)
     if not task:
         return make_response("", 404)
-    # why no request body here? have one in PUT
+
     task.completed_at = datetime.now()
     db.session.commit()
+
+    # Slack hookup
+    target_url = "https://slack.com/api/chat.postMessage"
+    LC_SLACK_KEY = os.environ.get("LC_SLACK_KEY")
+    headers = {"Authorization": LC_SLACK_KEY}
+    data = {
+        "channel": "C0220R1781W", # copied from slack tester response body
+        "text": f"Someone just completed the task {task.title}"}
+    requests.patch(target_url, headers=headers, data=data)
+
     return jsonify({"task": task.to_json()})
 
 @task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
@@ -94,7 +108,7 @@ def mark_incomplete(task_id):
     task = Task.query.get(task_id)
     if not task:
         return make_response("", 404)
-    # why no request body here? have one in PUT
+
     task.completed_at = None
     db.session.commit()
     return jsonify({"task": task.to_json()})
