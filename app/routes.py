@@ -4,7 +4,7 @@ from app import db
 from app.models.task import Task 
 from flask import request, Blueprint, make_response 
 from flask import jsonify
-
+from datetime import date
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -39,12 +39,17 @@ def handle_task():
             db.session.add(new_task)
             db.session.commit() 
 
+            if new_task.completed_at == None:
+                is_complete = False 
+            else:
+                is_complete = True 
+            
             return {
                 "task":{
                     "id": new_task.task_id,
                     "title": new_task.title,
                     "description": new_task.description,
-                    "is_complete": False
+                    "is_complete": is_complete
             }}, 201
         else:
             return {
@@ -74,12 +79,19 @@ def task_by_id(task_id):
             task.description = request_body["description"]
             task.completed_at = request_body["completed_at"]
             db.session.commit()
-            return { "task": {
-                        "id": task.task_id,
-                        "title": task.title,
-                        "description": task.description,
-                        "is_complete": False
+            if task.completed_at == None:
+                is_complete = False 
+            else:
+                is_complete = True 
+            
+            return {
+                "task":{
+                    "id": task.task_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": is_complete
             }}, 200
+
         else:
             return (f"None", 404)
 
@@ -92,4 +104,42 @@ def task_by_id(task_id):
             }, 200
         else:
             return (f"None", 404)
+
+    else:
+        return (f"None", 404)
+
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def mark_complete(task_id):
+    task = Task.query.get(task_id)
+    if task:
+            task.completed_at = date.today()
+            db.session.commit()
+            return {
+                "task": {
+                "id": task.task_id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": True
+        }}, 200
+
+    else:
+        return (f"None", 404)
+
+
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
+def mark_incomplete(task_id):
+    task = Task.query.get(task_id)
+    if task:
+        task.completed_at = None
+        db.session.commit()
+        return {
+            "task": {
+            "id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": False
+    }}, 200
+
+    else:
+        return (f"None", 404)
 
