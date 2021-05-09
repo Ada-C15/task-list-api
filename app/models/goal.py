@@ -11,5 +11,5 @@ class Goal(db.Model):
     def to_json(self):
         return {
             "id": self.id,
-            "title": self.title
+            "title": self.title,
         }
