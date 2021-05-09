@@ -20,7 +20,6 @@ class Task(db.Model):
     
     #Create an instance method in Task named to_json()
     def to_json(self):
-        
         return {
                 "task":     
                        {
@@ -50,7 +49,7 @@ class Task(db.Model):
                             "is_complete": self.compute_is_complete()
                         }
     
-    def to_json_with_goalid_and_key(self):
+    def to_json_with_goalid_and_key(self):  #WAVE 6
         return {
                 "task":     
                        {
@@ -62,8 +61,20 @@ class Task(db.Model):
                         }
                      }
         
-                         
+    #did not use this function                  
     def to_string(self):
         return f"{self.task_id}: {self.title} Description: {self.description} completed at {self.completed_at} " 
         
     #optional enhancement Create a class method in Task named from_json(): Converts JSON into a new instance of Task
+    
+    @staticmethod
+    def from_json(task_json):
+        
+        task_goal_id = None
+        if ("goal_id" in task_json):
+            task_goal_id = task_json["goal_id"]
+        
+        return Task(title=task_json["title"],
+                    description=task_json["description"],
+                    completed_at=task_json["completed_at"],
+                    goal_id = task_goal_id)

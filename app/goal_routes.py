@@ -76,7 +76,8 @@ def create_a_goal():
     if "title" not in request_body:
         return jsonify(details="Invalid data"),400
     
-    new_goal = Goal(title=request_body["title"])
+    # This is an optional enchancement to introduce from_json method for Goal
+    new_goal = Goal.from_json(request_body) # Goal(title=request_body["title"])
 
     db.session.add(new_goal)
     db.session.commit()

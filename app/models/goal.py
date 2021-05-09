@@ -8,6 +8,11 @@ class Goal(db.Model):
     
     tasks = db.relationship('Task', backref='goal', lazy=True) #wave 6
     
+    # optional enchancement: This method is marked static because it does not operate on current instance, instead it creates a new instance from json 
+    @staticmethod
+    def from_json(goal_json):
+        return Goal(title=goal_json["title"])
+    
     def to_json_goal(self):
         
         return {

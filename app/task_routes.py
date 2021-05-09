@@ -24,14 +24,16 @@ def create_task():
         
         return jsonify(details="Invalid data"),400
     
-    task_goal_id = None
-    if ("goal_id" in request_body):
-        task_goal_id = request_body["goal_id"]
+    # task_goal_id = None
+    # if ("goal_id" in request_body):
+    #     task_goal_id = request_body["goal_id"]
     
-    new_task = Task(title=request_body["title"],
-                    description=request_body["description"],
-                    completed_at=request_body["completed_at"],
-                    goal_id = task_goal_id) #wave 6
+    # new_task = Task(title=request_body["title"],
+    #                 description=request_body["description"],
+    #                 completed_at=request_body["completed_at"],
+    #                 goal_id = task_goal_id) #wave 6
+    
+    new_task = Task.from_json(request_body) # optional enchancement - use Task.from_json()
 
     db.session.add(new_task)
     db.session.commit()
@@ -41,10 +43,18 @@ def create_task():
 
 @task_list_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks():
+    
     #WAVE 2
     sort_by_title_order = request.args.get("sort")
     
+    # Optional enchacement - Filter tasks by title
+    # filter_title = request.args.get("title")
+    
     tasks_list = []
+    
+    # OE
+    # if (filter_title is not None):
+    #     tasks_list = Task.query.filter_by(title=filter_title).all()
     
     if sort_by_title_order is not None:
         if (sort_by_title_order == "asc"):
