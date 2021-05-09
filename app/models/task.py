@@ -39,8 +39,19 @@ class Task(db.Model):
                             "is_complete": self.compute_is_complete()
                         }
     
-    #optional enhancement Create a class method in Task named from_json(): Converts JSON into a new instance of Task
     
-    
+    # #WAVE 6
+    # def to_json_with_goal_id(self): 
+    #     return {
+    #             "tasks": {
+    #                         "id": self.id
+    #                         "goal_id": goal.goal_id,
+    #                         "title": self.title,
+    #                         "description": self.description,
+    #                         "is_complete": self.compute_is_complete()
+    #                     }
+                         
     def to_string(self):
         return f"{self.task_id}: {self.title} Description: {self.description} completed at {self.completed_at} " 
+        
+    #optional enhancement Create a class method in Task named from_json(): Converts JSON into a new instance of Task

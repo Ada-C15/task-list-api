@@ -44,7 +44,7 @@ def create_goal_tasks(goal_id):
     
     db.session.commit()
     
-    return jsonify(id=goal_id, task_ids=taskids), 200
+    return jsonify(id=int(goal_id), task_ids=taskids), 200 #int removed the quotes from the goal_id
 
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 def get_goal_tasks(goal_id):
@@ -65,7 +65,8 @@ def get_goal_tasks(goal_id):
     for task in goal.tasks:
         related_tasks.append(task.to_json())
     
-    return jsonify(id=goal_id, title=goal.title, tasks=related_tasks), 200
+
+    return jsonify(id=int(goal_id), title=goal.title, tasks=related_tasks), 200
     
 
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
@@ -90,7 +91,7 @@ def get_goals():
     
     goal_response = [] 
     for goal in goal_list:
-        goal_response.append(goal.to_json_goal_no_key())
+        goal_response.append(goal.to_json())
     
     return jsonify(goal_response), 200
 
