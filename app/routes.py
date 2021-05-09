@@ -89,12 +89,10 @@ def handle_one_task_delete(task_id):
     if task is None:
         return jsonify(None), 404
 
-    if task:
-        db.session.delete(task)
-        db.session.commit()
-        return ({
-            "details": f'Task {task.task_id} "{task.title}" successfully deleted'
-        }, 200)
+    db.session.delete(task)
+    db.session.commit()
+    return (
+        {"details": f'Task {task.task_id} "{task.title}" successfully deleted'}, 200)
 
 
 @tasks_bp.route("/<task_id>", methods=["PUT"])
