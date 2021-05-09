@@ -14,25 +14,15 @@ class Task(db.Model):
     def check_is_complete(self):
         if not self.completed_at:
             return False
-        else:
-            return True
-
-    def goal_id_to_json(self):
-        return {
-            "goal_id": self.goal_id
-        }
+        return True
     
-
     def to_json(self):
-        # is_complete = None
-        # if not self.completed_at:
-        #     is_complete = False
-        # else:
-        #     is_complete = True
-
-        return {
+        task_json = {
             "id": self.task_id,
             "title": self.title,
             "description": self.description,
             "is_complete": self.check_is_complete(),
         }
+        if self.goal:
+            task_json["goal_id"] = self.goal_id
+        return task_json
