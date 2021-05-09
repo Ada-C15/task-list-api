@@ -8,7 +8,7 @@ from app import db
 from datetime import datetime
 import os
 import time
-from slack import WebClient
+# from slack import WebClient
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
@@ -37,8 +37,8 @@ def create_tasks():
 @tasks_bp.route("", methods=["GET"])
 def get_all_tasks():
 
-    #sort title by ace and desc order
-    #check wave_2 tests
+#sort title by asc and desc order
+#check wave_2 tests
     sort_by_title = request.args.get("sort")
     if sort_by_title == "asc":
         tasks = Task.query.order_by(Task.title.asc())
