@@ -6,9 +6,13 @@ class Task(db.Model):
     task_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
     description = db.Column(db.String)
-    completed_at = db.Column(db.DateTime)
+    completed_at = db.Column(db.DateTime, nullable = True)
+    # def is_complete_helper_function(self):
+    #     if Task.completed_at is None:
+    #         is_complete == False
+    #         return is_complete
+    #     else:
+    #         is_complete == True
+    #         return is_complete
 
-    # is_complete = None
-    # if completed_at == None:
-    #     is_complete == False
     
