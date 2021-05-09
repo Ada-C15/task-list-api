@@ -40,7 +40,20 @@ def get_single_task(task_id):
 @tasks_bp.route("", methods=["GET"])
 def tasks_index():
     # This portion is the GET request
-    tasks = Task.query.all()
+    query_sorted = request.args.get("sort")
+    if query_sorted == "asc":
+        # Found in SQLALchemy documentation. 
+        # The order_by method takes the data in the user table (Task) 
+        # and filters by title in ascending order
+        tasks = Task.query.order_by(Task.title.asc())
+    elif query_sorted == "desc":
+        # Found in SQLALchemy documentation. 
+        # The order_by method takes the data in the user table (Task) 
+        # and filters by title in descending order
+        tasks = Task.query.order_by(Task.title.desc())
+    else:
+        tasks = Task.query.all()
+
     if tasks == None:
         return []
     else:
@@ -72,5 +85,3 @@ def tasks():
     except KeyError:
         return {
             "details": "Invalid data"}, 400
-
-
