@@ -3,14 +3,16 @@ from app import db
 
 
 class Task(db.Model):
-    task_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
     description = db.Column(db.String)
-    completed_at = db.Column(db.DateTime, nullable=True) # if null task hasnt been completed
+    completed_at = db.Column(db.DateTime, nullable=True)
+    goal_id = db.Column(db.Integer, db.ForeignKey('goal.id'), nullable=True)
+    
 
     def to_json(self):
         return {
-            "id": self.task_id,
+            "id": self.id,
             "title": self.title,
             "description": self.description,
             "is_complete": self.completed_at != None
