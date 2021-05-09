@@ -9,7 +9,7 @@ import os
 import requests
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
-goals_bp = Blueprint("goasl", __name__, url_prefix="/goals")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 
 def missing_data():
@@ -106,7 +106,6 @@ def marking_complete(task_id):
                 "channel": channel,
                 "text": text, 
             }
-            
             response = requests.post(path, query_params, headers=headers)
 
         return make_response({"task":task.to_json()}, 200)
@@ -179,4 +178,27 @@ def update_goal(goal_id):
         db.session.commit()
         return make_response({"goal":goal.to_json()}, 200)
     return goal_not_found(goal_id)
+
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
+def get_tasked_goal(goal_id):
+    goals= Goal.query.get(goal_id)
+    if goal:
+        return make_response #of something or other
+    return goal_not_found(goal_id)                   ### This whole function needs more work
+
+
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"])
+def handle_tasked_goals(goal_id):
+    tasked_goal = Goal.query.get(goal_id)
+    goal_data = request.get_json()
+    tasks = [] 
+    for id in goal_data["task_ids"]:
+        tasks.append(id) # is this the right thing?
+
+    new_tasked_goal = Goal(#something here)
+
+    db.session.add(new_tasked_goal)
+    db.session.commit()
+    return make_response({"task_ids":f"{tasks}"}, 200) #not sure this response will actually work
 
