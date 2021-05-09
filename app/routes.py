@@ -26,9 +26,27 @@ def handle_tasks():
         return jsonify(response_body), 201
 
     elif request.method == "GET":
-
+        sorting_tasks = request.args.get("sort")
+        
         tasks = Task.query.all()
         tasks_response = []
+
+        if sorting_tasks == "asc":
+            asc_order = Task.query.order_by(Task.title.asc())
+            new_order = []
+        
+            for task in asc_order:
+               new_order.append(task.resp_json())
+            return jsonify(new_order), 200
+
+        elif sorting_tasks == "desc":
+            desc_order = Task.query.order_by(Task.title.desc())
+            new_order = []
+        
+            for task in desc_order:
+               new_order.append(task.resp_json())
+            return jsonify(new_order), 200
+            
 
         for task in tasks:
             tasks_response.append(task.resp_json())
@@ -36,6 +54,11 @@ def handle_tasks():
         print(request.view_args)
 
         return jsonify(tasks_response), 200
+
+
+
+
+    
         
 @tasks_bp.route("/<id>", methods=["GET", "PUT", "DELETE"])
 def handle_task(id):
@@ -72,3 +95,4 @@ def handle_task(id):
         return {
             "details": f"Task {task.id} \"{task.title}\" successfully deleted"
         }, 200
+
