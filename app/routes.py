@@ -2,6 +2,7 @@ from os import abort
 from app import db
 from app.models.task import Task
 from flask import Blueprint, make_response, request, jsonify, request
+from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -46,7 +47,7 @@ def handle_tasks():
             for task in desc_order:
                new_order.append(task.resp_json())
             return jsonify(new_order), 200
-            
+
 
         for task in tasks:
             tasks_response.append(task.resp_json())
@@ -96,3 +97,34 @@ def handle_task(id):
             "details": f"Task {task.id} \"{task.title}\" successfully deleted"
         }, 200
 
+@tasks_bp.route("/<id>/mark_complete", methods=["PATCH"])
+
+def task_completed(id):
+    task = Task.query.get(id)
+
+    if task is None:
+        return make_response("", 404)
+    
+    task.completed_at = datetime.now()
+    db.session.commit()
+
+    response_body = {
+            "task": task.resp_json()
+        }
+    return jsonify(response_body), 200
+
+@tasks_bp.route("/<id>/mark_incomplete", methods=["PATCH"])
+
+def task_incomplete(id):
+    task = Task.query.get(id)
+
+    if task is None:
+        return make_response("", 404)
+    
+    task.completed_at = None
+    db.session.commit()
+
+    response_body = {
+            "task": task.resp_json()
+        }
+    return jsonify(response_body), 200
