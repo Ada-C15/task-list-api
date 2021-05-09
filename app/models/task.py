@@ -8,7 +8,8 @@ class Task(db.Model):
     id: int
     title: str
     description: str
-    completed_at: datetime 
+    completed_at: datetime
+
 # you need these four lines in because they provide the necessary format that jsonify can work with???
 # there is some kind of magic going on in the background?
 
@@ -24,6 +25,9 @@ class Task(db.Model):
             "description": self.description,
             "is_complete": self.completed_at != None
             }
-    # this to_dictionary(self) method will format each task instance as a dictionary that can be wrapped/converted in JSON format with the function jsonify()
+
+    # this to_dictionary(self) method will format each task instance as a dictionary that, 
+    # with the function jsonify(), can be wrapped/converted in JSON format 
     # this is the refactor that Chris did in the 3rd video of Create and Read. 
-    # I found that calling the method "to_dictionary" instead of "to_json(self)" was more accuate and easier to tell apart from get_json() which is a different function that comes in the pytest package
+    # I named the method "to_dictionary" so it's easier to tell apart from get_json() 
+    # which is a different function that comes in the pytest package
