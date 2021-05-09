@@ -7,7 +7,10 @@ class Task(db.Model):
     title = db.Column(db.String) # or title (this is the name of the task)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
-#    completed_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
+    #completed_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
+    # adding one to many relationship  tasks to goal == >dog to person 
+    goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True) # # nullable means task might not belong to a goal
+
     def to_json_response(self):
         return {"task": 
                         {"id": self.id,
@@ -29,7 +32,6 @@ class Task(db.Model):
                                 # with currentdate/time
         complete_time = (datetime.now()).strftime("%c")
         self.completed_at = complete_time ## completed at gets updated to date/time it's right now. 
-
 
 
 # for reference

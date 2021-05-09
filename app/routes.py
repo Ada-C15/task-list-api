@@ -164,4 +164,26 @@ def update_goal(goal_id):
         goal.title = form_data["title"] # updating model? title field language?
         db.session.commit()
         return goal.goal_to_json_response(), 200
-    return make_response(""), 404
+    return make_response(""), 404  #NOT FOUND ERROR VS 400 - BAD REQ
+
+
+# ONE TO MANY RELATIONSHIP - /goals/<goal_id>/tasks
+@goal_bp.route("/<goal_id>/tasks", methods = ["POST"])
+def post_task_ids_to_goal(goal_id):
+    try: 
+        request_body = request.get_json()   # should be a dictionary like:
+                                            # {"task_ids": [1, 2, 3]}
+        goal = Goal.query.get(goal_id)  # the instance of thi goal id including the task ids
+        # store list of tasks given in the request body (task_ids)
+        task_ids = request_body["task_ids"]  # task_ids - should be a list [1,3,4]
+        for task_id in task_ids:
+            task = Task.query.get(task_id) # I WANT TASKS WITH THOSE ID S IN TASK IDS 
+            # append those tasks that you queried into goal with given id
+            goal.tasks.append(task) # this is a field 
+            db.session.commit()
+        # display this info into response as json 
+        return {"id": int(goal_id), "task_ids": task_ids},200
+        
+    except:
+        return make_response(""), 404 ## not found
+        # return {"details": "Invalid data"}, 400
