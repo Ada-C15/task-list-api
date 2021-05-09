@@ -3,7 +3,10 @@ from app.models.task import Task
 from flask import request, Blueprint, jsonify, Response, make_response
 from datetime import datetime
 import requests
-# from dotenv import load_dotenv, slackbot_path, slackbot_API_KEY
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -66,22 +69,12 @@ def put_task(task_id):
     return jsonify({"task": task.api_response()}), 200 
 
 def slack_bot_complete(task_title):
-    ## not getting the imports above to work
-    # slackbot_path = "https://slack.com/api/chat.postMessage"
-    # slackbot_API_KEY = "xoxb-2042057993413-2051337686356-SACq8v376Pp5eh8mw3kcxKx8"
-
-    # return requests.post(os.environ.get(slackbot_path), {
-    #     'token': os.environ.get(slackbot_API_KEY),
-    #     'channel': "task-notifications",
-    #     'text': f"Someone just completed {task_title}",
-    # }).json()	
-
+    # ## not working when key is hidden in .env
     return requests.post(("https://slack.com/api/chat.postMessage"), {
-        'token': "xoxb-2042057993413-2051337686356-SACq8v376Pp5eh8mw3kcxKx8",
+        'token': os.environ.get("slackbot_API_KEY"),
         'channel': "task-notifications",
-        'text': f"Someone just completed {task_title}",
-    }).json()	
-
+        'text': f"Someone just completed {task_title}"
+    }).json()
 
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
