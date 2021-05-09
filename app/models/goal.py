@@ -3,4 +3,13 @@ from app import db
 
 
 class Goal(db.Model):
+    # Goals are entities that describe a task a user wants to complete.
     goal_id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String)
+
+
+def to_dict(self):
+    return {
+        "id": self.goal_id,
+        "title": self.title
+    }

@@ -10,6 +10,7 @@ import requests
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 
 @tasks_bp.route("", methods=["GET"])
@@ -18,11 +19,11 @@ def handle_tasks_get():
     - Get all saved tasks.
     - Get all saved tasks filtered by title in asc and desc order.
     """
-    title_query = request.args.get("sort")
+    sort_query = request.args.get("sort")
 
-    if title_query == "desc":
+    if sort_query == "desc":
         tasks = Task.query.order_by(Task.title.desc())
-    elif title_query == "asc":
+    elif sort_query == "asc":
         tasks = Task.query.order_by(Task.title.asc())
     else:
         tasks = Task.query.all()
@@ -181,3 +182,39 @@ def handle_one_task_incomplete_patch(task_id):
     retrieve_task = Task.query.get(task.task_id)
 
     return ({"task": retrieve_task.to_dict()}, 200)
+
+
+# # --------------Routes for Goal defined below---------------------------
+
+
+# @goals_bp.route("", methods=["GET"])
+# def handle_goals_get():
+#     """
+#     - Get all saved goals.
+#     """
+
+#     goals = Goal.query.all()
+
+#     goals_response = []
+#     for goal in goals:
+#         goals_response.append(goal.to_dict())
+
+#     if len(goals_response) == 1:
+#         ({"goal": goal.to_dict()}, 200)
+
+#     else:
+#         return jsonify(goals_response)
+
+
+# @goals_bp.route("/<goal_id>", methods=["GET"])
+# def handle_one_goals_get(goal_id):
+#     """
+#     Get specific goal by id.
+#     """
+
+#     goal = Goal.query.get(goal_id)
+
+#     if goal is None:
+#         return jsonify(None), 404
+
+#     return ({"goal": goal.to_dict()}, 200)
