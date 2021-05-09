@@ -2,6 +2,8 @@ from app import db
 from app.models.task import Task
 from flask import Blueprint, request, make_response, jsonify
 from datetime import datetime
+import requests
+from app import slack_key
 
 task_list_bp = Blueprint("task_list", __name__, url_prefix = "/tasks")
 
@@ -73,7 +75,20 @@ def get_task(task_id):
 @task_list_bp.route("/<task_id>/mark_complete", methods = ["PATCH"])
 def mark_complete(task_id):
     task = Task.query.get(task_id)
+# url = 'https://www.w3schools.com/python/demopage.php'
+# myobj = {'somekey': 'somevalue'}
 
+# x = requests.post(url, data = myobj)
+    url = "https://slack.com/api/chat.postMessage"
+    data = {
+        "channel": "C020W6FPXQX",
+        "text": (f"Someone just completed the task {task.title}")
+        }
+    headers = {
+        "Authorization": f"Bearer {slack_key}"
+        }
+    x = requests.post(url, data = data, headers = headers)
+    
     if task == None:
         return make_response(), 404
     
