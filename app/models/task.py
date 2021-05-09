@@ -13,6 +13,5 @@ class Task(db.Model):
         return {
             "task_id": self.task_id,
             "title": self.title,
-            "description": self.description,
-            "completed at": self.completed_at
+            "description": self.description
         }
