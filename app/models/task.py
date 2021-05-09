@@ -1,6 +1,7 @@
 from flask import current_app
 from app import db
-from datetime import datetime ## IS THIS CORRECT???
+from datetime import datetime ## versus import datetime only you would write datetime.datetime in line 40
+                                ## like from random import randint 
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # do i set it to autoincrement?
@@ -24,6 +25,13 @@ class Task(db.Model):
                 "description": self.description,
                 "is_complete": bool(self.completed_at)}
 
+    def task_to_json_response_w_goal(self):
+        return {"id": self.id,
+                "goal_id": self.goal_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": bool(self.completed_at)}
+
 # A task's is_complete is true when there is a datetime for 
 # the task's completed_at value. A task's is_complete is 
 # false when there is a null/None value for the tasks's 
@@ -31,7 +39,7 @@ class Task(db.Model):
     def set_completion(self):   # if method is called, it changes completed_at 
                                 # with currentdate/time
         complete_time = (datetime.now()).strftime("%c")
-        self.completed_at = complete_time ## completed at gets updated to date/time it's right now. 
+        self.completed_at = complete_time ## completed_at gets updated to date/time it's right now. 
 
 
 # for reference

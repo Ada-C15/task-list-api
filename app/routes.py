@@ -35,7 +35,7 @@ def retrieve_tasks_data():
     tasks_response = []
 
     if tasks != None: 
-        if sort_by != None and sort_by == "asc": # there are query params (still I need to add that part)
+        if sort_by != None and sort_by == "asc": # these are NOT query params 
             tasks_asc = Task.query.order_by(Task.title.asc()).all() # this is a list in asc order
             # this puts it in the right order for the response body:
             tasks_response_asc = [task_asc.task_to_json_response() for task_asc in tasks_asc]
@@ -50,15 +50,18 @@ def retrieve_tasks_data():
         for task in tasks:
             tasks_response.append(task.task_to_json_response())
         return jsonify(tasks_response), 200  # returning the list of all tasks
-    return jsonify(tasks_response), 200 ## also works as #return tasks_response, 200 ### DOESN'T WORK WITH MAKE RESPONSE!!!!!
+    return jsonify(tasks_response), 200 ## OR #return tasks_response, 200 ### DOESN'T WORK WITH MAKE RESPONSE!!!!!
 
 # Retrieve one /task/1     
 @task_bp.route("/<task_id>", methods=["GET"])
 def retrieve_single_task(task_id):
     task = Task.query.get(task_id)
     if task != None:
-        return task.to_json_response(), 200
-
+        # return task.to_json_response(), 200
+        response = task.to_json_response()
+        if task.goal_id:
+            response['task']['goal_id'] = task.goal_id
+        return response, 200
     return make_response('', 404)
 
 #Update a task
@@ -67,10 +70,10 @@ def update_task(task_id):
     task = Task.query.get(task_id)
     if task: # successful updating task
         form_data = request.get_json() # save user input form_data as json format 
-        task.title = form_data["title"] # updating model? title field language?
+        task.title = form_data["title"] # updating instance of model with task_id, first the title 
         task.description = form_data["description"] # updating model description field for task = task_id
-        task.completed_at = form_data["completed_at"]
-        db.session.commit()
+        task.completed_at = form_data["completed_at"] # and completed at
+        db.session.commit() # commiting changes to db
         return task.to_json_response(), 200
     return make_response(""), 404
 
@@ -88,7 +91,7 @@ def delete_task(task_id):  # dict_task = task.task_to_json_response()  ==> dict_
     return make_response(""), 404
 
 # Modify part of a task to mark complete
-@task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])  ## DO A TRY EXCEPT WITH DATAERROR ??
+@task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])  
 def patch_task_mark_complete(task_id):
     task = Task.query.get(task_id) ## getting the task by id (it's whole body)
     # PATCHing if: arg mark_complete specified # in URL and task id provided exists in database
@@ -101,11 +104,10 @@ def patch_task_mark_complete(task_id):
     return make_response(""), 404
 
 # Modify part of a task to mark incomplete
-@task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])  ## DO A TRY EXCEPT WITH DATAERROR ??
+@task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])  
 def patch_task_mark_incomplete(task_id):
     task = Task.query.get(task_id)
     if task:
-        # task.set_completion() # updates it with a date in "completed_at" field
         task.completed_at = None
         db.session.commit()
         return task.to_json_response(), 200
@@ -133,7 +135,7 @@ def retrieve_goals_data():
         for goal in goals:
             goals_response.append(goal.simple_response())
         return jsonify(goals_response), 200  # returning the list of all goals
-    return jsonify(goals_response), 200 ## also works as #return goals_response, 200 ### DOESN'T WORK WITH MAKE RESPONSE!!!!!
+    return jsonify(goals_response), 200 ## OR #return goals_response, 200 ### DOESN'T WORK WITH MAKE RESPONSE!!!!!
 
 # Retrieve one /goal/1     
 @goal_bp.route("/<goal_id>", methods=["GET"])
@@ -141,7 +143,6 @@ def retrieve_single_goal(goal_id):
     goal = Goal.query.get(goal_id)
     if goal != None:
         return goal.goal_to_json_response(), 200
-
     return make_response('', 404)
 
 # Delete a goal
@@ -156,12 +157,12 @@ def delete_goal(goal_id):
     return make_response(""), 404
 
 #Update a goal
-@goal_bp.route("/<goal_id>", methods=["PUT"])  ## DO A TRY EXCEPT WITH DATAERROR
+@goal_bp.route("/<goal_id>", methods=["PUT"])  
 def update_goal(goal_id):
     goal = Goal.query.get(goal_id)
     if goal: # successful updating goal
         form_data = request.get_json() # save user input form_data as json format 
-        goal.title = form_data["title"] # updating model? title field language?
+        goal.title = form_data["title"] # updating model
         db.session.commit()
         return goal.goal_to_json_response(), 200
     return make_response(""), 404  #NOT FOUND ERROR VS 400 - BAD REQ
@@ -173,7 +174,7 @@ def post_task_ids_to_goal(goal_id):
     try: 
         request_body = request.get_json()   # should be a dictionary like:
                                             # {"task_ids": [1, 2, 3]}
-        goal = Goal.query.get(goal_id)  # the instance of thi goal id including the task ids
+        goal = Goal.query.get(goal_id)  # the instance of this goal id including the task ids
         # store list of tasks given in the request body (task_ids)
         task_ids = request_body["task_ids"]  # task_ids - should be a list [1,3,4]
         for task_id in task_ids:
@@ -183,7 +184,21 @@ def post_task_ids_to_goal(goal_id):
             db.session.commit()
         # display this info into response as json 
         return {"id": int(goal_id), "task_ids": task_ids},200
-        
     except:
         return make_response(""), 404 ## not found
-        # return {"details": "Invalid data"}, 400
+
+@goal_bp.route("/<goal_id>/tasks", methods = ["GET"])
+def getting_tasks_of_one_goal(goal_id):
+    goal = Goal.query.get(goal_id) 
+    if goal: 
+        tasks = goal.tasks
+        # create a list of tasks and each task CALL FUNCTION task.task_to_json_response()
+        new_list = [task.task_to_json_response_w_goal() for task in tasks]
+        return {"id": goal.goal_id,
+            "title": goal.title,
+            "tasks": new_list}, 200
+    # if goal doesn't exist
+    return make_response(""), 404
+        
+
+        
