@@ -1,7 +1,7 @@
 from app import db
 from .models.task import Task
 from flask import request, Blueprint, make_response, jsonify
-
+from datetime import datetime 
 
 task_bp = Blueprint("task", __name__, url_prefix="/tasks")
 
@@ -65,7 +65,7 @@ def tasks():
 
 
 #endpoint to get response body by task_id
-@task_bp.route("/<task_id>", methods=["GET","PUT","DELETE"])
+@task_bp.route("/<task_id>", methods=["GET","PUT","DELETE"],)
 def task(task_id):
     task = Task.query.get(task_id)
     if not task:
@@ -90,6 +90,28 @@ def task(task_id):
         return jsonify(details=f'Task {task.task_id} "{task.title}" successfully deleted'),200
 
 
+    
+
+#endpoint for giving completed_at attribute column with a datetime value in the DB
+@task_bp.route("<task_id>/mark_complete",methods=["PATCH"])
+def complete(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return '', 404 
+    # in order to make variable truthy we need to have datatype as value
+    task.completed_at = datetime.utcnow()
+    db.session.commit()
+    return make_response({"task": task.to_json()}, 200)
+
+#endpoint for giving completed_at column/attribute the value null/NONE in the DB
+@task_bp.route("<task_id>/mark_incomplete",methods=["PATCH"])
+def in_complete(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return '', 404    
+    task.completed_at = None 
+    db.session.commit()
+    return make_response({"task": task.to_json()}, 200)
 
 
 
