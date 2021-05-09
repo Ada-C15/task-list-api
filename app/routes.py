@@ -2,9 +2,11 @@ from app import db
 from app.models.task import Task
 from flask import request, Blueprint, make_response, jsonify, Response
 from datetime import datetime
+from sqlalchemy import desc, asc
 import os
 import requests
 
+#WAVE 1
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 def is_int(value):
@@ -33,10 +35,18 @@ def create_task():
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_saved_tasks():
 
-    tasks = Task.query.all()
+#WAVE 2    
+    sort_by_title = request.args.get("sort")
+    if sort_by_title == "asc":
+            tasks = Task.query.order_by(Task.title.asc()).all()
+    elif sort_by_title == "desc":
+            tasks = Task.query.order_by(Task.title.desc()).all()
+    else:
+        tasks = Task.query.all()
+    
     tasks_response = []
     for task in tasks:
-        tasks_response.append(task.to_json() )
+        tasks_response.append(task.to_json())
 
     return jsonify(tasks_response), 200
 
