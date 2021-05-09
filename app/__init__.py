@@ -25,11 +25,14 @@ def create_app(test_config=None):  # We have called the new parameter test_confi
 
     # Import models here for Alembic setup
     from app.models.task import Task
-    # from app.models.goal import Goal
+    from app.models.goal import Goal
     # ^^Make task and goal visible to flask migration helper
 
     from .routes import tasks_bp
     app.register_blueprint(tasks_bp)
+
+    from .routes import goals_bp
+    app.register_blueprint(goals_bp)
     # ^^ Register Blueprints here
 
     return app
