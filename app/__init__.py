@@ -30,5 +30,10 @@ def create_app(test_config=None):
     migrate.init_app(app, db)
 
     # Register Blueprints here
+    from .routes import task_bp
+    app.register_blueprint(task_bp)
 
     return app
+
+    # if __name__ == "__main__":
+#     app.run(port= 5000, debug=True)
