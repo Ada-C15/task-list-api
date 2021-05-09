@@ -188,9 +188,9 @@ def handle_one_task_incomplete_patch(task_id):
 
 
 @goals_bp.route("", methods=["POST"])
-def handle_goals_post():
+def handle_goal_post():
     """
-    - Creates new goal.
+    - Create new goal.
     """
 
     request_body = request.get_json()
@@ -222,7 +222,7 @@ def handle_goals_get():
 
 
 @goals_bp.route("/<goal_id>", methods=["GET"])
-def handle_one_goals_get(goal_id):
+def handle_one_goal_get(goal_id):
     """
     Get specific goal by id.
     """
@@ -233,3 +233,20 @@ def handle_one_goals_get(goal_id):
         return jsonify(None), 404
 
     return ({"goal": goal.to_dict()}, 200)
+
+
+@goals_bp.route("/<goal_id>", methods=["DELETE"])
+def handle_one_goal_delete(goal_id):
+    """
+    Delete goal with specific id.
+    """
+
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return jsonify(None), 404
+
+    db.session.delete(goal)
+    db.session.commit()
+
+    return ({"details": f'Goal {goal_id} \"{goal.title}\" successfully deleted'}, 200)
