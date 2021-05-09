@@ -193,3 +193,14 @@ def update_goal(goal_id):
             }
             }), 200
     return "", 404
+
+@goal_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)
+def delete_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal:
+        db.session.delete(goal)
+        db.session.commit()
+        return jsonify({
+            "details": (f'Goal {goal.goal_id} "{goal.title}" successfully deleted')
+        }), 200
+    return "", 404
