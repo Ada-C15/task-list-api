@@ -10,13 +10,11 @@ class Task(db.Model):
 
     def to_json(self):
         return {
-            "task": {
             "id": self.task_id,
             "title": self.title,
             "description": self.description,
-            "completed_at":self.completed_at
+            "is_complete": (False if self.completed_at == None else True)
             }        
-        }
 
     
     def to_string(self):

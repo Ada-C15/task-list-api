@@ -17,36 +17,29 @@ def is_int(value):
 def create_task():
     request_body = request.get_json()
     
-    if "title" not in request or "description" not in request_body \
-        or "completed_at" not in request_body:
-        return {
-            "details": "Invalid Data"
-        }, 400
+    if ("title" not in request_body or "description" not in request_body \
+        or "completed_at" not in request_body):
+        return jsonify({"details":"Invalid data"}),400
     
-    new_task = Task(title = request_body["title"],
+    else:
+        new_task = Task(title = request_body["title"],
                         description = request_body["description"],
                         completed_at = request_body["completed_at"])
     
-    db.session.add(new_task)
-    db.session.commit()
-
-    return task.to_json(), 201
+        db.session.add(new_task)
+        db.session.commit()
+        return {"task": new_task.to_json()}, 201
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_saved_tasks():
+
     tasks = Task.query.all()
     tasks_response = []
     for task in tasks:
         tasks_response.append(task.to_json() )
-    
+
     return jsonify(tasks_response), 200
 
-@tasks_bp.route("", methods=["GET"], strict_slashes=False)
-def get_no_saved_tasks():
-    tasks = Task.query.all()
-    
-    if tasks == []:
-        return jsonify(tasks), 200
 
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def get_single_task(task_id):
@@ -59,10 +52,10 @@ def get_single_task(task_id):
 
     task = Task.query.get(task_id)
     if task:
-        return task.to_json(), 200
+        return {"task": task.to_json()}, 200
+    else:
+        return Response("",status=404)
     
-    return 404
-
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
     task = Task.query.get(task_id)
@@ -73,12 +66,12 @@ def update_task(task_id):
     if task: 
         form_data = request.get_json()
 
-        task.name = form_data["name"]
+        task.title = form_data["title"]
         task.description = form_data["description"]
         task.completed_at = form_data["completed_at"]
 
         db.session.commit()
-        return 200
+        return {"task": task.to_json()}, 200
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)    
 def delete_single_task(task_id):
@@ -92,6 +85,4 @@ def delete_single_task(task_id):
         db.session.commit()
 
         return {
-            "details": f"Task {task.id}, {task.description} was successfully deleted", 
-            "success": False
-        }, 200
+            "details": f"Task {task.task_id} \"{task.title}\" successfully deleted"}, 200
