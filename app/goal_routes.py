@@ -91,7 +91,7 @@ def get_goals():
     
     goal_response = [] 
     for goal in goal_list:
-        goal_response.append(goal.to_json())
+        goal_response.append(goal.to_json_goal_no_key())
     
     return jsonify(goal_response), 200
 

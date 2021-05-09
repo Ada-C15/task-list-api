@@ -50,7 +50,18 @@ class Task(db.Model):
                             "is_complete": self.compute_is_complete()
                         }
     
-    #def to_json_with 
+    def to_json_with_goalid_and_key(self):
+        return {
+                "task":     
+                       {
+                            "id": self.task_id,
+                            "goal_id": self.goal_id,
+                            "title": self.title,
+                            "description": self.description,
+                            "is_complete": self.compute_is_complete()
+                        }
+                     }
+        
                          
     def to_string(self):
         return f"{self.task_id}: {self.title} Description: {self.description} completed at {self.completed_at} " 

@@ -77,8 +77,11 @@ def get_single_task(task_id):
         return Response("",status=404)
     
     if task:
+        if task.goal_id is not None:
+            return task.to_json_with_goalid_and_key(), 200
+        
         return task.to_json(), 200
-    
+
     return {
         "message": f"Task with id {task_id} was not found",
         "success": False
