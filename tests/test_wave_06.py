@@ -21,7 +21,8 @@ def test_post_task_ids_to_goal(client, one_goal, three_tasks):
     assert len(Goal.query.get(1).tasks) == 3
 
 
-def test_post_task_ids_to_goal_already_with_goals(client, one_task_belongs_to_one_goal, three_tasks):
+def test_post_task_ids_to_goal_already_with_goals(
+        client, one_task_belongs_to_one_goal, three_tasks):
     # Act
     response = client.post("/goals/1/tasks", json={
         "task_ids": [1, 4]
@@ -46,7 +47,7 @@ def test_get_tasks_for_specific_goal_no_goal(client):
 
     # Assert
     assert response.status_code == 404
-    assert response_body == None
+    assert response_body is None
 
 
 def test_get_tasks_for_specific_goal_no_tasks(client, one_goal):

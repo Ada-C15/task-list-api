@@ -13,6 +13,9 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 
+# -------------- CRUD for Tasks ---------------------------
+
+
 @tasks_bp.route("", methods=["GET"])
 def handle_tasks_get():
     """
@@ -269,3 +272,30 @@ def handle_one_goal_update(goal_id):
     retrieve_goal = Goal.query.get(goal.goal_id)
 
     return ({"goal": retrieve_goal.to_dict()}, 200)
+
+
+# ----- Establishing one-to-many relationship between goals and tasks --------
+# /goals/<goal_id>/tasks
+
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"])
+def handle_one_goal_many_tasks_get(goal_id):
+    """
+    Sending a List of Task IDs to a Goal with specific ID.
+    """
+
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return jsonify(None), 404
+
+    request_body = request.get_json()
+    tasks_ids_to_belong = request_body["task_ids"]
+
+    for task_id in tasks_ids_to_belong:
+        task = Task.query.get(task_id)
+        task.goal_id = goal_id
+        db.session.commit()
+
+    response_body = goal.tasks_to_dict()
+
+    return (response_body, 200)

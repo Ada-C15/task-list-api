@@ -8,7 +8,11 @@ class Task(db.Model):
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True, default=None)
     # A task with a null value for completed_at has not been completed.
-    __tablename__ = "tasks"
+    # __tablename__ = "tasks"
+    goal_id = db.Column(
+        db.Integer,
+        db.ForeignKey('goal.goal_id'),
+        nullable=True)
 
     def is_complete(self):
         if self.completed_at is None:
