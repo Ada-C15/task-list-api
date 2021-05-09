@@ -181,3 +181,30 @@ def update_goal(goal_id):
     else:
         return jsonify(None), 404     
       
+#################### Routes for Goals-Related-Task ####################
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def post_tasks_to_goal(goal_id):
+    request_body = request.get_json()
+    goal = Goal.query.get(goal_id)
+    for task_id in request_body["task_ids"]:
+        task = Task.query.get(task_id)
+        task.goal_id = goal_id
+    db.session.commit()
+    return {
+            "id": int(goal_id),
+            "task_ids": request_body["task_ids"]
+    }, 200
+    
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_goals_tasks(goal_id):
+    goal = Goal.query.get(goal_id)
+    if not goal:
+        return jsonify(None), 404 
+    else:
+        tasks = Task.query.filter_by(goal_id=goal_id)
+        task_list = []
+        for task in tasks:
+            task_list.append(task.to_json())
+        
+    return {"id":int(goal_id),"title":goal.title,"tasks":task_list},200
+
