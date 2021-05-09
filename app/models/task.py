@@ -1,12 +1,11 @@
 from flask import current_app
 from app import db
-import datetime
 
 
 class Task(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String, nullable=False)
-    description = db.Column(db.String, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.String)
+    description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
     __tablename__ = "tasks"
 
