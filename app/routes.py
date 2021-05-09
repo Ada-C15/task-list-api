@@ -5,14 +5,11 @@ from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
-def is_complete_helper_function():
-    is_complete = True
-    if Task.completed_at is None:
-        is_complete == False
-        return is_complete
+def is_complete_helper_function(completed_at):
+    if completed_at is None:
+        return False
     else:
-        is_complete == True
-        return is_complete
+        return True
 
 @tasks_bp.route("", methods = ["GET", "POST"])
 def handle_tasks():
@@ -47,7 +44,7 @@ def handle_tasks():
                     "id": new_task.task_id,
                     "title": new_task.title,
                     "description": new_task.description,
-                    "is_complete": is_complete_helper_function()
+                    "is_complete": is_complete_helper_function(new_task.completed_at)
                     }}, 201)
             
 
@@ -74,7 +71,7 @@ def handle_task(task_id):
                     "id": task.task_id,
                     "title": task.title,
                     "description": task.description,
-                    "is_complete": is_complete_helper_function()}}))
+                    "is_complete": is_complete_helper_function(task.completed_at)}}))
     elif request.method == "DELETE":
         db.session.delete(task)
         db.session.commit()
