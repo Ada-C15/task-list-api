@@ -178,3 +178,18 @@ def get_goal(goal_id):
             }
             }), 200
     return "", 404
+
+@goal_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
+def update_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal:
+        form_data = request.get_json()
+        goal.title = form_data["title"]
+        db.session.commit()
+        return jsonify({
+            "goal":{
+            "id": goal.goal_id,
+            "title": goal.title
+            }
+            }), 200
+    return "", 404
