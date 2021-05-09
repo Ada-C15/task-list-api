@@ -41,15 +41,16 @@ class Task(db.Model):
     
     
     # #WAVE 6
-    # def to_json_with_goal_id(self): 
-    #     return {
-    #             "tasks": {
-    #                         "id": self.id
-    #                         "goal_id": goal.goal_id,
-    #                         "title": self.title,
-    #                         "description": self.description,
-    #                         "is_complete": self.compute_is_complete()
-    #                     }
+    def to_json_with_goal_id(self): 
+        return {
+                            "id": self.task_id,
+                            "goal_id": self.goal_id,
+                            "title": self.title,
+                            "description": self.description,
+                            "is_complete": self.compute_is_complete()
+                        }
+    
+    #def to_json_with 
                          
     def to_string(self):
         return f"{self.task_id}: {self.title} Description: {self.description} completed at {self.completed_at} " 

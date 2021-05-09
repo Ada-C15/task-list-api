@@ -63,7 +63,7 @@ def get_goal_tasks(goal_id):
     related_tasks = []
     
     for task in goal.tasks:
-        related_tasks.append(task.to_json())
+        related_tasks.append(task.to_json_with_goal_id())
     
 
     return jsonify(id=int(goal_id), title=goal.title, tasks=related_tasks), 200
