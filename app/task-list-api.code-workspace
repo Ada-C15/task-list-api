@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": ".."
+		},
+		{
+			"path": "../../api/solar-system-api"
 		}
 	],
 	"settings": {}
