@@ -143,38 +143,38 @@ def mark_incomplete(task_id):
 
     return task.to_json()
 
-@goals_bp.route("", methods=["POST", "GET"])
-def handle_goals():
+@goals_bp.route("", methods=["GET"])
+def display_goals():
+    """Gets all goals"""
+    goals = Goal.query.all()
+
+    goals_response = []
+    for goal in goals:
+        goals_response.append({
+            "id": goal.goal_id,
+            "title": goal.title,
+        })
+    return jsonify(goals_response)
+
+@goals_bp.route("", methods=["POST"])
+def post_goal():
     """
-    Gets all goals
     Posts new goal
     """
+    request_body = request.get_json()
 
-    if request.method == "POST":
-        request_body = request.get_json()
+    if "title" not in request_body:
+        return ({
+        "details": "Invalid data"
+        }, 400)
 
-        if "title" not in request_body:
-            return ({
-            "details": "Invalid data"
-            }, 400)
+    new_goal = Goal(
+        title=request_body["title"])
 
-        new_goal = Goal(
-            title=request_body["title"])
+    db.session.add(new_goal)
+    db.session.commit()
 
-        db.session.add(new_goal)
-        db.session.commit()
-
-        return (new_goal.to_json(), 201)
-    elif request.method == "GET":
-        goals = Goal.query.all()
-
-        goals_response = []
-        for goal in goals:
-            goals_response.append({
-                "id": goal.goal_id,
-                "title": goal.title,
-            })
-        return jsonify(goals_response)
+    return (new_goal.to_json(), 201)
 
 @goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
 def handle_task(goal_id):

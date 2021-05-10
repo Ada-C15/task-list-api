@@ -40,9 +40,3 @@ class Task(db.Model):
     #         self.completed_at=input_data["completed_at"])
 
     # How do I set a variable equal to a new instance when the instance hasn't been created yet?
-
-    # def validate_datetime(self):
-    #     try:
-    #         if isinstance(self.completed_at, db.Datetime)
-    #     except ValueError:
-    #         return ("Invalid timestamp", 401)
