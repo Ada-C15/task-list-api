@@ -2,6 +2,7 @@ from app import db
 from flask import Blueprint
 from flask import request, Blueprint, make_response
 from flask import jsonify
+from .models.goal import Goal
 from .models.task import Task
 from datetime import datetime
 import os
@@ -9,6 +10,7 @@ import requests
 from dotenv import load_dotenv
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 @tasks_bp.route("", methods=["POST", "GET"])
 def tasks_functions():
@@ -120,4 +122,53 @@ def make_task_incomplete(task_id):
     }
     return jsonify(response_body), 200
     
+#Goals routes***********************************************************************************************************************
+@goals_bp.route("", methods=["GET", "POST"])
+def handle_goals():
+    if request.method == "POST":
+        req_body = request.get_json()
+        if "title" not in req_body:
+            return {
+                "details": "Invalid data"
+            }, 400
+        new_goal = Goal(title = req_body["title"])
+        db.session.add(new_goal)
+        db.session.commit()
+        response_body = {
+            "goal": new_goal.goal_json()
+        }
+        return jsonify(response_body), 201
     
+    if request.method == "GET":
+        all_goals = Goal.query.all()
+        response_body = []
+        for any_goal in all_goals:
+            response_body.append(any_goal.goal_json())
+        return jsonify(response_body), 200
+
+@goals_bp.route("/<goal_id>", methods=["GET", "DELETE", "PUT"], strict_slashes=False)
+def goal_id_functions(goal_id):
+    a_goal = Goal.query.get(goal_id)
+
+    if a_goal is None:
+        return make_response("", 404)
+    
+    if request.method == "GET":
+        return {
+            "goal": a_goal.goal_json()
+        }, 200
+    
+    elif request.method == "PUT":
+        info = request.get_json()
+        a_goal.title = info["title"]
+        db.session.commit()
+        return {
+            "goal": a_goal.goal_json()
+        }, 200
+    
+    elif request.method == "DELETE":
+        db.session.delete(a_goal)
+        db.session.commit()
+        return {
+            "details": f"Goal {a_goal.goal_id} \"{a_goal.title}\" successfully deleted"
+        }, 200
