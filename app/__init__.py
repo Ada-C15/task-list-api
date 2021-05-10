@@ -12,6 +12,8 @@ load_dotenv()
 
 def create_app(test_config=None):
     app = Flask(__name__)
+    from .routes import task_bp
+    app.register_blueprint(task_bp)
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     if test_config is None:
@@ -30,5 +32,10 @@ def create_app(test_config=None):
     migrate.init_app(app, db)
 
     # Register Blueprints here
+    from .routes import index_bp
+    app.register_blueprint(index_bp)
+    
+    from .routes import task_bp
+    app.register_blueprint(task_bp)
 
     return app
