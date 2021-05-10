@@ -3,11 +3,11 @@ from app.models.task import Task
 from flask import request
 from flask import request, Blueprint, make_response
 from flask import jsonify
-import datetime
+from datetime import datetime 
 from sqlalchemy import asc, desc
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
-
+#localhost:9000/tasks/2
 @task_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
 def get_single_task(task_id):
 
@@ -39,9 +39,6 @@ def get_single_task(task_id):
 
 @task_bp.route("", methods=["GET", "POST"])
 def handle_tasks():
-    
-
-
     if request.method == "GET":
         
         request_value = request.args.get("sort") 
@@ -62,12 +59,6 @@ def handle_tasks():
             task_response.append(task.json_object())
         
         return jsonify(task_response), 200
-
-
-
-
-
-
 
     elif request.method == "POST":
         request_body = request.get_json()
@@ -90,10 +81,42 @@ def handle_tasks():
 
         db.session.add(new_task)
         db.session.commit()
+    
+#PATCH localhost:9000/tasks/1/mark_complete
+@task_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def mark_complete(task_id):
+    # If POSTMAN (request)searches for a patch path 
+    if request.method == "PATCH":
+        #query is seaching TASK (ID, TITLE, DESCRIPTION, AND COMPLEATED_AT) and "get" getting the task_id
+        task = Task.query.get(task_id)
+        # If the task is NONE return the not found 404 code 
+        if task is None:
+            return jsonify(None), 404
+        # If None is found than my code searches for what id is being mark_compleated and with my compleated_at_helper() marking complete turn/
+        # into a true statement which then timestamps the date and time completed.
+        task.completed_at = datetime.now()
+        #jsonify my object and "task"(STR) json_object is the jsonifyed id, title, description, and compleated_at function 
+        return jsonify({"task": task.json_object()}),200 # 200 ok code 
 
+#PATCH localhost:9000/tasks/2/mark_incomplete(is saying this id should be marked as complete)
+@task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
+def mark_incomplete(task_id):
+    
+    if request.method == "PATCH":
+        #query is seaching TASK (ID, TITLE, DESCRIPTION, AND COMPLEATED_AT) and "get" getting the task_id
+        task = Task.query.get(task_id)
+        # If the task is NONE return the not found 404 code 
+        if task is None:
+            return jsonify(None), 404
+        
+        task.completed_at = None
+        
+        return jsonify({"task": task.json_object()}),200
+    
 
 # post man testing eviroment
-# # api request using url request can i find route that matches
+#API request using url request can i find route that matches
+
 
 
 
