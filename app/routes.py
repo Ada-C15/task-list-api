@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response, jsonify
 from app import db
 from app.models.task import Task
 from sqlalchemy import asc, desc
+from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -37,7 +38,7 @@ def handle_tasks():
             return make_response(invalid_data, 400)
 
         else:    
-            new_task = Task(title=request_body["title"], description=request_body["description"], completed_at=None)
+            new_task = Task(title=request_body["title"], description=request_body["description"], completed_at=request_body["completed_at"])
             
             db.session.add(new_task)
             db.session.commit()
@@ -72,4 +73,26 @@ def handle_task(task_id):
         return {
             "details": (f"Task {task.task_id} \"{task.title}\" successfully deleted")
         }
+
+@tasks_bp.route("/<task_id>/mark_complete", methods= ["PATCH"])
+def mark_complete(task_id):
+    task = Task.query.get(task_id)
+
+    if task == None:
+        return make_response("", 404)
+
+    task.completed_at = datetime.utcnow()
+    db.session.commit()
+    return make_response({"task": task.make_json()}) 
+
+@tasks_bp.route("/<task_id>/mark_incomplete", methods= ["PATCH"])
+def mark_incomplete(task_id):
+    task = Task.query.get(task_id)
+
+    if task == None:
+        return make_response("", 404)
+
+    task.completed_at = None
+    db.session.commit()
+    return make_response({"task": task.make_json()}) 
 
