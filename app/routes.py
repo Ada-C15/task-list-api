@@ -1,12 +1,14 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from .models.task import Task
-# from .models.goal import Goal
+from .models.goal import Goal
 from datetime import datetime
 import requests
 import os
+from requests import post, patch
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def tasks_index():
@@ -71,8 +73,9 @@ def complete_task(task_id):
     if task is None:
         return jsonify(None), 404
     task.completed_at = datetime.utcnow()
-    #db.session.commit()
-    post_message(task.title)
+    db.session.commit()
+    # Slack
+    post_message(f"Someone just completed the task {task.title}")
     return jsonify({"task":task.to_json()}), 200
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
@@ -85,12 +88,58 @@ def incomplete_task(task_id):
     return jsonify({"task":task.to_json()}), 200
 
 #Helper function posting to slack
-def post_message(task_title):
+def post_message(message):
     path = "https://slack.com/api/chat.postMessage"
     SLACK_KEY = os.environ.get("SLACK_TOKEN")
-    query_params = {"channel": "task-notifications",
-                    "text": f"Someone just completed the task{task_title}"
-                    }
     headers = {"Authorization": f"Berer {SLACK_KEY}"}
+    query_params = {"channel": "task-notifications",
+                    "text": message
+                    }
     requests.post(path, params=query_params, headers=headers)
     #channel_id: C0212CDM38W
+
+
+# GOALS:
+@goals_bp.route("", methods=["POST"], strict_slashes=False)
+def create_goal():
+    request_body = request.get_json()
+    if "title" not in request_body:
+        return jsonify({"details":"Invalid data"}), 400
+    new_goal = Goal(title = request_body["title"])
+    db.session.add(new_goal)
+    db.session.commit()
+    return jsonify({"goal":new_goal.to_json()}), 201
+
+@goals_bp.route("", methods=["GET"], strict_slashes=False)
+def goals_index():
+    goals = Goal.query.all()
+    goals_response = []
+    for goal in goals:
+        goals_response.append(goal.to_json())
+    return jsonify(goals_response), 200
+
+@goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
+def single_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return jsonify(None), 404
+    return jsonify({"goal":goal.to_json()}), 200
+
+@goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
+def update_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return jsonify(None), 404
+    form_data = request.get_json()
+    goal.title = form_data["title"]
+    db.session.commit()
+    return jsonify({"goal":goal.to_json()}), 200
+
+@goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)
+def delete_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return jsonify(None), 404
+    db.session.delete(goal)
+    db.session.commit()
+    return jsonify({"details":f'Goal {goal.id} "{goal.title}" successfully deleted'}), 200
