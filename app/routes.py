@@ -24,21 +24,22 @@ def create_task():
         return jsonify(valid_task), 201
 
 
-@tasks_bp.route("/tasks?sort=asc", methods=["GET"])
-def asc_tasks_sort(tasks):
-    tasks = Task.query.all()
-    tasks_response = []
+# @tasks_bp.route("/tasks?sort=asc", methods=["GET"])
+# def asc_tasks_sort(tasks):
+#     tasks = Task.query.all()
+#     tasks_response = []
 
-    if tasks is None:
-        return jsonify(tasks_response)
+#     if tasks is None:
+#         return jsonify(tasks_response)
     
-    else:
-        for task in tasks:
-            tasks_response.append(to_dict(task))
+#     else:
+#         for task in tasks:
+#             tasks_response.append(to_dict(task))
         
-        sorted_list = sorted(tasks_response, key=lambda x: (x["title"])) 
+#         sorted_list = sorted(tasks_response, key=lambda x: (x["title"])) 
 
-        return jsonify(sorted_list)
+#         return jsonify(sorted_list)
+
 
 
 @tasks_bp.route("/tasks", methods=["GET"])
@@ -103,34 +104,36 @@ def handle_task(task_id):
             return make_response(f"", 404)
 
 
-@tasks_bp.route("/tasks/<task_id>/mark_complete", methods=["PATCH"])
-def mark_complete(task):
+# @tasks_bp.route("/tasks/<task_id>/mark_complete", methods=["PATCH"])
+# def mark_complete(task):
 
-    request_body = request.get_json()
-    complete_task = Task(title = request_body["title"], description = request_body["description"], completed_at = request_body["completed_at"])
-
-    
-    mark_task_complete = {
-            "id": complete_task.task_id,
-            "title": complete_task.title,
-            "description": complete_task.description,
-            "is_complete": True
-    }
-
-    return {"task": mark_task_complete}
-
-
-@tasks_bp.route("/tasks/<task_id>/mark_incomplete", methods=["PATCH"])
-def mark_incomplete(task):
-    request_body = request.get_json()
-    incomplete_task = Task(title = request_body["title"], description = request_body["description"], completed_at = request_body["completed_at"])
+#     request_body = request.get_json()
+#     complete_task = Task(title = request_body["title"], description = request_body["description"], completed_at = request_body["completed_at"])
 
     
-    mark_task_incomplete = {
-            "id": incomplete_task.task_id,
-            "title": incomplete_task.title,
-            "description": incomplete_task.description,
-            "is_complete": False
-    }
+#     mark_task_complete = {
+#             "id": complete_task.task_id,
+#             "title": complete_task.title,
+#             "description": complete_task.description,
+#             "is_complete": True
+#     }
 
-    return {"task": mark_task_incomplete}
+#     return {"task": mark_task_complete}
+
+
+# @tasks_bp.route("/tasks/<task_id>/mark_incomplete", methods=["PATCH"])
+# def mark_incomplete(task):
+#     request_body = request.get_json()
+#     incomplete_task = Task(title = request_body["title"], description = request_body["description"], completed_at = request_body["completed_at"])
+
+    
+#     mark_task_incomplete = {
+#             "id": incomplete_task.task_id,
+#             "title": incomplete_task.title,
+#             "description": incomplete_task.description,
+#             "is_complete": False
+#     }
+
+#     return {"task": mark_task_incomplete}
+
+# comment 
