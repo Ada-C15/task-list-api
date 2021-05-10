@@ -1,6 +1,6 @@
 from flask import current_app
 from app import db
-import datetime
+from datetime import datetime
 # this is telling flask about my database task table
 
 
@@ -24,4 +24,5 @@ class Task(db.Model):
             "description": self.description,
             "is_complete": self.completed_at_helper()
         }
-    # Use this helper function any time the return is expected to be complete
+    # Use this helper function any time the return is expected to be complete ^^^
+    
