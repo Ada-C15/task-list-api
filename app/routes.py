@@ -19,7 +19,7 @@ def index():  #html homepage = index
     return make_response({"name": "Hello index2"}, 200)
 
 @task_bp.route("", methods=["GET"])
-def task():  #html homepage = index
+def task():  
     tasks = Task.query.all()
     task_response = []
 
