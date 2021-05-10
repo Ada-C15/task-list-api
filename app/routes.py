@@ -96,3 +96,27 @@ def delete_single_task(task_id):
 
         return {
             "details": f"Task {task.task_id} \"{task.title}\" successfully deleted"}, 200
+
+#WAVE 3
+@tasks_bp.route("/<task_id>/<task_completion>", methods=["PATCH"], strict_slashes=False)
+def patch_task(task_id, task_completion):
+    
+    if not is_int(task_id):
+        return {
+            "message": f"ID {task_id} must be an integer",
+            "success": False
+        }, 400
+
+    task = Task.query.get(task_id)
+
+    if task == None:
+        return Response("", status=404)
+
+    elif task_completion == 'mark_complete':
+        task.completed_at = datetime.today()
+
+    else: 
+        task.completed_at = None
+
+    db.session.commit()
+    return {"task": task.to_json()}, 200
