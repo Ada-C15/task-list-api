@@ -1,8 +1,9 @@
 from flask import Blueprint, request, make_response
 from flask import jsonify
-from app import db
+from app import db, slack_key, slack_channel
 from app.models.task import Task
 import datetime
+import requests
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -98,7 +99,19 @@ def mark_task_complete(task_id):
         # task.is_complete = task.check_if_complete()
         db.session.commit()
 
-        return task.to_json()
+        query_params = {
+        "channel": slack_channel, #"C021K0ANK09"
+        "text": f"Someone just completed the task {task.title}"
+        }
+
+        header_data = {
+            "authorization": slack_key # can also be f string with Bearer
+        }
+
+    response = requests.post('https://slack.com/api/chat.postMessage', headers=header_data, params=query_params) # http request
+    # response_body = response.json()
+
+    return task.to_json()
 
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])

@@ -26,14 +26,4 @@ class Task(db.Model):
 
 
 
-# return jsonify({
-#     "task": {
-#         "id": new_task.task_id,
-#         "title": new_task.title,
-#         "description": new_task.description,
-#         "is_complete": False
-#         }
-# }), 201
-
-
 
