@@ -22,21 +22,23 @@ def create_app(test_config=None):
         app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
             "SQLALCHEMY_TEST_DATABASE_URI")
 
-    ## this all grabs my models, where my routes are and my blueprints  to 
-    ## be able to run my app  #grabbing it all from everywhere to be able to run my app
+    ## this grabs my models, where my routes are and my blueprints  to 
+    ## be able to run my app  
+    ## grabbing it all from everywhere to be able to run my app
 
     # Import models here for Alembic setup
     from app.models.task import Task
     from app.models.goal import Goal
-    from .routes import task_bp # ADDED THIS, uncomment and run db upgrade when routes done
-    from .routes import goal_bp  # ADDED THIS
+    from .routes import task_bp  # Importing routes from each model
+    from .routes import goal_bp  # same as above
 
     db.init_app(app)
     migrate.init_app(app, db)
 
     # Register Blueprints here   
-    app.register_blueprint(task_bp)  # ADDED THIS: need to create blue prints yet but they'll go here
-    app.register_blueprint(goal_bp)  # same as above
+    app.register_blueprint(task_bp)  # registering blueprints for each 
+    app.register_blueprint(goal_bp)  # model
 
-    # IF ALL GOES WELL, HERE YOU APP IS READY TO work and do posts! gets, deletes, etc!
+    # IF ALL GOES WELL, HERE YOU APP IS READY TO work and do posts! 
+    # gets, deletes, etc!
     return app

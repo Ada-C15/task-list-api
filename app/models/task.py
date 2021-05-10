@@ -1,16 +1,17 @@
 from flask import current_app
 from app import db
-from datetime import datetime ## versus import datetime only you would write datetime.datetime in line 40
+from datetime import datetime   ## vs. with import datetime -  would be
+                                ## datetime.datetime in line 40
                                 ## like from random import randint 
 
 class Task(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # do i set it to autoincrement?
-    title = db.Column(db.String) # or title (this is the name of the task)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  
+    title = db.Column(db.String) # name of task
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
-    #completed_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
-    # adding one to many relationship  tasks to goal == >dog to person 
-    goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True) # # nullable means task might not belong to a goal
+    # adding one to many relationship  tasks to goal ==> dog to person 
+    # nullable = task might not belong to a goal
+    goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True) 
 
     def to_json_response(self):
         return {"task": 
@@ -39,10 +40,9 @@ class Task(db.Model):
     def set_completion(self):   # if method is called, it changes completed_at 
                                 # with currentdate/time
         complete_time = (datetime.now()).strftime("%c")
-        self.completed_at = complete_time ## completed_at gets updated to date/time it's right now. 
+        self.completed_at = complete_time 
 
-
-# for reference
+# for later reference when using slack
 # import datetime
 # now = datetime.datetime.now()
 # print(now.strftime("%A"), now) 
