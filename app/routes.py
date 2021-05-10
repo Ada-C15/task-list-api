@@ -79,6 +79,13 @@ def mark_complete(task_id):
 # myobj = {'somekey': 'somevalue'}
 
 # x = requests.post(url, data = myobj)
+    
+    if task == None:
+        return make_response(), 404
+    
+    task.completed_at = datetime.utcnow()
+    db.session.commit()
+
     url = "https://slack.com/api/chat.postMessage"
     data = {
         "channel": "C020W6FPXQX",
@@ -89,12 +96,6 @@ def mark_complete(task_id):
         }
     x = requests.post(url, data = data, headers = headers)
     
-    if task == None:
-        return make_response(), 404
-    
-    task.completed_at = datetime.utcnow()
-    db.session.commit()
-
     return jsonify({"task": task.to_json()}), 200
 
 @task_list_bp.route("/<task_id>/mark_incomplete", methods = ["PATCH"])
