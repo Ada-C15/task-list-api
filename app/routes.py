@@ -1,21 +1,26 @@
 from flask import Blueprint, request, make_response, jsonify
 from app import db
 from app.models.task import Task
+from datetime import datetime
+import datetime
+from sqlalchemy import DateTime, desc
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @tasks_bp.route("", methods=["GET", "POST"], strict_slashes= False)
 def deal_tasks():
-    title = None
-    description = None
-    completed_at = None
     if request.method == "GET":
-        tasks = Task.query.order_by(Task.title).all()
+        #wanted to do wave 2 with if statement here but can't get syntax to work
+        # query_string = request.query_string
+        # if "/tasks?sort=desc" in query_string:
+        #     tasks = tasks = Task.query.order_by(desc(Task.title)).all()
+        # else:
+        tasks = Task.query.order_by(Task.title).all() #<- handles first wave 2
         tasks_response = []
         for task in tasks:
             tasks_response.append(task.to_json())
         return jsonify(tasks_response)
-        
+
     elif request.method == "POST":
         request_body = request.get_json()
        
@@ -39,10 +44,20 @@ def get_task_by_id(task_id):
     else:
         return make_response({"task": task.to_json()}, 200)
 
+# #wave 2 desc part does not work either way need to debug/ rewrite
+# @tasks_bp.route("?sort=desc", methods=["GET"], strict_slashes= False)
+# def sort_desc_title():
+#     tasks = Task.query.order_by(desc(Task.title)).all()
+#     tasks_response = []
+#         for task in tasks:
+#             tasks_response.append(task.to_json())
+#         return jsonify(tasks_response)
+
+
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes= False)
 def delete_task(task_id):
     print("in delete task")
-    task = Task.query.get(task_id) #what is .query.get returning
+    task = Task.query.get(task_id) 
     if task is None:
         return jsonify(None), 404
     else:
@@ -66,6 +81,44 @@ def update_task(task_id):
     db.session.commit()
     
     return jsonify({"task":task.to_json()}), 200
+
+#wave 3
+@tasks_bp.route("/<task_id>/mark_complete", methods=["Patch"])
+def mark_complete(task_id):
+    task= Task.query.get(task_id)
+    if not task:
+        return "", 404
+
+    if task.completed_at:
+        task.completed_at = datetime.datetime.now()
+    else:
+        task.completed_at = datetime.datetime.now()
+
+    db.session.add(task)
+    db.session.commit()
+
+    if task.completed_at:
+        return jsonify({
+        "task": task.to_json()
+        }), 200
+
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["Patch"])
+def mark_incomplete(task_id):
+    task= Task.query.get(task_id)
+    if not task:
+        return "", 404
+
+    if task.completed_at:
+        task.completed_at = None
+        return {
+            "task": task.to_json()
+            }, 200
+    else:
+        task.completed_at = None
+        return {
+            "task": task.to_json()
+            }, 200
+
   
 
 
