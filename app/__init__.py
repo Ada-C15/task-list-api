@@ -21,6 +21,7 @@ def create_app(test_config=None):
         app.config["TESTING"] = True
         app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
             "SQLALCHEMY_TEST_DATABASE_URI")
+    
 
     # Import models here for Alembic setup
     from app.models.task import Task
@@ -30,5 +31,11 @@ def create_app(test_config=None):
     migrate.init_app(app, db)
 
     # Register Blueprints here
-
+    from app.models.task import Task
+    from .task_routes import task_list_bp
+    from .goal_routes import goals_bp #wave 5
+    
+    app.register_blueprint(task_list_bp)
+    app.register_blueprint(goals_bp) #wave 5
+     
     return app
