@@ -1,8 +1,10 @@
-from os import abort
+import requests
+import os
 from app import db
 from app.models.task import Task
-from flask import Blueprint, make_response, request, jsonify, request
+from flask import Blueprint, make_response, request, jsonify
 from datetime import datetime
+from dotenv import load_dotenv
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -107,11 +109,35 @@ def task_completed(id):
     
     task.completed_at = datetime.now()
     db.session.commit()
-
     response_body = {
             "task": task.resp_json()
         }
+
+
+    path = "https://slack.com/api/chat.postMessage"
+    slack_response = f"Someone just completed the task{task.title}"
+    query_params = {
+        "channel": "task-notifications",
+        "text": slack_response
+    }
+    header = {
+            "Authorization": f"Bearer {os.environ.get('SLACK_TOKEN')}"
+        }
+    response = requests.post(path, params=query_params, headers=header)
     return jsonify(response_body), 200
+
+# def send_to_slack(notification):
+#     path = "https://api.slack.com/methods/chat.postMessage"
+#     # SLACK_TOKEN = 
+#     slack_response = f"Someone just completed the task{task.title}"
+#     query_params = {
+#         "channel": "task-notifications",
+#         "text": slack_response
+#     }
+#     header = {
+#             "Authorization": f"Bearer {os.environ.get('SLACK_TOKEN')}"
+#         }
+#     response = requests.post(path, params=query_params, headers=header)
 
 @tasks_bp.route("/<id>/mark_incomplete", methods=["PATCH"])
 
@@ -128,3 +154,4 @@ def task_incomplete(id):
             "task": task.resp_json()
         }
     return jsonify(response_body), 200
+
