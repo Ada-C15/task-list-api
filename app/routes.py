@@ -66,3 +66,27 @@ def handle_task(task_id):
         task_response = {
             "details": f'Task {task.task_id} "{task.title}" successfully deleted'}
         return make_response(task_response), 200
+
+
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def handle_complete(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return make_response("", 404)
+    else:
+        form_data = request.get_json()
+        task.completed_at = form_data["completed_at"]
+        db.session.commit()
+        return jsonify({"task": task.to_dict()}), 200
+
+
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
+def handle_incomplete(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return make_response("", 404)
+    else:
+        form_data = request.get_json()
+        task.completed_at = form_data["completed_at"]
+        db.session.commit()
+        return jsonify({"task": task.to_dict()}), 200
