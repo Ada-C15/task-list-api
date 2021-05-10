@@ -2,12 +2,15 @@ from flask import Blueprint
 from app.models.task import Task
 from app import db
 from flask import request, Blueprint, make_response, Response, jsonify
+from datetime import date
 
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+
 
 @task_bp.route("", methods=["GET", "POST"])
 def handle_tasks():  # NameError
     if request.method == "GET":
+
         tasks = Task.query.all()
         tasks_response = []
 
@@ -23,6 +26,16 @@ def handle_tasks():  # NameError
                 "description": task.description,
                 "is_complete": completed_at
             })
+
+        # sort before return
+        sort = request.args.get("sort")
+        if sort == "asc":
+            # def test_get_tasks_sorted_asc
+            tasks_response = sorted(tasks_response, key=lambda x: x["title"])
+        elif sort == "desc":
+            # def test_get_tasks_sorted_desc(client, three_tasks):
+            tasks_response = sorted(
+                tasks_response, key=lambda x: x["title"], reverse=True)
         return jsonify(tasks_response)
 
     elif request.method == "POST":  # CRUD CREATE
@@ -44,7 +57,7 @@ def handle_tasks():  # NameError
 
         db.session.add(task)
         db.session.commit()
-        
+
         if task.completed_at == None:
             completed_at = False
         else:
@@ -59,6 +72,8 @@ def handle_tasks():  # NameError
         }, 201
 
 # getting 1 task
+
+
 @task_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
 def handle_task(task_id):
     task = Task.query.get(task_id)
@@ -111,3 +126,23 @@ def handle_task(task_id):
         return {
             "details": f"Task {task.task_id} \"{task.title}\" successfully deleted"
         }
+
+# test wave3
+# creating new endpoint to update is_complete=True
+
+
+@task_bp.route("/<task_id>", methods=["PATCH"])
+def mark_complete(task_id):
+    task = Task.query.get(task_id)
+    task.completed_at = date.today()  # todays date
+
+    db.session.commit()
+
+    return {
+        "task": {
+            "id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": completed_at
+        }
+    }
