@@ -47,13 +47,7 @@ def handle_tasks():
             db.session.add(new_task)
             db.session.commit()
 
-            return make_response({
-                "task": {
-                    "id": new_task.task_id,
-                    "title": new_task.title,
-                    "description": new_task.description,
-                    "is_complete": new_task.is_complete()
-            }}, 201)
+            return new_task.to_json(), 201
 
 @tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
 def handle_task(task_id):
@@ -62,23 +56,8 @@ def handle_task(task_id):
         return make_response("", 404)
 
     if request.method == "GET":
-        if task.goal_id:
-            return {
-                "task": {
-                    "id": task.task_id,
-                    "goal_id": task.goal_id,
-                    "title": task.title,
-                    "description": task.description,
-                    "is_complete": task.is_complete()
-            }}
-        else:
-            return {
-                "task": {
-                    "id": task.task_id,
-                    "title": task.title,
-                    "description": task.description,
-                    "is_complete": task.is_complete()
-            }}
+        return task.to_json()
+
     elif request.method == "PUT":
         form_data = request.get_json()
 
@@ -88,13 +67,8 @@ def handle_task(task_id):
 
         db.session.commit()
 
-        return {
-                "task": {
-                    "id": task.task_id,
-                    "title": task.title,
-                    "description": task.description,
-                    "is_complete": task.is_complete()
-            }}
+        return task.to_json()
+
     elif request.method == "DELETE":
         db.session.delete(task)
         db.session.commit()
@@ -119,14 +93,7 @@ def mark_complete(task_id):
     requests.patch('https://slack.com/api/chat.postMessage',
     headers=headers, data=data)
 
-    return {
-        "task": {
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": True # is this better if it uses is_complete()?
-        }
-    }
+    return task.to_json()
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
 def mark_incomplete(task_id):
@@ -136,14 +103,7 @@ def mark_incomplete(task_id):
 
     task.completed_at = None
 
-    return {
-        "task": {
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": False # is this better if it uses is_complete()?
-        }
-    }
+    return task.to_json()
 
 @goals_bp.route("", methods=["POST", "GET"])
 def handle_goals():
