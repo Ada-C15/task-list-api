@@ -145,7 +145,7 @@ def add_tasks_to_goals(goal_id):
 
     db.session.commit()
 
-    return make_response(jsonify({"id": goal.goal_id, "task_ids": request_body["task_ids"]}))
+    return make_response(jsonify({"id": goal.goal_id, "task_ids": [task.task_id for task in goal.tasks]}))
 
 
 
