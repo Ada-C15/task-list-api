@@ -57,7 +57,6 @@ def handle_task(task_id):
 
     if request.method == "GET":
         return task.to_json()
-
     elif request.method == "PUT":
         form_data = request.get_json()
 
@@ -68,7 +67,6 @@ def handle_task(task_id):
         db.session.commit()
 
         return task.to_json()
-
     elif request.method == "DELETE":
         db.session.delete(task)
         db.session.commit()
@@ -122,12 +120,7 @@ def handle_goals():
         db.session.add(new_goal)
         db.session.commit()
 
-        return ({
-            "goal": {
-                "id": new_goal.goal_id,
-                "title": new_goal.title
-            }
-        }, 201)
+        return (new_goal.to_json(), 201)
     elif request.method == "GET":
         goals = Goal.query.all()
 
@@ -146,11 +139,7 @@ def handle_task(goal_id):
         return make_response("", 404)
 
     if request.method == "GET":
-        return {
-            "goal": {
-                "id": goal.goal_id,
-                "title": goal.title
-        }}
+        return goal.to_json()
     elif request.method == "PUT":
         form_data = request.get_json()
 
@@ -158,11 +147,7 @@ def handle_task(goal_id):
 
         db.session.commit()
 
-        return {
-                "goal": {
-                    "id": goal.goal_id,
-                    "title": goal.title
-            }}
+        return goal.to_json()
     elif request.method == "DELETE":
         db.session.delete(goal)
         db.session.commit()
