@@ -85,6 +85,11 @@ def handle_task(task_id):
     elif request.method == "PUT":
         form_data = request.get_json()
 
+        if not form_data["completed_at"]:
+            if not isinstance(form_data["completed_at"], datetime)\
+                and form_data["completed_at"] != None:
+                return make_response("Timestamp must be in correct format", 401)
+
         #task.from_json(form_data)
 
         task.title = form_data["title"]
