@@ -1,9 +1,10 @@
 from app import db
-from flask import request, Blueprint, make_response, jsonify
+from flask import request, Blueprint, jsonify
 from .models.task import Task
+import datetime
 
 
-### WAVE 1 AND 2
+### WAVES 1 AND 2
 
 # Create an endpoint specifically for tasks (all the routes start with /tasks):
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -23,10 +24,9 @@ def get_tasks():
         tasks = Task.query.order_by("title")
     elif sort_query == "desc":
         tasks = Task.query.order_by("title desc")        # using string allows us to be more specific in our queries
-        # tasks = Task.query.order_by(Task.title.desc())  # same as above
+        tasks = Task.query.order_by(Task.title.desc())  # same as above
     else:
         tasks = Task.query.all()
-
 
     tasks_response = []
     for task in tasks:
@@ -52,15 +52,15 @@ def get_tasks():
 # define a route with default empty string for POST:
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_task():  
+
     request_body = request.get_json()
 
     # if not request_body["title"] or not request_body["description"]:  # triggers key error
     if not request_body.get("title") or not request_body.get("description"):
         return jsonify({"details": "Invalid data"}), 400 
 
-    # OR try except
     try:
-        request_body["is_complete"] == None
+        request_body["completed_at"] == None
     except KeyError:
         return jsonify({"details": "Invalid data"}), 400 
  
@@ -73,17 +73,7 @@ def create_task():
     db.session.commit()  
 
     # we need an extra step to transfer completed_at to is_completed:
-    task_dict = {
-        "id": new_task.id,
-        "title": new_task.title,
-        "description": new_task.description
-    }
-    
-    if request_body["completed_at"] == None:
-        # adds key to temp dict before we can return new_task
-        task_dict["is_complete"] = False
-    else:
-        task_dict["is_complete"] = True
+    task_dict = new_task.to_dict()
 
     return jsonify({"task": task_dict}), 201
 
@@ -91,18 +81,16 @@ def create_task():
 # define a new route to GET a specific task
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def get_one_task(task_id):
+
+    if not is_int(task_id):        
+        return {"message": f"ID {task_id} must be an integer"}, 400
+    
     task = Task.query.get(task_id)
 
     if task is None:
-        return make_response("", 404)
-
+        return jsonify(None), 404
     else:
-        task_dict = {
-        "id": task.id,
-        "title": task.title,
-        "description": task.description,
-        "is_complete": False
-        }
+        task_dict = task.to_dict()
      
     return jsonify({"task": task_dict}), 200
 
@@ -111,31 +99,22 @@ def get_one_task(task_id):
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_single_task(task_id):
 
-    # check whether task_id is an int:
     if not is_int(task_id):        
-        return {
-            "success": False,
-            "message": f"ID {task_id} must be an integer"
-        }, 400
+        return {"message": f"ID {task_id} must be an integer"}, 400
     
     task = Task.query.get(task_id)
 
     if task is None:
-        return make_response("", 404)
+        return jsonify(None), 404
 
-    ### HOW DOES form_data WORK?
     form_data=request.get_json()
     task.title=form_data["title"]
     task.description=form_data["description"]
     task.completed_at=form_data["completed_at"]
     db.session.commit()
 
-    task_dict = {
-        "id": task.id,
-        "title": task.title,
-        "description": task.description,
-        "is_complete": False                ### WHAT IF is_complete IS TRUE?
-        }
+    # we need an extra step to transfer completed_at to is_completed:
+    task_dict = task.to_dict()
     
     return jsonify({"task": task_dict}), 200
 
@@ -144,17 +123,12 @@ def update_single_task(task_id):
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
 def delete_single_task(task_id):
 
-    # check whether book_id is an int:
-    if not is_int(task_id):        # BEFORE isinstance(book_id, int):
-        return {
-            "success": False,
-            "message": f"ID {task_id} must be an integer"
-        }, 400
+    if not is_int(task_id):        
+        return {"message": f"ID {task_id} must be an integer"}, 400
 
     task = Task.query.get(task_id)
 
     if task is None:
-        # return make_response("", 404)   # used to render templates like HTML
         return jsonify(None), 404
    
     db.session.delete(task)
@@ -163,11 +137,51 @@ def delete_single_task(task_id):
     return jsonify({"details": f'Task {task.id} "{task.title}" successfully deleted'}), 200
 
 
+### WAVE 3 - PATCH ROUTES
+
+# define a new route to update (PATCH) one task by its id (route parameter between <>, treated as a variable):
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def mark_complete(task_id):
+
+    if not is_int(task_id):        
+        return {"message": f"ID {task_id} must be an integer"}, 400
+    
+    task = Task.query.get(task_id)
+
+    if task is None:
+        return jsonify(None), 404
+
+    task.completed_at=datetime.datetime.now()
+    db.session.commit()
+
+    # we need an extra step to transfer completed_at to is_completed:
+    task_dict = task.to_dict()
+    
+    return jsonify({"task": task_dict}), 200
 
 
+# define a new route to update (PATCH) one task by its id (route parameter between <>, treated as a variable):
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
+def mark_incomplete(task_id):
 
+    # check whether task_id is an int:
+    if not is_int(task_id):        
+        return {"message": f"ID {task_id} must be an integer"}, 400
+    
+    task = Task.query.get(task_id)
 
+    if task is None:
+        return jsonify(None), 404
 
+    if task.completed_at != None:
+        task.completed_at = None
+        task.is_complete = False
+
+    db.session.commit()
+
+    task_dict = task.to_dict()
+        
+    return jsonify({"task": task_dict}), 200
 
 
 

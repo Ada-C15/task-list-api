@@ -10,3 +10,16 @@ class Task(db.Model):
     completed_at = db.Column(db.DateTime, nullable=True)
 
     __tablename__= "tasks"
+
+    def to_dict(self):
+        if self.completed_at == None:
+            # adds key to temp dict before we can return new_task
+            is_complete = False
+        else:
+            is_complete = True
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "is_complete": is_complete
+        }
