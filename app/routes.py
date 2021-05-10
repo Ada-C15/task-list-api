@@ -1,7 +1,9 @@
 from app import db
 from app.models.task import Task
+from app.models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify
-from datetime import datetime
+import datetime
+import requests
 
 
 
@@ -65,12 +67,27 @@ def handle_tasks(task_id):
 
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
+
     task = Task.query.get(task_id)
     if task is None:
         return make_response("", 404)
     elif not task.is_complete(): 
-        task.completed_at = True
+        task.completed_at = datetime.datetime.now()
+        db.session.commit()
+
+    path = "https://slack.com/api/chat.postMessage"
+
+    headers = {'Authorization': 'Bearer SLACK_API_KEY'}
+
+    query_params = {
+        "channel": "task-notifications",
+        "text": "Someone just completed the task My Beautiful Task",
+        "format": "json"
+    }
+
+    response = requests.post(path, params=query_params, headers = headers)
     return {"task": task.to_json()}, 200
+
     
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
 def mark_incomplete(task_id):
@@ -80,6 +97,25 @@ def mark_incomplete(task_id):
     elif task.is_complete(): 
         task.completed_at = None
     return {"task": task.to_json()}, 200
+
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
+
+@goals_bp.route("", methods = ["POST"])
+def goals():
+    request_body = request.get_json()
+    new_goal = Goal(title = request_body("title"))
+
+    db.session.add(new_goal)
+    db.session.commit()
+
+    return make_response(jsonify({"goal": new_goal.to_json()}), 201)
+
+
+
+
+
+
+
 
 
 
