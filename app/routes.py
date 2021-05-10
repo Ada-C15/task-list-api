@@ -74,8 +74,7 @@ def handle_complete(task_id):
     if task is None:
         return make_response("", 404)
     else:
-        form_data = request.get_json()
-        task.completed_at = form_data["completed_at"]
+        task.completed_at = datetime.now()
         db.session.commit()
         return jsonify({"task": task.to_dict()}), 200
 
@@ -86,7 +85,6 @@ def handle_incomplete(task_id):
     if task is None:
         return make_response("", 404)
     else:
-        form_data = request.get_json()
-        task.completed_at = form_data["completed_at"]
+        task.completed_at = None
         db.session.commit()
         return jsonify({"task": task.to_dict()}), 200
