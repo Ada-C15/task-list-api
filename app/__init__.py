@@ -10,6 +10,7 @@ migrate = Migrate()
 
 load_dotenv()
 
+slack_token = os.environ.get("TOKEN")
 
 def create_app(test_config=None):
     app = Flask(__name__)

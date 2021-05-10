@@ -1,10 +1,14 @@
-from datetime import datetime
 from flask import request, Blueprint, Response, jsonify, make_response
 from app import db
 from app.models.task import Task
+
 # wave #2 
 from sqlalchemy import asc, desc
-
+# wave 3 
+from datetime import datetime
+# wave 4 
+import requests
+from app import slack_token 
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -76,8 +80,20 @@ def one_task_only(task_id):
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def edit_one_task_complete(task_id):
     task = Task.query.get(task_id)
+
     if task == None:
         return make_response("",404)
+# creating a connection with slack api 
+    url = "https://slack.com/api/chat.postMessage"
+    data = {
+        "channel" : "C021A7E1AE6",
+        "text": (f"Someone just completed the task {task.title}")
+    }
+    headers = {
+        "Authorization": slack_token
+    }
+    connect = requests.post(url, data=data, headers=headers)
+    
         
     task.completed_at = datetime.utcnow()
     db.session.commit()
