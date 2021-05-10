@@ -10,12 +10,11 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 @tasks_bp.route("", methods=["GET", "POST"], strict_slashes= False)
 def deal_tasks():
     if request.method == "GET":
-        #wanted to do wave 2 with if statement here but can't get syntax to work
-        # query_string = request.query_string
-        # if "/tasks?sort=desc" in query_string:
-        #     tasks = tasks = Task.query.order_by(desc(Task.title)).all()
-        # else:
-        tasks = Task.query.order_by(Task.title).all() #<- handles first wave 2
+        sort_query = request.args.get("sort")
+        if sort_query == "desc":
+            tasks = Task.query.order_by(Task.title.desc()).all()
+        else:
+            tasks = Task.query.order_by(Task.title).all() #<- handles first wave 2
         tasks_response = []
         for task in tasks:
             tasks_response.append(task.to_json())
@@ -43,16 +42,6 @@ def get_task_by_id(task_id):
         return jsonify(None), 404
     else:
         return make_response({"task": task.to_json()}, 200)
-
-# #wave 2 desc part does not work either way need to debug/ rewrite
-# @tasks_bp.route("?sort=desc", methods=["GET"], strict_slashes= False)
-# def sort_desc_title():
-#     tasks = Task.query.order_by(desc(Task.title)).all()
-#     tasks_response = []
-#         for task in tasks:
-#             tasks_response.append(task.to_json())
-#         return jsonify(tasks_response)
-
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes= False)
 def delete_task(task_id):
