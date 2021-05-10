@@ -169,11 +169,16 @@ def delete_goal(goal_id):
     db.session.commit()
     return make_response({'details': f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}, 200)
 
-# @goal_bp.route("/<goal_id>/tasks", methods=["POST"])
-# def create_goal_w_tasks(goal_id, task_list):
-#     """Updates goal with related tasks"""
-#     request_body = request.get_json() # {"task_ids": [1, 2, 3]}
-#     target_goal = Goal.query.get(goal_id) # get the target goal
-#     target_goal.tasks = request_body["task_ids"] # assign user's tasks to new db column
-#     db.session.commit() # commit the change to the attr
-#     return jsonify(target_goal.to_json())
+# STILL WORKING ON THIS FOR STARTING WAVE 6
+@goal_bp.route("/<goal_id>/tasks", methods=["POST"])
+def create_goal_w_tasks(goal_id, task_list):
+    """Updates goal with related tasks"""
+    request_body = request.get_json() # {"task_ids": [1, 2, 3]}
+    target_goal = Goal.query.get(goal_id) # get the target goal
+    target_goal.tasks = request_body["task_ids"] # assign user's tasks to new db column
+    db.session.commit() # commit the change to the attr
+    return {
+            "id": self.goal_id,
+            "title": self.title,
+            "task_ids": self.tasks
+            }
