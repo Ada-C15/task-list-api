@@ -8,7 +8,7 @@ from app import db
 from datetime import datetime
 import os
 import time
-# from slack import WebClient
+from slack import WebClient
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
@@ -96,7 +96,7 @@ def mark_complete(task_id):
 
     db.session.commit()
 
-    # message_to_slack("#task-notifications", f"Someone just completed the task {task.title}")
+    message_to_slack("#task-notifications", f"Someone just completed the task {task.title}")
     return {
         "task": task.to_json()
     }, 200
@@ -120,84 +120,75 @@ def mark_incomplete(task_id):
         }, 200
 
 #wave 4 
-# client = WebClient(token=os.environ["SLACK_API_TOKEN"])
+client = WebClient(token=os.environ["SLACK_API_TOKEN"])
 
-# # wrapper for sending a Slack message
-# def message_to_slack(channel, message):
-#     return client.chat_postMessage(
-#         channel=channel,
-#         text=message
-#     )
+# wrapper for sending a Slack message
+def message_to_slack(channel, message):
+    return client.chat_postMessage(
+        channel=channel,
+        text=message
+    )
 
 
 # #wave_5
 # # created second models for goals
-# @goals_bp.route("", methods=["POST"])
-# def create_goal():
-#     request_body = request.get_json()
+@goals_bp.route("", methods=["POST"])
+def create_goal():
+    request_body = request.get_json()
 
-#     if "title" not in request_body:
-#         return (
-#             {"details": "Invalid data"}
-#             ), 400
-#     else:
-#         add_goal = Goal(title = request_body["title"])
+    if "title" not in request_body:
+        return (
+            {"details": "Invalid data"}
+            ), 400
+    else:
+        add_goal = Goal(title = request_body["title"])
 
-#         db.session.add(add_goal)
-#         db.session.commit()
+        db.session.add(add_goal)
+        db.session.commit()
 
-#         return make_response({
-#                 "goal": add_goal.to_json_goal()
-#             }, 201)
+        return make_response({
+                "goal": add_goal.to_json_goal()
+            }, 201)
 
-# @goals_bp.route("", methods=["GET"])
-# def get_goals():
-#     goals = Goal.query.all()
+@goals_bp.route("", methods=["GET"])
+def get_goals():
+    goals = Goal.query.all()
 
-#     goals_response = []
-#     for goal in goals: 
-#         goals_response.append(goal.to_json_goal())
+    goals_response = []
+    for goal in goals: 
+        goals_response.append(goal.to_json_goal())
 
-#     return jsonify(goals_response)
+    return jsonify(goals_response)
 
-# @goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
-# def handle_goals(goal_id):
+@goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
+def handle_goals(goal_id):
 
-#     goal = Goal.query.get(goal_id)
-#     if goal is None:
-#         return make_response("", 404)
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
     
-#     if request.method == "GET":
-#         return make_response(
-#             {"goal": goal.to_json_goal()
-#         }, 200)
+    if request.method == "GET":
+        return make_response(
+            {"goal": goal.to_json_goal()
+        }, 200)
 
-#     elif request.method == "PUT":
-#         form_data = request.get_json()
-#         goal.title = form_data["title"]
+    elif request.method == "PUT":
+        form_data = request.get_json()
+        goal.title = form_data["title"]
 
-#         db.session.commit()
+        db.session.commit()
 
-#         return make_response(
-#             {"goal": goal.to_json_goal()}, 200)
+        return make_response(
+            {"goal": goal.to_json_goal()}, 200)
 
-#     elif request.method == "DELETE":
+    elif request.method == "DELETE":
 
-#         db.session.delete(goal)
-#         db.session.commit()
+        db.session.delete(goal)
+        db.session.commit()
 
-#         return make_response({
-#             "details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"
-#             })
-
-
-
-
-
-
-
-
-
+        return make_response({
+            "details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"
+            })
 
 
 # Wave 6
