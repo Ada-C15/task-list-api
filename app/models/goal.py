@@ -14,7 +14,13 @@ class Goal(db.Model):
             "title": self.title
         }
 
-    def tasks_to_dict(self):
+    def tasks_ids_to_dict(self):
+        """
+        {
+        "id": 1,
+        "task_ids": [1, 2, 3]
+        }
+        """
         tasks_ids = []
         for task in self.tasks:
             tasks_ids.append(task.task_id)

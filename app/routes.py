@@ -48,8 +48,8 @@ def handle_one_task_get(task_id):
     if task is None:
         return jsonify(None), 404
 
-    if task:
-        return ({"task": task.to_dict()}, 200)
+    response_body = {"task": task.to_dict_with_goal()}
+    return (response_body, 200)
 
 
 @tasks_bp.route("", methods=["POST"])
@@ -293,9 +293,33 @@ def handle_one_goal_many_tasks_get(goal_id):
 
     for task_id in tasks_ids_to_belong:
         task = Task.query.get(task_id)
-        task.goal_id = goal_id
+        task.goal_id = int(goal_id)
         db.session.commit()
 
-    response_body = goal.tasks_to_dict()
+    response_body = goal.tasks_ids_to_dict()
+
+    return (response_body, 200)
+
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
+def handle_tasks_of_goal_get(goal_id):
+    """
+    Getting Tasks of One Goal
+    """
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return jsonify(None), 404
+
+    tasks = goal.tasks
+
+    tasks_list = []
+    for task in tasks:
+        tasks_list.append(task.to_dict_with_goal())
+    response_body = {
+        "id": int(goal_id),
+        "title": goal.title,
+        "tasks": tasks_list
+    }
 
     return (response_body, 200)
