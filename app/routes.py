@@ -111,6 +111,32 @@ def post_goal():
     db.session.commit()
     return {"goal":new_goal.build_dict()}, 201
 
+@goals_bp.route("/<goal_id>", methods = ["PUT"])
+def update_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
+    form_data = request.get_json()
+    goal.title = form_data["title"]
+    db.session.commit()
+
+    return make_response(jsonify({"goal":goal.build_dict()}))
+
+@goals_bp.route("/<goal_id>", methods = ["DELETE"])
+def delete_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
+    db.session.delete(goal)
+    db.session.commit()
+
+    return {"details" : f'Goal {goal_id} \"{goal.title}\" successfully deleted'}
+
+
+
+
+
+
         
     
 
