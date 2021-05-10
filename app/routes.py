@@ -152,10 +152,10 @@ def get_tasks_for_goal(goal_id):
     goal = Goal.query.get(goal_id)
     if goal is None:
         return make_response("", 404)
-    else:
-        goal_dict = goal.build_dict()
-        goal_dict["tasks"] = goal.tasks
-        return goal_dict
+    tasks = [task.build_dict() for task in goal.tasks]
+    goal_dict = goal.build_dict()
+    goal_dict["tasks"] = tasks
+    return goal_dict
 
 
         

@@ -16,9 +16,19 @@ class Task(db.Model):
         return False
 
     def build_dict(self):
-        return {
-            "id": self.task_id,
-            "title": self.title,
-            "description": self.description,
-            "is_complete": self.is_complete()
-        }
+        if self.goal_id:
+
+            return {
+                "id": self.task_id,
+                "goal_id": self.goal_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.is_complete()
+            }
+        else:
+            return {
+                "id": self.task_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.is_complete()
+            }
