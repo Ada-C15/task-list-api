@@ -134,7 +134,18 @@ def delete_goal(goal_id):
 
     return {"details" : f'Goal {goal_id} \"{goal.title}\" successfully deleted'}
 
+@goals_bp.route("/<goal_id>/tasks", methods = ["POST"])
+def add_tasks_to_goals(goal_id):
+    goal = Goal.query.get(goal_id)
+    request_body = request.get_json(goal)
+    for task_id in request_body["task_ids"]:
+        task = Task.query.get(task_id)
+        task.goal_id = goal_id
 
+
+    db.session.commit()
+
+    return make_response(jsonify({"id": goal.goal_id, "task_ids": request_body["task_ids"]}))
 
 
 
