@@ -49,7 +49,7 @@ def get_tasks():
         return make_response({"task": update_new_task}, 201)
 
 @task_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
-def get_single_task(task_id):
+def handle_single_task(task_id):
     task = Task.query.get(task_id)
 
     if task is None:
@@ -112,7 +112,7 @@ def update_task_with_incomplete(task_id):
     return {"task": updated_task}
 
 @goal_bp.route("", methods=["POST", "GET"])
-def create_or_get_goal():
+def create_or_get_goals():
 
     goals = Goal.query.all()
     if request.method == "GET":
@@ -131,3 +131,20 @@ def create_or_get_goal():
         db.session.add(new_goal)
         db.session.commit()
     return make_response({"goal": new_goal.to_json()}, 201)
+
+@goal_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
+def handle_single_goal(goal_id): 
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
+    if request.method == "GET":
+        return {"goal": goal.to_json()}
+    elif request.method == "PUT":
+        request_body = request.get_json()
+        goal.title = request_body["title"]
+        db.session.commit()
+        return make_response({"goal": goal.to_json()}, 200)
+    elif request.method == "DELETE":
+        db.session.delete(goal)
+        db.session.commit()
+        return make_response({"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}, 200)
