@@ -10,8 +10,28 @@ import requests
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
+
+def post_to_slack(text, request_method):
+    """
+    Posts a message to Slack channel
+    text is the string to be posted
+    request_method is the type of request, e.g. requests.patch
+    """
+    headers = {"Authorization": os.environ.get("SLACK_KEY")}
+    data = {
+        "channel": "C021GPYFGKT",
+        "text": text
+    }
+
+    request_method('https://slack.com/api/chat.postMessage',
+    headers=headers, data=data)
+
 @tasks_bp.route("", methods=["POST", "GET"])
 def handle_tasks():
+    """
+    Gets all tasks, with option of querying by ascending or descending order
+    Posts new task
+    """
     if request.method == "GET":
         sort_query = request.args.get("sort")
         if sort_query == "asc":
@@ -21,7 +41,7 @@ def handle_tasks():
         else:
             tasks = Task.query.all()
 
-        tasks_response = []
+        tasks_response = [] # Can I use to_json() in a loop like this?
         for task in tasks:
             tasks_response.append({
                 "id": task.task_id,
@@ -51,6 +71,11 @@ def handle_tasks():
 
 @tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
 def handle_task(task_id):
+    """
+    Gets task by task_id
+    Updates specific task information
+    Deletes task by task_id
+    """
     task = Task.query.get(task_id)
     if task is None:
         return make_response("", 404)
@@ -59,6 +84,8 @@ def handle_task(task_id):
         return task.to_json()
     elif request.method == "PUT":
         form_data = request.get_json()
+
+        #task.from_json(form_data)
 
         task.title = form_data["title"]
         task.description = form_data["description"]
@@ -76,25 +103,24 @@ def handle_task(task_id):
 
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
+    """
+    Marks task as complete and posts notification message to Slack channel
+    """
     task = Task.query.get(task_id)
     if task is None:
         return make_response("", 404)
 
     task.completed_at = datetime.utcnow()
 
-    headers = {"Authorization": os.environ.get("SLACK_KEY")}
-    data = {
-        "channel": "C021GPYFGKT",
-        "text": f"Someone just completed the task {task.title}"
-    }
-
-    requests.patch('https://slack.com/api/chat.postMessage',
-    headers=headers, data=data)
+    post_to_slack(f"Someone just completed the task {task.title}", requests.patch)
 
     return task.to_json()
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
 def mark_incomplete(task_id):
+    """
+    Marks task as incomplete
+    """
     task = Task.query.get(task_id)
     if task is None:
         return make_response("", 404)
@@ -105,6 +131,10 @@ def mark_incomplete(task_id):
 
 @goals_bp.route("", methods=["POST", "GET"])
 def handle_goals():
+    """
+    Gets all goals
+    Posts new goal
+    """
 
     if request.method == "POST":
         request_body = request.get_json()
@@ -134,6 +164,11 @@ def handle_goals():
 
 @goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
 def handle_task(goal_id):
+    """
+    Gets goal by goal_id
+    Updates specific goal information
+    Deletes goal by goal_id
+    """
     goal = Goal.query.get(goal_id)
     if goal is None:
         return make_response("", 404)
@@ -157,6 +192,10 @@ def handle_task(goal_id):
 
 @goals_bp.route("/<goal_id>/tasks", methods=["GET", "POST"])
 def handle_goals_tasks(goal_id):
+    """
+    Gets list of tasks associated with goal_id
+    Creates new relationship between goal and list of tasks
+    """
     goal = Goal.query.get(goal_id)
 
     if goal is None:
@@ -166,7 +205,7 @@ def handle_goals_tasks(goal_id):
         tasks = Task.query.filter_by(goal_id=goal.goal_id)
 
         tasks_response = []
-        for task in tasks:
+        for task in tasks: # Can I use to_json() in a loop like this?
             tasks_dict = {
                 "id": task.task_id,
                 "goal_id": task.goal_id,

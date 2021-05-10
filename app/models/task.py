@@ -34,5 +34,15 @@ class Task(db.Model):
                         "is_complete": self.is_complete()
                 }}
 
-    def from_json(self):
-        return jsonify(self)
+    # def from_json(self, input_data):
+    #         return (self.title=input_data["title"]
+    #         self.description=input_data["description"]
+    #         self.completed_at=input_data["completed_at"])
+
+    # How do I set a variable equal to a new instance when the instance hasn't been created yet?
+
+    # def validate_datetime(self):
+    #     try:
+    #         if isinstance(self.completed_at, db.Datetime)
+    #     except ValueError:
+    #         return ("Invalid timestamp", 401)
