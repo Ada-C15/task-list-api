@@ -1,6 +1,7 @@
 from app import db
 from app.models.task import Task
-from flask import Blueprint, request, make_response, jsonify
+from flask import Blueprint, request, jsonify
+from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -13,11 +14,7 @@ def get_single_task(task_id):
         return jsonify(None), 404
     # This portion is the GET request for only one task
     elif request.method == "GET":
-        return {"task": {
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": False}}, 200
+        return {"task": task.to_json()}, 200
     elif request.method == "PUT":
         # This portion is the PUT request for only one task
         request_body = request.get_json()
@@ -25,11 +22,7 @@ def get_single_task(task_id):
         task.description = request_body["description"]
         # Save action
         db.session.commit()
-        return {"task": {
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": False}}, 200
+        return {"task": task.to_json()}, 200
     elif request.method == "DELETE":
         db.session.delete(task)
         db.session.commit()
@@ -39,7 +32,7 @@ def get_single_task(task_id):
 
 @tasks_bp.route("", methods=["GET"])
 def tasks_index():
-    # This portion is the GET request
+    
     query_sorted = request.args.get("sort")
     if query_sorted == "asc":
         # Found in SQLALchemy documentation. 
@@ -53,7 +46,7 @@ def tasks_index():
         tasks = Task.query.order_by(Task.title.desc())
     else:
         tasks = Task.query.all()
-
+    # This portion is the just a GET request
     if tasks == None:
         return []
     else:
@@ -75,13 +68,29 @@ def tasks():
         db.session.add(new_task)
         db.session.commit()
 
-        return make_response({
-            "task": {
-            "id": new_task.task_id,
-            "title": request_body["title"],
-            "description": request_body["description"],
-            "is_complete": False
-            }}, 201)
+        return {"task": new_task.to_json()}, 201
     except KeyError:
         return {
             "details": "Invalid data"}, 400
+
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
+def mark_complete(task_id):
+    patch_task = Task.query.get(task_id)
+    date = datetime.utcnow()
+    if patch_task == None:
+        return jsonify(None), 404
+    # Mark Complete on an Incompleted Task
+    patch_task.completed_at = date
+    db.session.commit()
+
+    return {"task":patch_task.to_json()}, 200
+
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
+def mark_incomplete(task_id):
+    patch_task = Task.query.get(task_id)
+    if patch_task == None:
+        return jsonify(None), 404
+    patch_task.completed_at = None
+    db.session.commit()
+
+    return {"task":patch_task.to_json()}, 200
