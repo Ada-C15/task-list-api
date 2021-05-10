@@ -1,7 +1,8 @@
-from flask import current_app
+# from flask import current_app
 from app import db
 from dataclasses import dataclass
 import datetime
+# from .models.goal import Goal
 
 @dataclass # do i need this decorator and what is it doing?
 class Task(db.Model): 
@@ -17,14 +18,26 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable = True) 
+    goal_id = db.Column(db.Integer, db.ForeignKey('goal.id'), nullable=True)
+    # goal = db.relationship('Goal', backref='task')
+    # goal = db.relationship('Goal', back_populates='task')
 
     def to_dictionary(self):
-        return {
-            "id": self.id,
-            "title": self.title,
-            "description": self.description,
-            "is_complete": self.completed_at != None
-            }
+        if self.goal_id:
+            return {
+                "id": self.id,
+                "title": self.title,
+                "description": self.description,
+                "goal_id": self.goal_id,
+                "is_complete": self.completed_at != None
+                }
+        else:
+            return {
+                "id": self.id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.completed_at != None
+                }
 
     # this to_dictionary(self) method will format each task instance as a dictionary that, 
     # with the function jsonify(), can be wrapped/converted in JSON format 

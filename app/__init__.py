@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 import os # This built-in module provides a way to read environment variables
 from dotenv import load_dotenv # The python-dotenv package specifies to import the package like this
 
+
 db = SQLAlchemy()
 migrate = Migrate()
 load_dotenv() # The python-dotenv package specifies to call this method, which loads the values from our .env file so that the os module is able to see them.

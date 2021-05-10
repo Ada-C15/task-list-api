@@ -7,7 +7,6 @@ from datetime import datetime
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
-index_bp = Blueprint("index", __name__, url_prefix="/index")
 
 ####################### POST TASK CRUD - CREATE #############################
 @tasks_bp.route("", methods=["POST"]) # The route usually starts with the model plural - but the tasks_bp Blueprint - is already providing the url_prefix="/tasks"
@@ -223,3 +222,53 @@ def update_goal(goal_id):
         jsonable_update_goal = update_goal.to_dictionary()
 
         return jsonify(goal=jsonable_update_goal), 200
+
+
+###################### RELATIONAL REQUESTS ###########################
+
+####################### POST TASK_IDs to GOAL CRUD - CREATE #############################
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"]) 
+def post_task_ids_to_goal(goal_id): 
+    # goal_to_update = Goal.query.get(goal_id)
+    request_in_json = request.get_json()
+
+    new_task_ids = request_in_json["task_ids"]
+    for t in new_task_ids:
+        task_to_update = Task.query.get(t)
+        # goal_to_update.tasks.append(task_to_update) -- what?
+        task_to_update.goal_id = goal_id
+    db.session.commit() # saves the goal to the database
+        
+    response_body = {
+        "id": int(goal_id),
+        "task_ids": new_task_ids
+    }
+
+    return jsonify(response_body), 200
+
+        ###########
+    # if 'title' not in request_body.keys(): # this condition works withour the keys() function too
+    #     response_bod = {"details": "Invalid data"}
+    #     return jsonify(response_bod), 400
+        ###########
+
+####################### GET TASK for GOAL CRUD - READ #############################
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
+def get_tasks_for_specific_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal:
+        tasks_in_dictionary = []
+        for t in goal.tasks:
+            tasks_in_dictionary.append(t.to_dictionary())
+        
+        response = {
+            "id": goal.id,
+            "title": goal.title,
+            "tasks": tasks_in_dictionary
+        }
+    
+        return jsonify(response), 200
+    else:
+        response = None
+        return jsonify(response), 404
