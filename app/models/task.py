@@ -11,9 +11,12 @@ class Task(db.Model):
     
 
     def to_json(self):
-        return {
+        result = {
             "id": self.id,
             "title": self.title,
             "description": self.description,
             "is_complete": self.completed_at != None
         }
+        if self.goal_id:
+            result["goal_id"] = self.goal_id
+        return result

@@ -97,14 +97,11 @@ def marking_complete(task_id):
 
             TOKEN = os.environ.get("SLACK_KEY")
             path = "https://slack.com/api/chat.postMessage"
-            
-            channel = "task-notifications"                         # this could just be part of the dict
-            text = f"Someone just completed the task {task.title}" #  ^ 
             headers = {"authorization": f"Bearer {TOKEN}"}
             
             query_params = {
-                "channel": channel,
-                "text": text, 
+                "channel": "task-notifications",
+                "text": f"Someone just completed the task {task.title}", 
             }
             response = requests.post(path, query_params, headers=headers)
 
@@ -180,13 +177,6 @@ def update_goal(goal_id):
 
 
 
-@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
-def get_tasked_goal(goal_id):
-    goal = Goal.query.get(goal_id)
-    if not goal:
-        return goal_not_found(goal_id)
-    
-
 
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"])
 def handle_tasked_goals(goal_id):
@@ -194,12 +184,10 @@ def handle_tasked_goals(goal_id):
     goal_data = request.get_json()
     tasks = [] 
     task_ids = []
-
     for id in goal_data["task_ids"]:
         task = Task.query.get(id)
         tasks.append(task)
         task_ids.append(int(id))
-
     tasked_goal.tasks = tasks
     db.session.commit()
     response = {
@@ -207,3 +195,21 @@ def handle_tasked_goals(goal_id):
                 "task_ids": task_ids
                 }
     return make_response(response, 200) 
+
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
+def get_tasked_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal:
+        goal_data = request.get_json()
+        tasks_to_goal = goal.tasks
+        tasks_json = []
+        for task in goal.tasks:
+            tasks_json.append(task.to_json())
+        response = {
+                    "id": int(goal_id),
+                    "title": goal.title,
+                    "tasks": tasks_json
+        }
+        return make_response(response, 200)
+    return goal_not_found(goal_id)
