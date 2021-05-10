@@ -36,6 +36,13 @@ def validate_datetime(user_input):
         and user_input["completed_at"] != None:
             return make_response("completed_at must be in correct format", 401)
 
+# def check_instance(instance): # why does this not work?
+#     """
+#     Returns 404 error if instance not found
+#     """
+#     if instance is None:
+#         return make_response("", 404)
+
 @tasks_bp.route("", methods=["GET"])
 def get_tasks():
     """
@@ -57,7 +64,7 @@ def get_tasks():
             "description": task.description,
             "is_complete": task.is_complete()
         })
-    return jsonify(tasks_response) # why does this need to use jsonify? because it's a list?
+    return jsonify(tasks_response)
 
 @tasks_bp.route("", methods=["POST"])
 def post_task():
@@ -74,9 +81,7 @@ def post_task():
     else:
         validate_datetime(request_body)
 
-        new_task = Task(title=request_body["title"],
-        description=request_body["description"],
-        completed_at=request_body["completed_at"])
+        new_task = Task.from_json(Task, request_body)
 
         db.session.add(new_task)
         db.session.commit()
@@ -90,6 +95,7 @@ def get_task(task_id):
     Gets task by task_id
     """
     task = Task.query.get(task_id)
+    # check_instance(task)
     if task is None:
         return make_response("", 404)
 
@@ -108,8 +114,6 @@ def update_task(task_id):
     form_data = request.get_json()
 
     validate_datetime(form_data)
-
-    #task.from_json(form_data)
 
     task.title = form_data["title"]
     task.description = form_data["description"]

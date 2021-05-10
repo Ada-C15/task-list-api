@@ -9,6 +9,9 @@ class Task(db.Model):
     goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True)
 
     def is_complete(self):
+        """
+        Checks if task has completed_at value and is complete
+        """
         if self.completed_at is None:
             is_complete = False
         else:
@@ -16,6 +19,9 @@ class Task(db.Model):
         return is_complete
 
     def to_json(self):
+        """
+        Outputs formatted JSON dictionary of task attributes
+        """
         if self.goal_id:
             return {
                 "task": {
@@ -34,9 +40,10 @@ class Task(db.Model):
                         "is_complete": self.is_complete()
                 }}
 
-    # def from_json(self, input_data):
-    #         return (self.title=input_data["title"]
-    #         self.description=input_data["description"]
-    #         self.completed_at=input_data["completed_at"])
-
-    # How do I set a variable equal to a new instance when the instance hasn't been created yet?
+    def from_json(self, input_data):
+        """
+        Converts JSON input data into new instance of Task
+        """
+        return self(title=input_data["title"],
+        description=input_data["description"],
+        completed_at=input_data["completed_at"])
