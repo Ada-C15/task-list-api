@@ -1,3 +1,5 @@
+#test
+# 
 import datetime 
 from app import db
 from app.models.task import Task
@@ -28,12 +30,12 @@ def handle_task(task_id):
     # Get One Task: One Saved Task (Returns 200 OK)
     if request.method == "GET":
 
-        return { "task": {
+        return make_response( { "task": {
             "id": saved_task.task_id,
             "title": saved_task.title,
             "description": saved_task.description,
             "is_complete": bool(saved_task.completed_at)
-        }}, 200
+        }}, 200)
 
     # Update One Task (Returns 200 OK)
     elif request.method == "PUT":
