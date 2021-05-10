@@ -4,12 +4,18 @@ from app.models.task import Task
 from flask import request, Blueprint, make_response
 from flask import jsonify
 from .models.task import Task
+from .models.goal import Goal
 from datetime import datetime
 from dotenv import load_dotenv
 import re
 import os
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
+
+"""
+CRUD for Tasks
+"""
 
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_task():
@@ -47,7 +53,6 @@ def get_tasks():
     for task in tasks:
         tasks_response.append(task.to_json())
     return jsonify(tasks_response), 200
-
 
 
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
@@ -118,7 +123,6 @@ def slack_send_message():
     response = requests.post(path, data=query_params, headers=headers)
 
 
-
 @tasks_bp.route("/<task_id>/<complete_status>",methods=["PATCH"], strict_slashes=False)
 def mark_status_task(task_id, complete_status):
     task = Task.query.get(task_id)
@@ -141,3 +145,108 @@ def mark_status_task(task_id, complete_status):
 
 
 
+"""
+CRUD for Goals
+"""
+
+@goals_bp.route("", methods=["POST"], strict_slashes=False)
+def create_goal():
+    #Reads the HTTP request boby with:
+    request_body = request.get_json()
+    
+    if len(request_body) == 1:
+        new_goal = Goal(title = request_body["title"])
+            
+        db.session.add(new_goal)
+        db.session.commit()
+
+        return {
+            "goal" : new_goal.to_json()
+        }, 201
+
+    elif "title" not in request_body:
+        response = {
+            "details" : "Invalid data"
+        }
+        return make_response(response,400)
+
+    #return make_response(jsonify(new_task)), 201
+    # elif ("title" not in request_body) or ("description" not in request_body) or ("completed_at" not in request_body):
+    #     response = {
+    #         "details" : "Invalid data"
+    #     }
+    #     return make_response(response,400)
+
+
+
+
+@goals_bp.route("", methods=["GET"], strict_slashes=False)
+def get_goal():
+    goals_response = []
+
+    # query_param_value=request.args.get("sort")
+    # if query_param_value == "asc":
+    #     tasks = Task.query.order_by(Task.title)
+    # elif query_param_value == "desc":
+    #     tasks = Task.query.order_by(Task.title.desc())
+    # else:
+    goals = Goal.query.all()
+
+    for goal in goals:
+        goals_response.append(goal.to_json())
+    return jsonify(goals_response), 200
+
+
+@goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
+def get_one_goal(goal_id):
+    if not(re.match("[0-9]",goal_id)): 
+        return {
+            "message": f"Goal ID {goal_id} must be an integer"
+        }, 400
+
+    goal = Goal.query.get(goal_id)
+    if goal:
+        return{
+            "goal" : goal.to_json()
+        } , 200
+    return make_response("",404)
+
+
+@goals_bp.route("/<goal_id>",methods=["PUT"], strict_slashes=False)
+def update_goal(goal_id):
+    if not(re.match("[0-9]",goal_id)): 
+        return {
+            "message": f"Goal ID {goal_id} must be an integer"
+        }, 400
+
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("",404)
+
+    updates_body = request.get_json()
+    goal.title = updates_body["title"]
+
+    db.session.commit()
+
+    return {
+            "goal" : goal.to_json()
+    }, 200
+
+
+
+@goals_bp.route("/<goal_id>",methods=["DELETE"], strict_slashes=False)
+def delete_goal(goal_id):
+    if not(re.match("[0-9]",goal_id)): 
+        return {
+            "message": f"Goal ID {goal_id} must be an integer"
+        }, 400
+    
+    goal = Goal.query.get(goal_id)
+    if goal == None:
+        return make_response("",404)
+
+    db.session.delete(goal)
+    db.session.commit()
+    return {
+        "details" : f"Goal {goal.id} \"{goal.title}\" successfully deleted"
+    }, 200
