@@ -1,8 +1,11 @@
+import requests
+import os
 from flask import request, Blueprint, make_response, jsonify
 
 from app import db
 from app.models.task import Task
 from datetime import datetime
+
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix= "/tasks")
 
@@ -86,6 +89,21 @@ def specific_task(task_id):
         db.session.commit()
         return jsonify({"details": f'Task {task.task_id} "{task.title}" successfully deleted'}), 200 
 
+# create helper function for slack message bot 
+def slack_message_bot(task):
+
+    params = {
+        "channel": "task-notifications",
+        "text": f"Someone just completed the task {task.task_id}"
+    }
+
+    headers = {
+        "Authorization": f"Bearer {os.environ.get('SLACK_API_KEY')}"
+    }
+
+    requests.post("https://slack.com/api/chat.postMessage", data=params, headers=headers)
+
+
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
     task = Task.query.get(task_id)
@@ -95,6 +113,8 @@ def mark_complete(task_id):
     
     task.completed_at = datetime.utcnow()
     db.session.commit()
+
+    slack_message_bot(task)
 
     return jsonify({
         "task": {
