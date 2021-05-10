@@ -14,8 +14,8 @@ goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 def post_to_slack(text, request_method):
     """
     Posts a message to Slack channel
-    text is the string to be posted
-    request_method is the type of request, e.g. requests.patch
+    text: string to be posted
+    request_method: type of request, e.g. requests.patch
     """
     headers = {"Authorization": os.environ.get("SLACK_KEY")}
     data = {
@@ -25,6 +25,16 @@ def post_to_slack(text, request_method):
 
     request_method('https://slack.com/api/chat.postMessage',
     headers=headers, data=data)
+
+def validate_datetime(user_input):
+    """
+    Validates completed_at input to ensure it is either None
+    or in proper datetime format
+    """
+    if not user_input["completed_at"]: # should this be a try/except clause?
+        if not isinstance(user_input["completed_at"], datetime)\
+        and user_input["completed_at"] != None:
+            return make_response("completed_at must be in correct format", 401)
 
 @tasks_bp.route("", methods=["POST", "GET"])
 def handle_tasks():
@@ -60,6 +70,8 @@ def handle_tasks():
                 "details": "Invalid data"
             }, 400)
         else:
+            validate_datetime(request_body)
+
             new_task = Task(title=request_body["title"],
             description=request_body["description"],
             completed_at=request_body["completed_at"])
@@ -85,10 +97,7 @@ def handle_task(task_id):
     elif request.method == "PUT":
         form_data = request.get_json()
 
-        if not form_data["completed_at"]:
-            if not isinstance(form_data["completed_at"], datetime)\
-                and form_data["completed_at"] != None:
-                return make_response("Timestamp must be in correct format", 401)
+        validate_datetime(form_data)
 
         #task.from_json(form_data)
 
@@ -218,7 +227,7 @@ def handle_goals_tasks(goal_id):
                 "description": task.description,
                 "is_complete": task.is_complete()
             }
-            tasks_response.append(tasks_dict)
+            tasks_response.append(tasks_dict) # task.to_json()?
 
         return {
             "id": goal.goal_id,
