@@ -137,17 +137,25 @@ def delete_goal(goal_id):
 @goals_bp.route("/<goal_id>/tasks", methods = ["POST"])
 def add_tasks_to_goals(goal_id):
     goal = Goal.query.get(goal_id)
-    request_body = request.get_json(goal)
-    for task_id in request_body["task_ids"]:
-        task = Task.query.get(task_id)
-        task.goal_id = goal_id
+    if goal:
+        request_body = request.get_json(goal)
+        for task_id in request_body["task_ids"]:
+            task = Task.query.get(task_id)
+            task.goal_id = goal_id
 
+        db.session.commit()
 
-    db.session.commit()
+        return make_response(jsonify({"id": goal.goal_id, "task_ids": [task.task_id for task in goal.tasks]}))
 
-    return make_response(jsonify({"id": goal.goal_id, "task_ids": [task.task_id for task in goal.tasks]}))
-
-
+@goals_bp.route("/<goal_id>/tasks", methods = ["GET"])
+def get_tasks_for_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
+    else:
+        goal_dict = goal.build_dict()
+        goal_dict["tasks"] = goal.tasks
+        return goal_dict
 
 
         
