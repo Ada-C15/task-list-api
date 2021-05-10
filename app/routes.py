@@ -2,7 +2,8 @@ from flask import Blueprint, jsonify, request
 from app.models.task import Task
 from app import db
 from datetime import datetime
-
+import requests
+import os
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -15,42 +16,40 @@ def retrieve_tasks_ordered_by_title(is_desc=False):
     else:
         current_tasks = Task.query.order_by(Task.title.asc()).all()
     return [task.to_json_format() for task in current_tasks]
-        # 'current_tasks' will store all tasks in the current session.
-        # params: expects a boolean, that will return from the function
-        # below -> is_sort_descending. If is_sort_descending returns
-        # True, it will get the list of current tasks, and order those 
-        # by title in descending order #[::-1]
-        # else, orders titles by ascending order. returns a list of tasks
+        #: 'current_tasks' will store all tasks in the current session.
+        #: params: expects a boolean, that will return from the function
+        #: below -> is_sort_descending. If is_sort_descending returns
+        #: True, it will get the list of current tasks, and order those 
+        #: by title in descending order #[::-1]
+        #: else, orders titles by ascending order. returns a list of tasks
 
 
 def is_sort_descending(query_args):
     if "sort" in query_args and query_args["sort"] == "asc":
         return False
     return True
-        # helper function to check if the query string is asking 
-        # for a specific sorting order (desc to be precise, hence
-        # the name.) a GET request specifies that the sorting should
-        # be *ascending*, returns False and this value will be passed
-        # into 'retrieve_tasks_ordered_by_title' as argument. 
-        # otherwise it returns True, meaning "yes, in descending order"
-        # nunca vai ser desc até que se queira o contrário.
-        # my first implementation was using the bytes returning from 
-        # request.data, but comparing byte strings I allowed any query 
-        # with matching characters to be passed in the query!
-        # "/?SORTeio_de_trapezio_DESCendente" was ordering by desc. 
-        # if b"sort" in query_str and b"desc" in query_str:
-        #     return True
-        # return False
+        #: helper function to check if the query string is asking 
+        #: for a specific sorting order (desc to be precise, hence
+        #: the name.) a GET request specifies that the sorting should
+        #: be *ascending*, returns False and this value will be passed
+        #: into 'retrieve_tasks_ordered_by_title' as argument. 
+        #: otherwise it returns True, meaning "yes, in descending order"
+        #: tried using the bytes returning from request.data, but by 
+        #: comparing byte strings I allowed any query 
+        #: with matching characters to be passed in the query.
+        #: "/?SORTeio_de_trapezio_DESCendente" was ordering by desc. 
+        #: if b"sort" in query_str and b"desc" in query_str:
+        #: ...
 
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_all_tasks():
 
     return jsonify(retrieve_tasks_ordered_by_title(is_sort_descending(request.args)))
-        # 1. jsonify() -> jsonifies
-        # 2. retrieve_tasks_ordered_by_title -> gets all tasks (by title)
-        # 3. is_sort_descending -> checks if an order is specifird
-        # 4. request.args -> the arguments in the query, if any
+        #: 1. jsonify() -> jsonifies
+        #: 2. retrieve_tasks_ordered_by_title -> gets all tasks (by title)
+        #: 3. is_sort_descending -> checks if an order is specifird
+        #: 4. request.args -> the arguments in the query, if any
 
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def get_task(task_id):
@@ -67,10 +66,10 @@ def validate_field(field, dic):
         return False
     else:
         return True
-            # checks if a required 'field' is present in a request body,
-            # and if the body is not empty
-            # since we call get_json in the request (data bytes), 
-            # the arguments are like a key-value pair
+            #: checks if a required 'field' is present in a request body,
+            #: and if the body is not empty
+            #: since we call get_json in the request (data bytes), 
+            #: the arguments are like a key-value pair
 
 
 def post_request_validation(post_request):
@@ -79,12 +78,12 @@ def post_request_validation(post_request):
     valid &= validate_field("description", post_request)
     valid &= "completed_at" in post_request
     return valid
-        # pythons Bitwise & validation a = a & b
-        # validates a required field and a dictionary (post_request)
-        # using the 'validate_field' helper function in a Bitwise 
-        # validation. Needs to return True for all expressions 
-        # in both sides. We can't call 'validate_field' in "completed_at"
-        # since validate_field would return False if "completed_at" is None.
+        #: pythons Bitwise & validation a = a & b
+        #: validates a required field and a dictionary (post_request)
+        #: using the 'validate_field' helper function in a Bitwise 
+        #: validation. Needs to return True for all expressions 
+        #: in both sides. We can't call 'validate_field' in "completed_at"
+        #: since validate_field would return False if "completed_at" is None.
 
 
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
@@ -129,8 +128,8 @@ def finish_task(task_id):
     db.session.delete(ongoing_task)
     db.session.commit()
     return jsonify({"details": f'Task {ongoing_task.task_id} "{ongoing_task.title}" successfully deleted'})
-        # wish I could have used the table name here
-        # return jsonify({"details": f'{ongoing_task.__tablename__} {ongoing_task.task_id} "{ongoing_task.title}" successfully deleted'})
+        #: Wish I could have used the table name here (maybe there's a way)
+        #: return jsonify({"details": f'{ongoing_task.__tablename__}...
 
 
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
@@ -141,9 +140,10 @@ def mark_task_is_complete(task_id):
         return "", 404
 
     ongoing_task.completed_at = datetime.utcnow()
-
     db.session.commit()
+    glados(ongoing_task)
     return jsonify({"task": ongoing_task.to_json_format()}), 200
+
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def mark_task_incomplete(task_id):
@@ -152,6 +152,24 @@ def mark_task_incomplete(task_id):
         return "", 404
 
     ongoing_task.completed_at = None
-
     db.session.commit()
+
     return jsonify({"task": ongoing_task.to_json_format()}), 200
+
+
+def glados(ongoing_task):
+    #TODO: import GLaDOS quotes from the csv
+    #: Aplly different quotes to different contexts (like 3 or 4)
+    #: replace human with *username* maybe but 'human' 
+    #: already sounds like GLaDOS herself
+    glados_first_msgs = os.environ.get('BOT_SLACK_IVA')
+    path = "https://slack.com/api/chat.postMessage"
+    channel = "task-notifications"
+    text = f"A human has just completed the task {ongoing_task.title}.\n Fantastic! You remained resolute and resourceful in an atmosphere of extreme pessimism."
+    body = {
+        "token": glados_first_msgs,
+        "channel": channel,
+        "text": text
+    }
+    sarcasm = requests.post(path, data=body)
+    return sarcasm
