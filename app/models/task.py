@@ -1,4 +1,5 @@
 from app import db
+from datetime import datetime
 
 
 class Task(db.Model):
@@ -16,6 +17,11 @@ class Task(db.Model):
         return complete
     
 
+    def display_tasks(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "is_complete": self.complete_helper()
+            }
 
-    
-    
