@@ -1,16 +1,18 @@
 from flask import current_app
 from app import db
-#from .models.goal import Goal #wave 6
 
 class Task(db.Model):
     task_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
+    
+    #WAVE 3
+    is_complete = False
 
+    #WAVE 6
     goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True) #wave 6
     
-    is_complete = False #wave 3
     
     def compute_is_complete(self):
         if self.completed_at == None:
@@ -39,7 +41,7 @@ class Task(db.Model):
                         }
     
     
-    # #WAVE 6
+    # #WAVE 6 includes goal_id
     def to_json_with_goal_id(self): 
         return {
                             "id": self.task_id,
@@ -49,7 +51,9 @@ class Task(db.Model):
                             "is_complete": self.compute_is_complete()
                         }
     
-    def to_json_with_goalid_and_key(self):  #WAVE 6
+    
+    #WAVE 6 includes goal_id and task key
+    def to_json_with_goalid_and_key(self):  
         return {
                 "task":     
                        {
@@ -60,13 +64,8 @@ class Task(db.Model):
                             "is_complete": self.compute_is_complete()
                         }
                      }
-        
-    #did not use this function                  
-    def to_string(self):
-        return f"{self.task_id}: {self.title} Description: {self.description} completed at {self.completed_at} " 
-        
+     
     #optional enhancement Create a class method in Task named from_json(): Converts JSON into a new instance of Task
-    
     @staticmethod
     def from_json(task_json):
         
@@ -78,3 +77,10 @@ class Task(db.Model):
                     description=task_json["description"],
                     completed_at=task_json["completed_at"],
                     goal_id = task_goal_id)
+        
+        
+    #did not use this function                  
+    def to_string(self):
+        return f"{self.task_id}: {self.title} Description: {self.description} completed at {self.completed_at} " 
+        
+    

@@ -33,14 +33,15 @@ def create_task():
     #                 completed_at=request_body["completed_at"],
     #                 goal_id = task_goal_id) #wave 6
     
-    new_task = Task.from_json(request_body) # optional enchancement - use Task.from_json()
-
+    #above code condensed because of from_json helper function
+    # optional enchancement - use Task.from_json()
+    new_task = Task.from_json(request_body)
     db.session.add(new_task)
     db.session.commit()
     
     return new_task.to_json(), 201
                          
-
+#WAVE 1
 @task_list_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks():
     
@@ -56,6 +57,7 @@ def get_tasks():
     # if (filter_title is not None):
     #     tasks_list = Task.query.filter_by(title=filter_title).all()
     
+    #WAVE 2: sort the tasks by ascending and descending order
     if sort_by_title_order is not None:
         if (sort_by_title_order == "asc"):
             tasks_list = db.session.query(Task).order_by(asc(Task.title)) 
@@ -72,6 +74,7 @@ def get_tasks():
     return jsonify(task_response), 200
 
 
+#WAVE 1
 @task_list_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def get_single_task(task_id):
     
@@ -97,9 +100,7 @@ def get_single_task(task_id):
         "success": False
     }, 404 
 
-#wave 2 : sort the tasks by ascending and descending order
-#when getting all tasks, and using query params, the value of sort is not "desc" or "asc"?
-    
+#WAVE 1
 @task_list_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
     
@@ -121,7 +122,9 @@ def update_task(task_id):
         db.session.commit()
 
         return task.to_json(), 200
+    
 
+#WAVE 1
 @task_list_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)    
 def delete_single_task(task_id):
 
@@ -186,7 +189,6 @@ def patch_task_incomplete(task_id):
             "success": False
         },400 
 
-    
     task = Task.query.get(task_id)
     
     if task == None:

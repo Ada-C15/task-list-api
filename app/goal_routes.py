@@ -46,6 +46,7 @@ def create_goal_tasks(goal_id):
     
     return jsonify(id=int(goal_id), task_ids=taskids), 200 #int removed the quotes from the goal_id
 
+#WAVE 6
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 def get_goal_tasks(goal_id):
     # get the goal for the specified goal_id
@@ -68,7 +69,7 @@ def get_goal_tasks(goal_id):
 
     return jsonify(id=int(goal_id), title=goal.title, tasks=related_tasks), 200
     
-
+#WAVE 5
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
 def create_a_goal():
     request_body = request.get_json()
@@ -96,6 +97,8 @@ def get_goals():
     
     return jsonify(goal_response), 200
 
+
+#WAVE 5
 @goals_bp.route("<goal_id>", methods=["GET"], strict_slashes=False)
 def get_one_goal(goal_id):
     
@@ -114,6 +117,7 @@ def get_one_goal(goal_id):
         return goal.to_json_goal(), 200
     
  
+#WAVE 5
 @goals_bp.route("<goal_id>", methods=["PUT"], strict_slashes=False)
 def update_goal(goal_id):
     
@@ -134,6 +138,8 @@ def update_goal(goal_id):
 
         return goal.to_json_goal(), 200
 
+
+#WAVE 5
 @goals_bp.route("<goal_id>", methods=["DELETE"], strict_slashes=False)
 def delete_goal(goal_id):
 
