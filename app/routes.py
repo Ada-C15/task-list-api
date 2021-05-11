@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
+from werkzeug.wrappers import PlainRequest
 from app import db
 from flask.helpers import make_response
 from app.models.task import Task
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
+# come back and refactor into task_index & independent POST function
 @tasks_bp.route("", methods=["GET","POST"], strict_slashes=False)
 def handle_tasks():
     if request.method == "GET":
@@ -42,3 +44,27 @@ def handle_tasks():
         
         except KeyError:
             return{"details": "Invalid data"}, 400
+
+def is_int(value):
+    try:
+        return int(value)
+    except ValueError:
+        return False
+
+@tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
+def get_one_task(task_id):
+    if not is_int(task_id):
+        return{
+            "message": f"ID {task_id} must be an integer",
+            "success": False
+        }, 400
+    
+    task = Task.query.get(task_id)
+
+    if task is None:
+        return make_response("", 404)
+    
+    else:
+        return {
+            "task": task.to_json()
+        }, 200
