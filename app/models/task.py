@@ -15,7 +15,7 @@ class Task(db.Model):
         task_dictionary = {"id": self.task_id, 
                         "title": self.title, 
                         "description": self.description, 
-                        "is_complete": False}
+                        "is_complete": self.is_complete()}
         if self.goal_id is None:
             return task_dictionary
         else:
@@ -27,3 +27,4 @@ class Task(db.Model):
             return True
         else:
             return False
+

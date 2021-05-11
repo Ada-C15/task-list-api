@@ -14,7 +14,12 @@ import os
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
+def return_404():
+        return make_response("", 404)
 
+def from_json(body): 
+        new_task = Task(title=body["title"], description=body["description"], completed_at=body["completed_at"])
+        return new_task
 
 @task_bp.route("", methods=["GET", "POST"])
 def get_tasks():
@@ -29,35 +34,29 @@ def get_tasks():
         task_response = []
 
         for task in tasks:
-            task_response.append({"id": task.task_id, 
-                                "title": task.title, 
-                                "description": task.description, 
-                                "is_complete": task.is_complete()})
+            task_response.append(task.to_json())
         return jsonify(task_response), 200
     elif request.method == "POST":
         request_body = request.get_json()
         try:
-            new_task = Task(title=request_body["title"], description=request_body["description"], completed_at=request_body["completed_at"])
+            new_task = from_json(request_body)
         except KeyError:
             return make_response({"details": "Invalid data"}, 400)
         db.session.add(new_task)
         db.session.commit()
-        update_new_task = new_task.to_json()
-        update_new_task["is_complete"] = new_task.is_complete()
 
-
-        return make_response({"task": update_new_task}, 201)
+        return make_response({"task": new_task.to_json()}, 201)
 
 @task_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
 def handle_single_task(task_id):
     task = Task.query.get(task_id)
-
     if task is None:
-        return make_response("", 404)
+        return return_404()
     if request.method == "GET":
         return {"task": task.to_json()}
     elif request.method == "PUT":
         request_body = request.get_json()
+
         task.title = request_body["title"]
         task.description = request_body["description"]
         task.completed_at = request_body["completed_at"]
@@ -76,9 +75,8 @@ def handle_single_task(task_id):
 @task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def update_task_with_completion(task_id):
     task = Task.query.get(task_id)
-
     if task is None:
-        return make_response("", 404)
+        return return_404()
     else: 
         local_date = date.today()
         today = local_date.strftime("%m%d%y")
@@ -98,9 +96,8 @@ def update_task_with_completion(task_id):
 @task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
 def update_task_with_incomplete(task_id):
     task = Task.query.get(task_id)
-
     if task is None:
-        return make_response("", 404)
+        return return_404()
     else: 
         updated_task = task.to_json()
         task.completed_at = None
@@ -134,7 +131,7 @@ def create_or_get_goals():
 def handle_single_goal(goal_id): 
     goal = Goal.query.get(goal_id)
     if goal is None:
-        return make_response("", 404)
+        return return_404()
     if request.method == "GET":
         return {"goal": goal.to_json()}
     elif request.method == "PUT":
@@ -148,17 +145,12 @@ def handle_single_goal(goal_id):
         return make_response({"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}, 200)
 
 
-goal_bp.route("/<goal_id>/tasks/<task_id>", methods=["GET", "PUT", "DELETE"])
-def handle_tasks_with_a_goal(goal_id, task_id):
-    pass 
-
-
 @goal_bp.route("/<goal_id>/tasks", methods=["GET", "POST"])
 def add_tasks_to_goal(goal_id):
     request_body = request.get_json()
     goal = Goal.query.get(goal_id)
     if goal is None:
-        return make_response("", 404)
+        return return_404()
 
     if request.method == "POST":
         for id in request_body["task_ids"]:
