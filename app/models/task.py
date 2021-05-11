@@ -21,18 +21,14 @@ class Task(db.Model):
             return True
 
     def to_dict(self):
-        return {
+        response_body = {
             "id": self.task_id,
             "title": self.title,
             "description": self.description,
             "is_complete": self.is_complete()
         }
 
-    def to_dict_with_goal(self):
-        return {
-            "id": self.task_id,
-            "goal_id": self.goal_id,
-            "title": self.title,
-            "description": self.description,
-            "is_complete": self.is_complete()
-        }
+        if self.goal_id:
+            response_body["goal_id"] = self.goal_id
+
+        return response_body

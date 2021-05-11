@@ -48,7 +48,7 @@ def handle_one_task_get(task_id):
     if task is None:
         return jsonify(None), 404
 
-    response_body = {"task": task.to_dict_with_goal()}
+    response_body = {"task": task.to_dict()}
     return (response_body, 200)
 
 
@@ -315,7 +315,7 @@ def handle_tasks_of_goal_get(goal_id):
 
     tasks_list = []
     for task in tasks:
-        tasks_list.append(task.to_dict_with_goal())
+        tasks_list.append(task.to_dict())
     response_body = {
         "id": int(goal_id),
         "title": goal.title,
