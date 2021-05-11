@@ -172,3 +172,47 @@ def goal_id_functions(goal_id):
         return {
             "details": f"Goal {a_goal.goal_id} \"{a_goal.title}\" successfully deleted"
         }, 200
+
+#WAVE 6*********************************************************************************************************************
+
+@goals_bp.route("/<goals_id>/tasks", methods=["POST"], strict_slashes=False)
+def tasks_within_goals(goals_id):
+    goals_id = int(goals_id)
+    request_body = request.get_json()
+    multiple_task_ids = request_body["task_ids"]
+    
+    if goals_id is None:
+        return make_response("", 404)
+
+    list_of_ids = []
+    for ids in multiple_task_ids:
+
+        a_task = Task.query.get(ids)
+        a_task.goals_id = goals_id
+        list_of_ids.append(ids)
+
+        db.session.add(a_task)
+        db.session.commit()
+
+    return make_response({
+        "id": goals_id,
+        "task_ids": list_of_ids
+    }, 200)
+
+@goals_bp.route("/<goals_id>/tasks", methods=["GET"], strict_slashes=False)
+def goal_within_task(goals_id):
+    list_of_tasks = []
+    goal = Goal.query.get(goals_id)
+
+    if goal is None:
+        return make_response("", 404)
+
+    all_tasks = Task.query.all()
+    for any_task in all_tasks:
+        list_of_tasks.append(any_task.to_json())
+
+    return make_response({
+        "id": int(goals_id),
+        "title": goal.title,
+        "tasks": list_of_tasks
+    }, 200)
