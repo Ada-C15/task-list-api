@@ -72,15 +72,20 @@ def retrieve_one_task(task_id):
     if task is None: 
         return make_response("", 404)
 
-    if request.method == "GET": 
-        return jsonify({
-            "task": {
-                "id": task.id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": task.is_complete()
+    if request.method == "GET":
+        task_json = {
+                "task": {
+                    "id": task.id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": task.is_complete()
             }
-        })
+        }
+        if task.goal_id: 
+            task_json["task"]["goal_id"] = task.goal_id
+            
+        return jsonify(task_json)
+       
     elif request.method == "PUT": 
         form_data = request.get_json()
 
@@ -273,7 +278,8 @@ def send_task_ids_goal(goal_id):
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"])
 def retrieve_one_task(goal_id): 
     goal = Goal.query.filter_by(goal_id=goal_id).first()
-    tasks = Task.query.filter_by(goal_id = goal_id).all()
+    tasks = Task.query.filter_by(goal_id=goal_id).all()
+    
     if goal is None: 
         return make_response("", 404)
 
@@ -288,7 +294,7 @@ def retrieve_one_task(goal_id):
                 "title": task.title,
                 "description": task.description,
                 "is_complete": task.is_complete()
-                }
+                } 
                 for task in tasks 
             ]
         }
