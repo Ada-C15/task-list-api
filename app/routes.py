@@ -5,10 +5,12 @@ from sqlalchemy import asc, desc
 from datetime import datetime
 import requests
 from app import slack_key
+from app.models.goal import Goal
 
 task_list_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goal_list_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-# Wave 1
+# WAVE 1-4 TASKS
 # make a post request
 # add conditionals and if invalid return code 400
 
@@ -74,7 +76,15 @@ def task(task_id):
 @task_list_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
     task = Task.query.get(task_id)
+    print(task)
+    print(type(task))
     # Consider using the keyword arguments data, json, and/or headers
+    if task is None:
+        return make_response("", 404)
+    else:
+        task.completed_at = datetime.utcnow()
+    db.session.commit()
+
     url = "https://slack.com/api/chat.postMessage"
     data = {
         "channel": "C021ACT6H0B",
@@ -85,12 +95,6 @@ def mark_complete(task_id):
     }
 
     r = requests.post(url, data=data, headers=headers)
-
-    if task is None:
-        return make_response("", 404)
-    else:
-        task.completed_at = datetime.utcnow()
-        db.session.commit()
 
     return make_response({"task": task.to_json()})
 
@@ -106,3 +110,54 @@ def mark_incomplete(task_id):
         db.session.commit()
 
     return make_response({"task": task.to_json()})
+
+# WAVE 5 GOALS
+
+@goal_list_bp.route("", methods=["POST"])
+def create_goal():
+    request_body = request.get_json()
+    if "title" not in request_body:
+        return make_response({"details": "Invalid data"}), 400
+    else:
+        new_goal = Goal(title=request_body["title"])
+
+        db.session.add(new_goal)
+        db.session.commit() 
+    
+    # returning single task created by calling to_json on new task
+    return make_response({"goal": new_goal.to_json()}), 201
+    
+
+@goal_list_bp.route("", methods=["GET"])
+def get_all_goals():
+    goals = Goal.query.all()
+    goals_response = []
+    for goal in goals:
+        # building a list of jsons by calling to_json on each task
+        goals_response.append(goal.to_json())
+
+    return jsonify(goals_response), 200
+
+
+@goal_list_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
+def goal(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return make_response("", 404)
+    elif request.method == "GET":
+        return make_response({"goal": goal.to_json()}), 200
+    
+    elif request.method == "PUT":
+        goal_data = request.get_json()
+        goal.title = goal_data["title"]
+
+        db.session.commit()
+
+        return make_response({"goal": goal.to_json()}), 200
+
+    elif request.method == "DELETE":
+        db.session.delete(goal)
+        db.session.commit()
+        
+        return make_response({"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'})
