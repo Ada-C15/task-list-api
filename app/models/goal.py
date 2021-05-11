@@ -5,13 +5,22 @@ from app import db
 class Goal(db.Model):
     goal_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100))
-    # youtube guy creates necessary psuedo-column for this 'tasks' value
-    # the following line throws off a bunch of w5 tests now... ()
-    tasks = db.relationship('Task', backref='larger_goal', lazy=True) # 'Task' and not 'task' bc looking at the class in python code
+    # youtube guy creates necessary psuedo-column; it doesnt affect anything on the db level 
+    # simply a way for Flask-SQLAlchemy to associate one model w another
+
+    # added a property called tasks
+    #  By using a backref, each task will have a property called goal, which refers to entire goal object to which task belongs
+    tasks = db.relationship('Task', backref='task', lazy=True) # (model we're asso'ing w Goal, -, -) ;;; USED TO BE backref='tasks'
+
+    # we can now find a specific goal and get all of the tasks asso'd w it with 
+        # goal.tasks ('tasks' as in var name, not backref)
+    # find specific task with
+        # task.goal (backref-value.goal-instance)
+
 
     def to_json(self):
         return {
             "id": self.goal_id,
             "title": self.title,
-            #"task_ids": self.tasks >>> this fails 4 tests in wave 5
+            #"tasks": self.tasks # >>> this fails 4 tests in wave 5 
             }

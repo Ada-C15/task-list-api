@@ -1,8 +1,8 @@
-"""adding changes for goal and task model files
+"""empty message
 
-Revision ID: 8856f63381f6
+Revision ID: 49ea6caf3f20
 Revises: 
-Create Date: 2021-05-09 19:41:59.045122
+Create Date: 2021-05-10 16:46:30.848274
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '8856f63381f6'
+revision = '49ea6caf3f20'
 down_revision = None
 branch_labels = None
 depends_on = None

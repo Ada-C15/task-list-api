@@ -1,3 +1,4 @@
+from tests.test_wave_06 import test_get_task_includes_goal_id
 from app import db 
 from app.models.task import Task
 from app.models.goal import Goal
@@ -57,7 +58,13 @@ def get_single_task(task_id):
 
     if not single_task:
         return make_response("", 404)
-    return jsonify({"task": single_task.to_json()})
+
+    associated_goal_id = single_task.goal_id
+    dict_single_task = single_task.to_json() # turn obj to dict
+    if single_task.goal_id:
+        dict_single_task["goal_id"] = associated_goal_id
+        return jsonify({"task": dict_single_task})
+    return jsonify({"task": dict_single_task})
 
 @task_bp.route("/<task_id>", methods=["PUT"])
 def update_task_element(task_id):
@@ -169,16 +176,43 @@ def delete_goal(goal_id):
     db.session.commit()
     return make_response({'details': f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}, 200)
 
-# STILL WORKING ON THIS FOR STARTING WAVE 6
 @goal_bp.route("/<goal_id>/tasks", methods=["POST"])
-def create_goal_w_tasks(goal_id, task_list):
-    """Updates goal with related tasks"""
-    request_body = request.get_json() # {"task_ids": [1, 2, 3]}
-    target_goal = Goal.query.get(goal_id) # get the target goal
-    target_goal.tasks = request_body["task_ids"] # assign user's tasks to new db column
-    db.session.commit() # commit the change to the attr
-    return {
-            "id": self.goal_id,
-            "title": self.title,
-            "task_ids": self.tasks
-            }
+def create_goal_w_tasks(goal_id):
+    """Assigns related tasks to a goal"""
+
+    goal_id = int(goal_id)
+    request_body = request.get_json()
+    task_ids = request_body["task_ids"]
+    goal = Goal.query.get(goal_id)
+    ti_list = []
+
+    for task_id in task_ids:
+        task = Task.query.get(task_id)
+        task.goal_id = goal_id 
+        ti_list.append(task_id)
+
+        db.session.add(task)
+        db.session.commit()
+    return make_response({"id": goal_id, "task_ids": ti_list}, 200)
+
+@goal_bp.route("/<goal_id>/tasks", methods=["GET"])
+def get_single_tasked_goal(goal_id):
+    """Gets multiple goals and associated tasks per request"""
+
+    goal_id = int(goal_id)
+    hold_related_tasks = []
+    goal = Goal.query.get(goal_id)
+
+    if not goal:
+        return make_response("", 404)
+    for task in goal.tasks: # for every Task obj in collection
+        # append obj to final list so that it can be actual list of dicts
+        hold_related_tasks.append(task.to_json())
+    for i in range(len(hold_related_tasks)): # inside list of dicts,
+        hold_related_tasks[i]["goal_id"] = goal_id # add the goal id key-val pair
+    # return final list in proper format
+    return jsonify({
+            "id": goal.goal_id,
+            "title": goal.title,
+            "tasks": hold_related_tasks
+            })
