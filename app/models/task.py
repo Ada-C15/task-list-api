@@ -15,15 +15,15 @@ class Task(db.Model):
         complete = False
         if self.completed_at:
             complete = True
-        json_data = {
+        json_data = {"task":{
             "id": self.id,
             "title": self.title,
             "description": self.description,
             "is_complete": complete,
-            "goal_id": self.goal_id
+            "goal_id": self.goal_id}
         }
         if self.goal_id is None:
-            del json_data["goal_id"]
+            del json_data["task"]["goal_id"]
         return json_data
     
     def to_string(self):

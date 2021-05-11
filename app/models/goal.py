@@ -12,7 +12,7 @@ class Goal(db.Model):
     def to_json(self):
         task_list = []
         for task in self.tasks:
-            task_list.append(task.to_json())
+            task_list.append(task.to_json()["task"])
 
         json_data = {
             "id": self.id,
