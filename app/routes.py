@@ -100,7 +100,7 @@ def delete_task(task_id):
         }, 400
     
     task = Task.query.get(task_id)
-    if task == None:
+    if task is None:
         return make_response("",404)
 
     db.session.delete(task)
@@ -161,7 +161,7 @@ def create_goal():
         return make_response(response,400)
 
     new_goal = Goal(title = request_body["title"])
-    print("New goal created",new_goal.id)    
+
     db.session.add(new_goal)
     db.session.commit()
 
@@ -169,27 +169,30 @@ def create_goal():
         "goal" : new_goal.to_json()
     }, 201
 
- 
-    #return make_response(jsonify(new_task)), 201
-    # elif ("title" not in request_body) or ("description" not in request_body) or ("completed_at" not in request_body):
-    #     response = {
-    #         "details" : "Invalid data"
-    #     }
-    #     return make_response(response,400)
 
+@goals_bp.route("<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def create_task_ids_to_goal(goal_id):
+    request_body = request.get_json()
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("",404)
+    
+    for task_id in request_body["task_ids"]:
+        task = Task.query.get(task_id)
+        task.g_id = goal.g_id
+    
+    db.session.commit()
 
+    response = {
+        "id" : goal.g_id,
+        "task_ids": request_body["task_ids"]
+    }
+    return jsonify(response), 200
 
 
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def get_goal():
     goals_response = []
-
-    # query_param_value=request.args.get("sort")
-    # if query_param_value == "asc":
-    #     tasks = Task.query.order_by(Task.title)
-    # elif query_param_value == "desc":
-    #     tasks = Task.query.order_by(Task.title.desc())
-    # else:
     goals = Goal.query.all()
 
     for goal in goals:
@@ -210,6 +213,30 @@ def get_one_goal(goal_id):
             "goal" : goal.to_json()
         } , 200
     return make_response("",404)
+
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_tasks_for_one_goal(goal_id):
+    if not(re.match("[0-9]",goal_id)): 
+        return {
+            "message": f"Goal ID {goal_id} must be an integer"
+        }, 400
+
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("",404)
+    
+    tasks = Task.query.filter_by(g_id=goal.g_id)
+    tasks_response = []
+    for task in tasks:
+        tasks_response.append(task.to_json())
+    response = {
+        "id": goal.g_id,
+        "title": goal.title,
+        "tasks": tasks_response
+    }
+    return jsonify(response), 200
+
 
 
 @goals_bp.route("/<goal_id>",methods=["PUT"], strict_slashes=False)
@@ -248,5 +275,5 @@ def delete_goal(goal_id):
     db.session.delete(goal)
     db.session.commit()
     return {
-        "details" : f"Goal {goal.id} \"{goal.title}\" successfully deleted"
+        "details" : f"Goal {goal.g_id} \"{goal.title}\" successfully deleted"
     }, 200
