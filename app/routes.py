@@ -224,19 +224,15 @@ def assign_goal_to_tasks(goal_id):
 def get_tasks_for_one_goal(goal_id):
     goal = Goal.query.get(goal_id)
     if goal:
-        task_found = Task.query.filter_by(goal.goal_id)
-
-        if task_found:
-            return jsonify({
-                "id": goal.goal_id,
-                "title": goal.title,
-                "tasks":[
-                    {
-                        "id": task_found.task_id,
-                        "goal_id": task_found.goal_id,
-                        "title": task_found.title,
-                        "description": task_found.description,
-                        "is_complete": task_found.convert_complete()
-                    }]
+        #task_found = Task.query.filter_by(goal.goal_id)
+        tasks = Task.query.all()
+        task_response = []
+        for task in tasks:
+            if task.goal_id == goal.goal_id:
+                task_response.append(task.to_json())
+        return jsonify({
+            "id": goal.goal_id,
+            "title": goal.title,
+            "tasks": task_response
             }), 200
     return "", 404 

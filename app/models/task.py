@@ -17,10 +17,17 @@ class Task(db.Model):
         return complete
 
     def to_json(self):
+        if self.goal_id:
+            return{
+                "id": self.task_id,
+                "goal_id": self.goal_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.convert_complete()
+            }
         return{
-            "id": self.task_id,
-            "title": self.title,
-            "description": self.description,
-            "is_complete": self.convert_complete()
-        }
-        
+                "id": self.task_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.convert_complete()
+            }
