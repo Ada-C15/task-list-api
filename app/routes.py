@@ -4,6 +4,8 @@ from app.models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify
 from sqlalchemy import asc, desc
 from datetime import datetime
+import os
+import requests
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -54,7 +56,6 @@ def get_all_tasks():
     return jsonify(sorted_response), 200
         
         
-
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_new_task():
 
@@ -75,15 +76,18 @@ def create_new_task():
 
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def get_task_by_id(task_id):
-
+    request_body = request.get_json()
     task = Task.query.get(task_id)
 
     if task is None:
             return make_response("", 404)
 
-    else:     
+    if task.goal_id is None:
         return make_response({"task": task.create_json()}, 200)
     
+    else:
+    
+        return make_response({"task": task.create_json_with_goal_id()}, 200)      
 
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
@@ -125,7 +129,20 @@ def mark_complete(task_id):
     task.completed_at = datetime.utcnow()
     db.session.commit()
 
+    slack_token = os.environ["SLACK_API_TOKEN"]
+    slack_channel = "task-notifications"
+    slack_icon_url = "https://slack.com/api/chat.postMessage"
+    text = f"Someone just completed the task {task.title}"
+
+    response = requests.post('https://slack.com/api/chat.postMessage', {
+        'token': slack_token,
+        'channel': slack_channel,
+        'text': text,
+        'icon_url': slack_icon_url
+    }).json()	
+
     return make_response({"task": task.create_json()}, 200)
+    
 
 @tasks_bp.route("<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def mark_incomplete(task_id):
@@ -140,9 +157,6 @@ def mark_incomplete(task_id):
     return make_response({"task": task.create_json()}, 200)
 
 
-#Goal Blueprints
-
-#GET/As a client, I want to be able to make a GET request to /goals
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def get_all_goals():
 
@@ -155,7 +169,6 @@ def get_all_goals():
     return make_response(jsonify(goals_response), 200) 
 
 
-#POST/I want to be able to make a POST request to /goals
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
 def create_goals():
     request_body = request.get_json()
@@ -171,7 +184,7 @@ def create_goals():
 
     return make_response({"goal": new_goal.create_goal_json()}, 201)
 
-#GET/<goal_id>/ I want to be able to make a GET request to /goals/1
+
 @goals_bp.route("<goal_id>", methods=["GET"], strict_slashes=False)
 def get_one_goal(goal_id):
 
@@ -184,7 +197,6 @@ def get_one_goal(goal_id):
     return make_response({"goal": goal.create_goal_json()}, 200)
 
 
-#PUT/PUT request to /goals/1
 @goals_bp.route("<goal_id>", methods=["PUT"], strict_slashes=False)
 def update_goal(goal_id):
 
@@ -200,7 +212,6 @@ def update_goal(goal_id):
     return make_response({"goal": goal.create_goal_json()}, 200)
 
 
-#DELETE/DELETE request to /goals/1
 @goals_bp.route("<goal_id>", methods=["DELETE"], strict_slashes=False)
 def delete_goal(goal_id):
 
@@ -217,40 +228,60 @@ def delete_goal(goal_id):
     return make_response({"details": f'Goal {goal.id} \"{goal.title}\" successfully deleted'}, 200)
 
 
-#one-to-many route
-
 @goals_bp.route("<goal_id>/tasks", methods=["POST"], strict_slashes=False)
 def add_tasks_to_goals(goal_id):
 
+    goal_id = int(goal_id)
     request_body = request.get_json()
     task_ids = request_body["task_ids"]
     goal = Goal.query.get(goal_id)
+
     task_id_list =[]
 
     if not request_body:
         return make_response({"details": "Invalid data"}, 400)
 
-    for task_id in task_ids:
 
-        
+    for task_id in task_ids:
         task = Task.query.get(task_id)
         task.goal_id = goal_id 
+
         task_id_list.append(task_id)
 
         db.session.add(task)
         db.session.commit()  
 
 
-    return make_response({f'"id": {"goal_id"}, \
-        "task_ids": {"task_id_list"}'}, 200)
+    return make_response({"id": goal_id, "task_ids": task_id_list}, 200)
 
 @goals_bp.route("<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 def get_tasks_of_one_goal(goal_id):
 
-    request_body = request.get_json()
+    goal_id = int(goal_id)
     goal = Goal.query.get(goal_id)
-    #tasks_of_goal = Goal.query.get(tasks)
 
+
+    if not goal:
+        return make_response("", 404)
     
+    tasks = goal.tasks
+
+
+    task_list = []
+    for task in tasks:
+
+        task_list.append(task.create_json_with_goal_id())
+
+    response = {
+        "id" : goal_id,
+        "title" : goal.title,
+        "tasks" : task_list
+    }
+
+    return make_response(response, 200)
+
+
+
+
 
 
