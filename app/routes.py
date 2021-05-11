@@ -3,7 +3,8 @@ from app.models.task import Task
 from flask import Blueprint, jsonify, request, make_response
 from sqlalchemy import desc, asc
 from datetime import datetime
-
+import os
+import slack
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -19,6 +20,7 @@ def tasks_index():
         tasks = Task.query.all()
     
     tasks_response = []
+
     for task in tasks:
         tasks_response.append(task.to_json())
 
@@ -38,6 +40,7 @@ def get_one_task(task_id):
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_task():
     request_body = request.get_json()
+    
     try:
         new_task = Task(title=request_body["title"],
                         description=request_body["description"],
@@ -76,6 +79,7 @@ def update_task(task_id):
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
 def delete_task(task_id):
     task = Task.query.get(task_id)
+    
     if not task:
         return make_response("", 404)
     
@@ -93,14 +97,22 @@ def task_mark_complete(task_id):
     
     if not task:
         return make_response("", 404)
-
-    task.completed_at = current_datetime
+    else:
+        task.completed_at = current_datetime
     
     db.session.commit()
+    
+    client = slack.WebClient(os.environ["SLACK_TOKEN"], timeout=30)
 
+    client.chat_postMessage(
+            channel="task-notifications",
+            text=f"Someone just completed the task {task.title}")
+            
     return {
         "task": task.to_json()
     }, 200
+
+    
         
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def task_mark_incomplete(task_id):

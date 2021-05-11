@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
 from dotenv import load_dotenv
-
+import slack
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -21,6 +21,10 @@ def create_app(test_config=None):
         app.config["TESTING"] = True
         app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
             "SQLALCHEMY_TEST_DATABASE_URI")
+    
+    SLACK_TOKEN = os.environ.get('SLACK_TOKEN')
+
+    slack_client = slack.RTMClient(token=SLACK_TOKEN)
 
     # Import models here for Alembic setup
     from app.models.task import Task
