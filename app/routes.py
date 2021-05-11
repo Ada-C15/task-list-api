@@ -27,6 +27,10 @@ def handle_tasks():
             sorted_ascending = sorted(tasks_response, key=lambda x: x.get("title"))
             return jsonify(sorted_ascending)
         
+        elif "desc" in request.full_path:
+            sorted_descending = sorted(tasks_response, key=lambda x: x.get("title"), reverse=True)
+            return jsonify(sorted_descending)
+
         return jsonify(tasks_response), 200
 
     elif request.method == "POST":
