@@ -1,14 +1,17 @@
 from app import db
 from .models.task import Task
+from .models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify
 from datetime import datetime 
+import requests
+import os 
 
 task_bp = Blueprint("task", __name__, url_prefix="/tasks")
+goal_bp = Blueprint("goal", __name__, url_prefix="/goals")
 
 #endpoint for new task entry post method 
 @task_bp.route("", methods=["POST"])
 def create_task():
-    
     request_body = request.get_json()
     #checks to see if 'title' is found as a key in request_body called 'validation'
     if 'title' not in request_body:
@@ -38,7 +41,6 @@ def create_task():
     return jsonify({
     "task": new_task.to_json()
     }), 201
-
 
 
 #endpoint for getting tasks
@@ -110,7 +112,21 @@ def complete(task_id):
     # in order to make variable truthy we need to have datatype as value
     task.completed_at = datetime.utcnow()
     db.session.commit()
-    return make_response({"task": task.to_json()}, 200)
+    
+    call_slack(task)
+    
+    return make_response({"task": task.to_json()}, 200)#helper function to 
+
+#call slack api helper function    
+def call_slack(task):
+    #using os package from __init__.py to pull value for the argument passed in 
+    key = os.environ.get("API_KEY")
+    url = "https://slack.com/api/chat.postMessage"
+    slack_str = f"Someone just completed the task {task.title}"
+    requests.post(url,data={"token": key ,"channel": "general" , "text": slack_str})
+    
+
+
 
 #endpoint for giving completed_at column/attribute the value null/NONE in the DB. route parameter is mark_incomplete
 @task_bp.route("<task_id>/mark_incomplete",methods=["PATCH"])
@@ -122,7 +138,56 @@ def in_complete(task_id):
     db.session.commit()
     return make_response({"task": task.to_json()}, 200)
 
+#endpoint for creating a new goal
+@goal_bp.route("",methods=["POST"])
+def create_goal():
+    request_body = request.get_json()
+    #checks to see if 'title' is found as a key in request_body called 'validation'
+    if 'title' not in request_body:
+        return make_response(jsonify({"details":"Invalid data"}), 400)
 
+    new_goal = Goal(title = request_body["title"]) 
+       
+    db.session.add(new_goal)
+    db.session.commit()
+        
+    return jsonify({
+    "goal": new_goal.goal_to_json()
+    }), 201
+
+#endpont for GET, PUT, DELETE based on goal_id
+@goal_bp.route("/<goal_id>", methods=["GET","PUT","DELETE"],)
+def handle_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    # if task is not found
+    if not goal:
+        return '',404
+    #
+    if request.method == "GET":
+        return jsonify(goal=goal.goal_to_json()), 200
+   
+    
+    if request.method =='PUT':
+        request_body = request.get_json()
+        #assigning updated values to task
+        goal.title = request_body['title']
+    
+        db.session.commit()
+        return jsonify(goal=goal.goal_to_json()), 200
+
+    if request.method == 'DELETE':
+        db.session.delete(goal)
+        db.session.commit()
+        return jsonify(details=f'Goal {goal.goal_id} "{goal.title}" successfully deleted'),200
+
+# GET method to return all goals
+@goal_bp.route('', methods=["GET"])
+def get_goals():
+    goals = Goal.query.all()
+    goals_response = []
+    for goal in goals:
+        goals_response.append(goal.goal_to_json())
+    return jsonify(goals_response)
 
 
 
