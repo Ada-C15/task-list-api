@@ -2,6 +2,7 @@ from flask import Blueprint
 from flask import request
 from flask import jsonify 
 from flask import make_response
+from werkzeug.datastructures import Authorization
 from app.models.task import Task
 from app.models.goal import Goal
 from app import db 
@@ -9,6 +10,7 @@ from datetime import datetime
 import os
 import time
 from slack import WebClient
+import requests, os 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
@@ -96,12 +98,13 @@ def mark_complete(task_id):
 
     db.session.commit()
 
+# Slack API - send messages to slack channel from here 
     message_to_slack("#task-notifications", f"Someone just completed the task {task.title}")
+
     return {
         "task": task.to_json()
     }, 200
 
-# Slack API - lets send some messages from here 
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"]) #update
 def mark_incomplete(task_id):
@@ -120,14 +123,26 @@ def mark_incomplete(task_id):
         }, 200
 
 #wave 4 
-client = WebClient(token=os.environ["SLACK_API_TOKEN"])
+# client = WebClient(token=os.environ["SLACK_API_TOKEN"])
 
-# wrapper for sending a Slack message
+# # wrapper for sending a Slack message
+# def message_to_slack(channel, message):
+#     return client.chat_postMessage(
+#         channel=channel,
+#         text=message
+#     )
+
 def message_to_slack(channel, message):
-    return client.chat_postMessage(
-        channel=channel,
-        text=message
-    )
+    token = os.environ["SLACK_API_TOKEN"]
+
+    return requests.post('https://slack.com/api/chat.postMessage', headers = {
+        "Authorization": f"Bearer {token}"
+    },
+    data = { 
+        "channel": channel,
+        "text": message
+    })
+
 
 
 # #wave_5
@@ -195,7 +210,6 @@ def handle_goals(goal_id):
 # Establishing a One-to-Many Relationship
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"])
 def create_goals_tasks(goal_id):
-
     request_body = request.get_json()
 
     number = int(goal_id)
@@ -210,9 +224,13 @@ def create_goals_tasks(goal_id):
         "task_ids": request_body["task_ids"]
     }
 
+
+
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"])
 def get_goals_tasks(goal_id):
+
     goal = Goal.query.get(goal_id)
+
     if not goal:
         return ("", 404)
 
@@ -232,6 +250,9 @@ def get_goals_tasks(goal_id):
 
 
 #optional- deployment
+
+
+
 
 #enhancements
 
