@@ -20,6 +20,7 @@ def create_goal():
         "goal": new_goal.to_json()
     }, 201
 
+
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def get_goal():
     title_from_url = request.args.get("title")
@@ -35,11 +36,13 @@ def get_goal():
 
     return jsonify(goals_response), 200
 
+
 def is_int(value):
     try:
         return int(value)
     except ValueError:
         return False
+
 
 @goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes = False)
 def get_goal_by_id(goal_id):
@@ -68,3 +71,16 @@ def update_goal(goal_id):
     db.session.commit()
 
     return {"goal": goal.to_json()}, 200
+
+
+@goals_bp.route("/<goal_id>", methods = ["DELETE"], strict_slashes = False)
+def delete_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return ("", 404)
+
+    db.session.delete(goal)
+    db.session.commit()
+
+    return {"details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"}, 200
