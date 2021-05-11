@@ -40,7 +40,7 @@ def retrieve_tasks_data():
             tasks_response_asc = [task_asc.task_to_json_response() \
                 for task_asc in tasks_asc]
             return jsonify(tasks_response_asc), 200
-        
+
         elif sort_by != None and sort_by == "desc":
             # this is a list in desc order
             tasks_asc = Task.query.order_by(Task.title.desc()).all() 
@@ -108,6 +108,7 @@ def patch_task_mark_complete(task_id):
         return task.to_json_response(), 200
     return make_response(""), 404
 
+# Wave 3 routes
 # Modify part of a task to mark incomplete
 @task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])  
 def patch_task_mark_incomplete(task_id):
@@ -118,6 +119,7 @@ def patch_task_mark_incomplete(task_id):
         return task.to_json_response(), 200
     return make_response(""), 404
 
+# Wave 4 routes
 # GOAL ROUTES start here 
 @goal_bp.route("", methods = ["POST"], strict_slashes = False)
 def create_goal():
