@@ -3,6 +3,8 @@ from flask import Blueprint, request, jsonify
 from app.models.task import Task
 from sqlalchemy import asc, desc
 from datetime import datetime
+import requests
+import os
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -111,6 +113,12 @@ def mark_task_complete(task_id):
     task.completed_at = datetime.utcnow()
 
     db.session.commit()
+
+    url = f"https://slack.com/api/chat.postMessage?channel=task-notifications&text=Someone just completed the task {task.title}"
+    headers = {
+                'Authorization': f'Bearer {os.environ.get("SLACK_BOT_TOKEN")}'
+                }
+    response = requests.request("POST", url, headers=headers)
 
     return {"task": task.to_json()}, 200
 
