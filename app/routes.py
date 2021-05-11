@@ -1,12 +1,13 @@
 from flask import Blueprint, jsonify, request
 from app.models.task import Task
+from app.models.goal import Goal
 from app import db
 from datetime import datetime
 import requests
 import os
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
-
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 def retrieve_tasks_ordered_by_title(is_desc=False):
     """Helper function to get all tasks."""
@@ -55,7 +56,7 @@ def get_all_tasks():
 def get_task(task_id):
     """Selects a single task with specified ID"""
     single_task = Task.query.get(task_id)
-    if single_task is None:
+    if not single_task:
         return "", 404
 
     return jsonify({"task": single_task.to_json_format()}), 200
@@ -119,7 +120,7 @@ def update_task(task_id):
 
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
-def finish_task(task_id):
+def discard_task(task_id):
     ongoing_task = Task.query.get(task_id)
 
     if not ongoing_task:
@@ -158,10 +159,7 @@ def mark_task_incomplete(task_id):
 
 
 def glados(ongoing_task):
-    #TODO: import GLaDOS quotes from the csv
-    #: Aplly different quotes to different contexts (like 3 or 4)
-    #: replace human with *username* maybe but 'human' 
-    #: already sounds like GLaDOS herself
+    
     glados_first_msgs = os.environ.get('BOT_SLACK_IVA')
     path = "https://slack.com/api/chat.postMessage"
     channel = "task-notifications"
@@ -173,3 +171,92 @@ def glados(ongoing_task):
     }
     sarcasm = requests.post(path, data=body)
     return sarcasm
+        #TODO: import GLaDOS quotes from the csv
+        #: Aplly different quotes to different contexts (like 3 or 4)
+        #: replace human with *username* maybe but 'human' 
+        #: already sounds like GLaDOS herself
+
+#===============================GOALS===============================#
+
+@goals_bp.route("", methods=["GET"], strict_slashes=False)
+def get_all_goals():
+    current_goals = Goal.query.all()
+    goals_list = [goal.goal_to_json_format() for goal in current_goals]
+    return jsonify(goals_list)
+
+@goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
+def get_goal(goal_id):
+    single_goal = Goal.query.get(goal_id)
+    if not single_goal:
+        return "", 404
+    return jsonify({"goal": single_goal.goal_to_json_format()})
+
+@goals_bp.route("", methods=["POST"], strict_slashes=False)
+def add_goal():
+    goal_request = request.get_json() # response string 
+    if not validate_field("title", goal_request):
+        return {"details": "Invalid data"}, 400
+    goal_to_add = Goal(title=goal_request["title"])
+    db.session.add(goal_to_add)
+    db.session.commit()
+    return jsonify({"goal": goal_to_add.goal_to_json_format()}), 201
+
+@goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
+def update_goal(goal_id):
+    goal_to_update = request.get_json()
+    ongoing_goal = Goal.query.get(goal_id)
+    if not ongoing_goal:
+        return "", 404
+
+    ongoing_goal.title = goal_to_update["title"]
+    db.session.commit()
+    return jsonify({"goal": ongoing_goal.goal_to_json_format()}), 200
+
+@goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)
+def abandon_goal(goal_id):
+    ongoing_goal = Goal.query.get(goal_id)
+
+    if not ongoing_goal:
+        return "", 404
+
+    db.session.delete(ongoing_goal)
+    db.session.commit()
+    return jsonify({"details": f'Goal {ongoing_goal.goal_id} "{ongoing_goal.title}" successfully deleted'})
+
+#===========================RELATIONSHIPS===========================#
+
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def add_tasks_to_goal(goal_id):
+
+    available_goal = Goal.query.get(goal_id)
+    request_body = request.get_json() 
+    
+    if not validate_field("task_ids", request_body):
+        return "", 404
+    
+    
+    for t in request_body["task_ids"]:
+        task = Task.query.get(t)
+        if task is None:
+            return "", 404
+        task.goal = goal_id
+        available_goal.tasks.append(task)
+        db.session.add(task)
+
+    db.session.add(available_goal)
+    db.session.commit()
+
+    return jsonify(available_goal.add_task_response_to_json()) , 200
+    
+
+# def 
+# if not "task_ids" in request_body:
+#         return "", 404
+        
+# for t in request_body["task_ids"]:
+#         task = Task.query.get(t)
+#         if task is None:
+#             return "", 404
+#         task.goal = goal_id
+#         available_goal.tasks.append(task)
+#         db.session.add(task)
