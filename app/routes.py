@@ -76,10 +76,13 @@ def handle_tasks_post():
             "details": "Invalid data"
         }, 400)
 
-    new_task = Task(title=request_body["title"],
-                    description=request_body["description"],
-                    completed_at=request_body["completed_at"]
-                    )
+    # new_task = Task(title=request_body["title"],
+    #                 description=request_body["description"],
+    #                 completed_at=request_body["completed_at"]
+    #                 )
+
+    # new_task = Task()
+    new_task = (Task()).from_json(request_body)
 
     db.session.add(new_task)
     db.session.commit()
@@ -117,9 +120,11 @@ def handle_one_task_update(task_id):
         return jsonify(None), 404
 
     data_to_update_with = request.get_json()
-    task.title = data_to_update_with["title"]
-    task.description = data_to_update_with["description"]
-    task.completed_at = data_to_update_with["completed_at"]
+    task = task.from_json(data_to_update_with)
+
+    # task.title = data_to_update_with["title"]
+    # task.description = data_to_update_with["description"]
+    # task.completed_at = data_to_update_with["completed_at"]
 
     db.session.commit()
 
