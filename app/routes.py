@@ -3,7 +3,13 @@ from app import db
 from app.models.task import Task
 import requests
 from datetime import datetime
+import os
+from dotenv import load_dotenv
+import re
 # from sqlachemy import asc, desc
+load_dotenv()
+
+PATH = "https://slack.com/api/chat.postMessage"
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -93,6 +99,17 @@ def update_time(task_id, completion):
 
     if completion == "mark_complete":
         task.completed_at = datetime.utcnow()
+        query_params = {
+            
+            "channel": "task-notifications",
+            "text" : f"Someone just completed the task {task.title}"
+        }
+        authorization = os.environ.get('API_KEY')
+        headers = {"Authorization" : f"Bearer {authorization}"}
+
+        response = requests.post(PATH, params=query_params, headers=headers)
+
+
     elif completion == "mark_incomplete":
         task.completed_at = None
         
