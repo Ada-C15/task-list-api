@@ -103,7 +103,7 @@ def get_one_goal(goal_id):
 
         return jsonify(response), 200 
 
-@goal_bp.route("/<goal_id>/tasks", methods=["POST"])
+@goal_bp.route("/<goal_id>/tasks", methods=["GET", "POST"])
 
 def handle_goal_tasks(goal_id):
 
@@ -128,19 +128,37 @@ def handle_goal_tasks(goal_id):
 
                     db.session.commit()
 
-        response = {}
-        response["id"] = int(goal_id)
-        response["task_ids"] = request_body["task_ids"]
+            response = {}
+            response["id"] = int(goal_id)
+            response["task_ids"] = request_body["task_ids"]
 
-        return jsonify(response), 200
+            return jsonify(response), 200
 
-                
+        elif request.method == "GET":
 
+            goal = Goal.query.get(goal_id)
+        
+            task_dict = []
 
+            for task in goal.tasks:
+                task_dict.append({
+                    "id": task.task_id,
+                    "goal_id": task.goal_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": bool(task.completed_at)
 
+                })
 
+            response = {
+                "id": goal.goal_id,
+                "title": goal.title,
+                "tasks": task_dict
+            }
 
+            return jsonify(response), 200
 
+            
 
 
 
@@ -217,14 +235,14 @@ def get_one_task(task_id):
         
     elif request.method == "GET":
 
-        tasks_response = {
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": bool(task.completed_at)
-                }
-        dict_copy = tasks_response.copy()
-        response = {"task": dict_copy}
+        # tasks_response = {
+        #         "id": task.task_id,
+        #         "title": task.title,
+        #         "description": task.description,
+        #         "is_complete": bool(task.completed_at)
+        #         }
+        # dict_copy = tasks_response.copy()
+        response = {"task": task.json_response()}
 
         return jsonify(response)
 
@@ -238,15 +256,7 @@ def get_one_task(task_id):
 
         db.session.commit()
 
-        tasks_response = {
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": bool(task.completed_at)
-                }
-
-        dict_copy = tasks_response.copy()
-        response = {"task": dict_copy}
+        response = {"task": task.json_response()}
 
         return jsonify(response), 200
     
@@ -298,15 +308,7 @@ def mark_complete(task_id):
         
         req = requests.request("POST", url, params=params, headers=headers)
 
-        tasks_response = {
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": bool(task.completed_at)
-                }
-
-        dict_copy = tasks_response.copy()
-        response = {"task": dict_copy}
+        response = {"task": task.json_response()}
 
         return jsonify(response), 200
 
@@ -325,15 +327,7 @@ def mark_incomplete(task_id):
 
         db.session.commit()
 
-        tasks_response = {
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": bool(task.completed_at)
-                }
-
-        dict_copy = tasks_response.copy()
-        response = {"task": dict_copy}
+        response = {"task": task.json_response()}   
 
         return jsonify(response), 200
 
