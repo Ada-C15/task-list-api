@@ -9,22 +9,23 @@ class Task(db.Model):
     completed_at = db.Column(db.DateTime, nullable=True)
     goal_id = db.Column(db.Integer, db.ForeignKey("goal.goal_id"), nullable=True)
     
-    def tasks_to_json(self): 
-        if self.goal_id: 
-            return {
-                "id": self.task_id,
-                "title": self.title,
-                "description": self.description,
-                "is_complete": bool(self.completed_at), 
-                "goal_id": self.goal_id
-            }
-        else: 
-            return {
+    def to_json(self): 
+        to_json = {
                 "id": self.task_id,
                 "title": self.title,
                 "description": self.description,
                 "is_complete": bool(self.completed_at)
-            }
+        }
+        return to_json
+    
+    def tasks_to_json(self):
+        reponse = self.to_json() 
+        
+        if self.goal_id: 
+            reponse["goal_id"] = self.goal_id
+            return reponse
+        else: 
+            return reponse
 
     def specific_task_to_json(self): 
         return {

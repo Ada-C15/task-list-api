@@ -80,16 +80,16 @@ def delete_task(task_id):
     
     return make_response("", 404)
 
-# @tasks_bp.route("<task_id>/mark_complete>", methods=["PATCH"], strict_slashes=False)
-# def task_mark_complete(task_id, mark_complete): 
-#     task = Task.query.get(task_id)
+@tasks_bp.route("<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def task_mark_complete(task_id): 
+    task = Task.query.get(task_id)
 
-#     if task:
-#         task.completed_at = datetime.utcnow()
-#         slack_post_message(task.title)
-#         return jsonify(task.specific_task_to_json()), 200 
+    if task:
+        task.completed_at = datetime.utcnow()
+        slack_post_message(task.title)
+        return jsonify(task.specific_task_to_json()), 200 
     
-#     return make_response("", 404) 
+    return make_response("", 404) 
 
 
 def slack_post_message(title):
@@ -98,14 +98,14 @@ def slack_post_message(title):
     slack_api_key = os.environ.get("SLACK_API_KEY")
     message = f"Someone just completed the task {title} Task"
     
-    query_params = {
+    params = {
         "channel": "task-notifications",
         "text": message,
         "format": "json"
     }
     headers = {"authorization": f"Bearer {slack_api_key}"}
 
-    requests.post(path, params=query_params, headers=headers)
+    requests.post(path, params=params, headers=headers)
 
 # @tasks_bp.route("<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 # def task_mark_incomplete(task_id):
