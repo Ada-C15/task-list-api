@@ -15,9 +15,7 @@ class Goal(db.Model):
         }
 
         if len(self.tasks) != 0:
-            tasks_ids = []
-            for task in self.tasks:
-                tasks_ids.append(task.task_id)
+            tasks_ids = [task.task_id for task in self.tasks]
             response_body = {
                 "id": self.goal_id,
                 "task_ids": tasks_ids

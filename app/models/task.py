@@ -7,8 +7,6 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True, default=None)
-    # A task with a null value for completed_at has not been completed.
-    # __tablename__ = "tasks"
     goal_id = db.Column(
         db.Integer,
         db.ForeignKey('goal.goal_id'),
@@ -28,10 +26,8 @@ class Task(db.Model):
             "description": self.description,
             "is_complete": self.is_complete()
         }
-
         if self.goal_id:
             response_body["goal_id"] = self.goal_id
-
         return response_body
 
     def from_json(self, json):

@@ -36,12 +36,7 @@ def handle_tasks_get():
             return jsonify(
                 "Parameter sort is not defined. Use ?sort=desc or ?sort=asc to sort the tasks by title."), 404
 
-        # else:
-        #     return jsonify("Parameter sort is not defined"), 404
-
-    tasks_response = []
-    for task in tasks:
-        tasks_response.append(task.to_json())
+    tasks_response = [task.to_json() for task in tasks]
 
     return jsonify(tasks_response)
 
@@ -67,8 +62,6 @@ def handle_tasks_post():
     """
     request_body = request.get_json()
 
-    # task to create must contain: - title, - description, - completed_at,
-    # otherwise 404 + details
     if ("title" not in request_body.keys()) or (
         "description" not in request_body.keys()) \
             or ("completed_at" not in request_body.keys()):
@@ -76,13 +69,8 @@ def handle_tasks_post():
             "details": "Invalid data"
         }, 400)
 
-    # new_task = Task(title=request_body["title"],
-    #                 description=request_body["description"],
-    #                 completed_at=request_body["completed_at"]
-    #                 )
-
-    # new_task = Task()
-    new_task = (Task()).from_json(request_body)
+    new_task = Task()
+    new_task = new_task.from_json(request_body)
 
     db.session.add(new_task)
     db.session.commit()
@@ -121,10 +109,6 @@ def handle_one_task_update(task_id):
 
     data_to_update_with = request.get_json()
     task = task.from_json(data_to_update_with)
-
-    # task.title = data_to_update_with["title"]
-    # task.description = data_to_update_with["description"]
-    # task.completed_at = data_to_update_with["completed_at"]
 
     db.session.commit()
 
@@ -192,9 +176,7 @@ def handle_one_task_incomplete_patch(task_id):
 
     task.completed_at = None
     db.session.commit()
-
     retrieve_task = Task.query.get(task.task_id)
-
     return ({"task": retrieve_task.to_json()}, 200)
 
 
@@ -225,13 +207,8 @@ def handle_goals_get():
     """
     - Get all saved goals.
     """
-
     goals = Goal.query.all()
-
-    goals_response = []
-    for goal in goals:
-        goals_response.append(goal.to_json())
-
+    goals_response = [goal.to_json() for goal in goals]
     return jsonify(goals_response)
 
 
@@ -325,10 +302,7 @@ def handle_tasks_of_goal_get(goal_id):
         return jsonify(None), 404
 
     tasks = goal.tasks
-
-    tasks_list = []
-    for task in tasks:
-        tasks_list.append(task.to_json())
+    tasks_list = [task.to_json() for task in tasks]
 
     response_body = {
         "id": int(goal_id),
