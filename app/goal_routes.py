@@ -31,6 +31,24 @@ def get_goal():
     
     goals_response = []
     for goal in goals:
-        tasks_response.append(goal.to_json())
+        goals_response.append(goal.to_json())
 
     return jsonify(goals_response), 200
+
+def is_int(value):
+    try:
+        return int(value)
+    except ValueError:
+        return False
+
+@goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes = False)
+def get_goal_by_id(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return ("", 404)
+
+    if not is_int(goal_id):
+        return ("", 404)
+
+    return {"goal": goal.to_json()}, 200
