@@ -1,15 +1,13 @@
-from tests.test_wave_06 import test_get_task_includes_goal_id
 from app import db 
 from app.models.task import Task
 from app.models.goal import Goal
-from flask import request, Blueprint, make_response, jsonify, Flask # added Flask here bc ytube
+from flask import request, Blueprint, make_response, jsonify, Flask 
 from datetime import datetime 
-from flask_sqlalchemy import SQLAlchemy # added from ytube vid, allows us to use the 1-to-many relationship
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc, asc 
 import os
 from dotenv import load_dotenv
-# requests allows us to make requests to other APIs. makes a request and returns the response from the external site
-import requests # import here only? other files?
+import requests
 
 load_dotenv()
 
@@ -24,7 +22,7 @@ def create_task():
 
     if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
         return make_response({"details": "Invalid data"}, 400)
-    new_task = Task(title=request_body["title"], #value in db column reassigned with whatever user entered on their side
+    new_task = Task(title=request_body["title"],
                     description=request_body["description"], 
                     completed_at=request_body["completed_at"])
     
@@ -54,13 +52,15 @@ def get_all_tasks():
 
 @task_bp.route("/<task_id>", methods=["GET"])
 def get_single_task(task_id):
+    """ Get single task and its data"""
     single_task = Task.query.get(task_id)
 
     if not single_task:
         return make_response("", 404)
 
     associated_goal_id = single_task.goal_id
-    dict_single_task = single_task.to_json() # turn obj to dict
+    dict_single_task = single_task.to_json() 
+
     if single_task.goal_id:
         dict_single_task["goal_id"] = associated_goal_id
         return jsonify({"task": dict_single_task})
@@ -75,7 +75,6 @@ def update_task_element(task_id):
         return make_response("", 404)
 
     request_body = request.get_json()
-    # reassign user's changes to the corresponding db field > cell
     task.title = request_body["title"]
     task.description = request_body["description"]
     task.completed_at = request_body["completed_at"]
@@ -85,6 +84,7 @@ def update_task_element(task_id):
 
 @task_bp.route("/<task_id>", methods=["DELETE"])
 def delete_task(task_id):
+    """ Delete specific task"""
     task = Task.query.get(task_id)
 
     if not task:
@@ -96,6 +96,7 @@ def delete_task(task_id):
 
 @task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
+    """Mark a task complete, send confirmation notification"""
     task = Task.query.get(task_id)
     if not task:
         return make_response("", 404)
@@ -103,12 +104,11 @@ def mark_complete(task_id):
     task.completed_at = datetime.now()
     db.session.commit()
 
-    # Slack hookup
     target_url = "https://slack.com/api/chat.postMessage"
     LC_SLACK_KEY = os.environ.get("LC_SLACK_KEY")
     headers = {"Authorization": LC_SLACK_KEY}
     data = {
-        "channel": "C0220R1781W", # copied from slack tester response body
+        "channel": "C0220R1781W",
         "text": f"Someone just completed the task {task.title}"}
     requests.patch(target_url, headers=headers, data=data)
 
@@ -116,7 +116,7 @@ def mark_complete(task_id):
 
 @task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
 def mark_incomplete(task_id):
-
+    """Mark a task incomplete"""
     task = Task.query.get(task_id)
     if not task:
         return make_response("", 404)
@@ -152,6 +152,7 @@ def get_goals():
 
 @goal_bp.route("/<goal_id>", methods=["GET"])
 def get_single_goal(goal_id):
+    """Get single goal and its data"""
     single_goal = Goal.query.get(goal_id)
     if not single_goal:
         return make_response("", 404)
@@ -159,9 +160,11 @@ def get_single_goal(goal_id):
 
 @goal_bp.route("/<goal_id>", methods=["PUT"])
 def update_goal(goal_id):
+    """Overwrite a goal with details supplied by a user"""
     goal = Goal.query.get(goal_id)
     if not goal:
         return make_response("", 404)
+
     request_body = request.get_json()
     goal.title = request_body["title"]
     db.session.commit()
@@ -169,9 +172,11 @@ def update_goal(goal_id):
 
 @goal_bp.route("/<goal_id>", methods=["DELETE"])
 def delete_goal(goal_id):
+    """Delete a specific goal"""
     goal = Goal.query.get(goal_id)
     if not goal:
         return make_response("", 404)
+
     db.session.delete(goal)
     db.session.commit()
     return make_response({'details': f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}, 200)
@@ -205,12 +210,10 @@ def get_single_tasked_goal(goal_id):
 
     if not goal:
         return make_response("", 404)
-    for task in goal.tasks: # for every Task obj in collection
-        # append obj to final list so that it can be actual list of dicts
+    for task in goal.tasks: 
         hold_related_tasks.append(task.to_json())
-    for i in range(len(hold_related_tasks)): # inside list of dicts,
-        hold_related_tasks[i]["goal_id"] = goal_id # add the goal id key-val pair
-    # return final list in proper format
+    for i in range(len(hold_related_tasks)):
+        hold_related_tasks[i]["goal_id"] = goal_id
     return jsonify({
             "id": goal.goal_id,
             "title": goal.title,

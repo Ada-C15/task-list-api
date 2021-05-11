@@ -7,8 +7,7 @@ class Task(db.Model):
     title = db.Column(db.String(50))
     description = db.Column(db.String(100))
     completed_at = db.Column(db.DateTime, nullable=True)
-    # minute 25:00 at https://www.youtube.com/watch?v=81UwMhpuxJk&ab_channel=RithmSchoolRithmSchool 
-    goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True) # foreign key(name-of-table.that-table's-column)
+    goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True)
 
     def to_json(self):
         if self.completed_at:
