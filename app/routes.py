@@ -212,7 +212,7 @@ def handle_goal_post():
     db.session.commit()
     retrieve_goal = Goal.query.get(new_goal.goal_id)
 
-    return make_response({"goal": retrieve_goal.to_dict()}, 201)
+    return make_response({"goal": retrieve_goal.to_json()}, 201)
 
 
 @goals_bp.route("", methods=["GET"])
@@ -225,7 +225,7 @@ def handle_goals_get():
 
     goals_response = []
     for goal in goals:
-        goals_response.append(goal.to_dict())
+        goals_response.append(goal.to_json())
 
     return jsonify(goals_response)
 
@@ -241,7 +241,7 @@ def handle_one_goal_get(goal_id):
     if goal is None:
         return jsonify(None), 404
 
-    return ({"goal": goal.to_dict()}, 200)
+    return ({"goal": goal.to_json()}, 200)
 
 
 @goals_bp.route("/<goal_id>", methods=["DELETE"])
@@ -279,7 +279,7 @@ def handle_one_goal_update(goal_id):
 
     retrieve_goal = Goal.query.get(goal.goal_id)
 
-    return ({"goal": retrieve_goal.to_dict()}, 200)
+    return ({"goal": retrieve_goal.to_json()}, 200)
 
 
 # ----- Establishing one-to-many relationship between goals and tasks --------
@@ -304,7 +304,7 @@ def handle_one_goal_many_tasks_get(goal_id):
         task.goal_id = int(goal_id)
         db.session.commit()
 
-    response_body = goal.to_dict()
+    response_body = goal.to_json()
 
     return (response_body, 200)
 

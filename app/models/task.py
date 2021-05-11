@@ -21,6 +21,7 @@ class Task(db.Model):
             return True
 
     def to_json(self):
+        """Converts a Task instance into JSON"""
         response_body = {
             "id": self.task_id,
             "title": self.title,
@@ -34,5 +35,6 @@ class Task(db.Model):
         return response_body
 
     # def from_json(self, request_body):
+    #     """Converts JSON into a new instance of Task"""
 
         
