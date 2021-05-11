@@ -13,6 +13,7 @@ class Task(db.Model):
     def is_complete(self):
         if self.completed_at:
             return True
+            
         return False
 
     def build_dict(self):
@@ -21,9 +22,9 @@ class Task(db.Model):
             "title": self.title,
             "description": self.description,
             "is_complete": self.is_complete()
-
         }
         if self.goal_id:
             task_dict["goal_id"] = self.goal_id
+
         return task_dict
 
