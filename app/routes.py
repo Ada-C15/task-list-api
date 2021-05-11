@@ -76,6 +76,7 @@ def retrieve_one_task(task_id):
         return jsonify({
             "task": {
                 "id": task.id,
+                "goal_id": task.goal_id,
                 "title": task.title,
                 "description": task.description,
                 "is_complete": task.is_complete()
@@ -136,7 +137,7 @@ def mark_complete(task_id):
                 "is_complete": task.is_complete() 
             }
         })
-    else: # task.is_complete() was False
+    else: 
         task.completed_at = datetime.now()
         db.session.commit() 
         return jsonify({
@@ -173,7 +174,7 @@ def mark_incomplete(task_id):
 
     
 
-# #Routes for Goals
+#Routes for Goals
 
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 @goals_bp.route("", methods=["POST"])
@@ -253,7 +254,44 @@ def retrieve_one_goals_tasks(goal_id):
         })
 
 
-# @goals_bp.route("/<goal_id>/tasks", methods=["GET,POST"])
-# def retrieve_one_goals_tasks(goal_id): 
-#     goal = Goal.query.filter_by(goal_id=goal_id).first()
- 
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"])
+def send_task_ids_goal(goal_id): 
+  
+
+    request_body = request.get_json()
+    task_ids = request_body['task_ids']
+    for task_id in task_ids:
+        task = Task.query.filter_by(id = task_id).first()
+        task.goal_id = goal_id
+
+    db.session.commit()
+    response = {
+                "id": int(goal_id),
+                "task_ids": task_ids,
+            }
+    return make_response(jsonify(response), 200)
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
+def retrieve_one_task(goal_id): 
+    goal = Goal.query.filter_by(goal_id=goal_id).first()
+    tasks = Task.query.filter_by(goal_id = goal_id).all()
+    if goal is None: 
+        return make_response("", 404)
+
+
+    response = {
+            "id": goal.goal_id,
+            "title": goal.title,
+            "tasks": [
+                {
+                "id": task.id,
+                "goal_id": task.goal_id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": task.is_complete()
+                }
+                for task in tasks 
+            ]
+        }
+
+    return make_response(jsonify(response), 200)
