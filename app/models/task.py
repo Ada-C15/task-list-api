@@ -17,3 +17,12 @@ class Task(db.Model):
             "description": self.description,
             "is_complete": False if self.completed_at is None else True
         }
+    
+    # base function for task UPDATE calls
+    def update_json(self):
+        return {
+            "id": self.task_id,
+            "title": self.title,
+            "description": self.description,
+            "is_complete": False if self.completed_at is None else True
+        }

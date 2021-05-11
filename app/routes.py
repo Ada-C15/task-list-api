@@ -69,9 +69,26 @@ def get_one_task(task_id):
             "task": task.to_json()
         }, 200
 
-# @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
-# def update_task():
+@tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
+def update_task(task_id):
 
+    task = Task.query.get(task_id)
+
+    if task:
+
+        task_data = request.get_json()
+
+        task.title = task_data["title"]
+        task.description = task_data["description"]
+
+        db.session.commit()
+
+        return{
+            "task": task.update_json()
+        }, 200
+    
+    else:
+        return make_response("", 404)
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
 def delete_task(task_id):
