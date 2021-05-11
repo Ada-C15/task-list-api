@@ -296,7 +296,7 @@ def handle_one_goal_many_tasks_get(goal_id):
         task.goal_id = int(goal_id)
         db.session.commit()
 
-    response_body = goal.tasks_ids_to_dict()
+    response_body = goal.to_dict()
 
     return (response_body, 200)
 
@@ -316,6 +316,7 @@ def handle_tasks_of_goal_get(goal_id):
     tasks_list = []
     for task in tasks:
         tasks_list.append(task.to_dict())
+
     response_body = {
         "id": int(goal_id),
         "title": goal.title,

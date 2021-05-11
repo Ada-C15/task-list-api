@@ -9,22 +9,18 @@ class Goal(db.Model):
     tasks = db.relationship('Task', backref='goal', lazy=True)
 
     def to_dict(self):
-        return {
+        response_body = {
             "id": self.goal_id,
             "title": self.title
         }
 
-    def tasks_ids_to_dict(self):
-        """
-        {
-        "id": 1,
-        "task_ids": [1, 2, 3]
-        }
-        """
-        tasks_ids = []
-        for task in self.tasks:
-            tasks_ids.append(task.task_id)
-        return {
-            "id": self.goal_id,
-            "task_ids": tasks_ids
-        }
+        if len(self.tasks) != 0:
+            tasks_ids = []
+            for task in self.tasks:
+                tasks_ids.append(task.task_id)
+            response_body = {
+                "id": self.goal_id,
+                "task_ids": tasks_ids
+            }
+
+        return response_body
