@@ -14,9 +14,20 @@ class Task(db.Model):
 
     __tablename__="task"
     def get_resp(self):
-        return{
-                "id": self.task_id,
-                "title": self.title,
-                "description": self.description,
-                "is_complete": (False if self.completed_at == None else True )
-            }
+        if not self.goal_id:
+            return{
+                    "id": self.task_id,
+                    "title": self.title,
+                    "description": self.description,
+                    "is_complete": (False if self.completed_at == None else True )
+                }
+        else:
+            return{
+                    "id": self.task_id,
+                    "goal_id": self.goal_id,
+                    "title": self.title,
+                    "description": self.description,
+                    "is_complete": (False if self.completed_at == None else True )
+                }
+    
+    

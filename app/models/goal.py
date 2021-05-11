@@ -14,7 +14,16 @@ class Goal(db.Model):
     tasks = db.relationship("Task", backref="goals", lazy=True)
 
     def get_resp(self):
-        return{
-                "id": self.goal_id,
-                "title": self.title,
-            }
+        if not self.tasks:
+            return{
+                    "id": self.goal_id,
+                    "title": self.title,
+                    "tasks": []
+                }
+        else:
+            return{
+                    "id": self.goal_id,
+                    "title": self.title,
+                    # "tasks": self.tasks
+                }
+                

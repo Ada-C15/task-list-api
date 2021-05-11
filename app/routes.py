@@ -146,13 +146,34 @@ def get_single_goal(goal_id):
             "details":f'Goal {goal.goal_id} "{goal.title}" successfully deleted'
         }, 200
 
-# How do I refer to this thing below???
-@goals_bp.route("/<goal_id>/<tasks>", methods=["POST"], strict_slashes=False)
-def retrieve_tasks(goal_id):
+@goals_bp.route("/<goal_id>/<tasks>", methods=["GET","POST"], strict_slashes=False)
+def retrieve_tasks(goal_id, tasks):
     goal = Goal.query.get(goal_id)
+
     if goal is None:
         return jsonify(None),404
 
     request_body = request.get_json()
 
-    new_goal = Goal(title=request_body["title"])
+    if request.method == "GET":
+        tasks_list = []
+        # tasks = Task.query.join(Goal).filter(Task.goal_id==goal_id).all()
+        tasks = goal.tasks
+        for task in tasks:
+            tasks_list.append((task.get_resp()))
+        goal_dict = goal.get_resp()
+        goal_dict["tasks"] = tasks_list
+        print(goal_dict)
+        return jsonify(goal_dict), 200
+
+    elif request.method == "POST":
+        for task_id in request_body["task_ids"]:
+            task = Task.query.get(task_id)
+            task.goal_id = int(goal_id)
+            # goal.tasks.append(task)
+
+        db.session.commit()
+        return jsonify({
+                "id": int(goal_id),
+                "task_ids": request_body["task_ids"]
+            }), 200
