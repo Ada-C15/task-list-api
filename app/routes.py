@@ -57,17 +57,7 @@ def create_task():
             }, 201
     else:
         return {"details": "Invalid data"}, 400
-      
-def validate_data(title, description, completed_at):
-    if type(title) != str or type(description) != str:
-        raise TypeError("Title and Description must be in string format") 
-    if completed_at is not None:
-        try:
-            parse(completed_at)
-        except:
-            raise TypeError("Completed_at must be in the format of datetime")
-    return True
-      
+        
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
     task = Task.query.get(task_id)
@@ -108,18 +98,6 @@ def mark_complete(task_id):
         }, 200
     else:
         return jsonify(None), 404
-
-def send_slack_notifications(task):
-    access_token = os.environ.get("AUTH_TOKEN")
-    path = "https://slack.com/api/chat.postMessage"
-    query_headers = {
-          "Authorization": f"Bearer {access_token}"
-    }
-    query_params = {
-          "channel": "task-notifications",
-          "text": f"Someone just completed the task {task.title}"
-    }
-    response = requests.post(path, headers=query_headers, params=query_params)
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def mark_incomplete(task_id):
@@ -213,4 +191,26 @@ def get_goals_tasks(goal_id):
         tasks = Task.query.filter_by(goal_id=goal_id)
         task_list = [task.to_json() for task in tasks]
     return {"id":int(goal_id),"title":goal.title,"tasks":task_list},200
+  
+#################### Helper function #################### 
+def validate_data(title, description, completed_at):
+    if type(title) != str or type(description) != str:
+        raise TypeError("Title and Description must be in string format") 
+    if completed_at is not None:
+        try:
+            parse(completed_at)
+        except:
+            raise TypeError("Completed_at must be in the format of datetime")
+    return True
 
+def send_slack_notifications(task):
+    access_token = os.environ.get("AUTH_TOKEN")
+    path = "https://slack.com/api/chat.postMessage"
+    query_headers = {
+          "Authorization": f"Bearer {access_token}"
+    }
+    query_params = {
+          "channel": "task-notifications",
+          "text": f"Someone just completed the task {task.title}"
+    }
+    response = requests.post(path, headers=query_headers, params=query_params)
