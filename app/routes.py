@@ -253,7 +253,7 @@ def retrieve_one_goals_tasks(goal_id):
         })
 
 
-@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
-def retrieve_one_goals_tasks(goal_id): 
-    goal = Goal.query.filter_by(goal_id=goal_id).first()
+# @goals_bp.route("/<goal_id>/tasks", methods=["GET,POST"])
+# def retrieve_one_goals_tasks(goal_id): 
+#     goal = Goal.query.filter_by(goal_id=goal_id).first()
  
