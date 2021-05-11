@@ -7,6 +7,7 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime)
+    
 
     # helper function to convert "complete" to true or false
     def complete_helper(self):

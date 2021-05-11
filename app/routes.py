@@ -1,17 +1,23 @@
 from flask import Blueprint
 from app import db
 from app.models.task import Task
-from flask import request
 from flask import request, Blueprint, make_response
 from flask import jsonify
 from sqlalchemy import asc, desc
 from datetime import datetime
+import requests
+import os 
+ 
+
 
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-# GET AND CREATE ITEMS
+
+
+# GET AND CREATE TASK ITEMS
 @tasks_bp.route("", methods=["POST", "GET"], strict_slashes=False)
 def tasks():
     
@@ -42,7 +48,9 @@ def tasks():
 
         db.session.add(task)
         db.session.commit()
-    
+
+
+
         return jsonify({"task": task.display_tasks()}), 201      
 
 # GET, CHANGE, AND DELETE A SPECIFIC TASK ID
@@ -92,9 +100,21 @@ def complete_task(task_id):
             return jsonify(None), 404
 
         task.completed_at = datetime.now()
-
+        db.session.commit()
+        slack_message(task)
         return jsonify({"task": task.display_tasks()}), 200
 
+# SEND MESSAGE TO SLACK WHEN COMPLETE
+def slack_message(task):
+
+    slack_token = os.environ.get("TOKEN")
+    
+    url = "https://slack.com/api/chat.postMessage?channel=task-notifications"
+
+    payload = {"text": f"Someone just completed the task: '{task.title}'!"}
+    headers = {"Authorization": f"Bearer {slack_token}"}
+
+    return requests.request("PATCH", url, headers=headers, data=payload)
 
 
 # MARK ID AS INCOMPLETE 
@@ -109,6 +129,8 @@ def incomplete_task(task_id):
             task.completed_at = None
 
             return jsonify({"task": task.display_tasks()}), 200
+
+
+
     
-    
-    
+
