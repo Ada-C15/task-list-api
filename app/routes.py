@@ -115,6 +115,20 @@ def patch_task(task_id, task_completion):
     elif task_completion == 'mark_complete':
         task.completed_at = datetime.today()
 
+        url_path = "https://slack.com/api/chat.postMessage"
+        SLACK_API_KEY = os.environ.get("SLACK_API_KEY")
+
+        header = {
+            "Authorization": f"Bearer {SLACK_API_KEY}"
+            }
+
+        query_params = {
+            "channel": "task-notifications",
+            "text": f"Someone just completed the task {task.title}"
+        }
+
+        requests.post(url_path, params=query_params, headers=header)
+
     else: 
         task.completed_at = None
 
