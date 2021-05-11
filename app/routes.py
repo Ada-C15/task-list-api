@@ -26,10 +26,7 @@ def get_tasks():
             raise TypeError("Only asc or desc is accepted here")
     else:
         tasks = Task.query.all()
-    tasks_response = []
-    for task in tasks:
-        tasks_response.append(task.to_json())
-    
+    tasks_response = [task.to_json() for task in tasks]
     return jsonify(tasks_response), 200
   
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
@@ -143,10 +140,7 @@ goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def get_goals():
     goals = Goal.query.all()
-    goals_response = []
-    for goal in goals:
-        goals_response.append(goal.to_json())
-    
+    goals_response = [goal.to_json() for goal in goals]
     return jsonify(goals_response), 200
   
 @goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
@@ -162,10 +156,8 @@ def create_goal():
     request_body = request.get_json()
     if "title" in request_body:
         new_goal = Goal(title = request_body["title"])
-        
         db.session.add(new_goal)
         db.session.commit()
-
         return {
                 "goal": new_goal.to_json()
         }, 201
@@ -219,9 +211,6 @@ def get_goals_tasks(goal_id):
         return jsonify(None), 404 
     else:
         tasks = Task.query.filter_by(goal_id=goal_id)
-        task_list = []
-        for task in tasks:
-            task_list.append(task.to_json())
-        
+        task_list = [task.to_json() for task in tasks]
     return {"id":int(goal_id),"title":goal.title,"tasks":task_list},200
 
