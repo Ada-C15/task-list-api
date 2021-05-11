@@ -283,51 +283,16 @@ def get_tasks(goal_id):
 
     tasks_response = []
     for task in tasks: 
-        tasks_dict = {
+        tasks_response.append({
             "id": task.id,
             "goal_id": task.goal_id,
             "title": task.title,
             "description": task.description,
             "is_complete": task.is_complete
-        }
-        tasks_response.append(tasks_dict) 
+        })
 
     return {
         "id": goal.id,
         "title": goal.title,
         "tasks": tasks_response
     }
-
-    # if request.method == "GET":
-    #     query_param_value = request.args.get("sort")
-    #     if query_param_value == "asc":
-    #         tasks = Task.query.order_by(Task.title.asc())
-    #         # tasks = Task.query.filter_by(title=title_query)
-    #     elif query_param_value == "desc":
-    #         tasks = Task.query.order_by(Task.title.desc())
-    #     else:
-    #         tasks = Task.query.all()
-
-    #     tasks_response = []
-    #     for task in tasks:
-    #         tasks_response.append({
-    #             "id": task.id,
-    #             "title": task.title,
-    #             "description": task.description,
-    #             "is_complete": task.is_complete
-    #         })
-      
-    #     return jsonify(tasks_response), 200
-
-    if request.method == "POST":
-        # get tasks from request body
-        request_data = request.get_json()
-        
-        for task_id in request_data["task_ids"]:
-            task = Task.query.get(task_id)
-            task.goal_id = goal.id
-
-        db.session.commit()
-
-        return {"id" : goal.id, "task_ids" : request_data["task_ids"]}
-
