@@ -64,6 +64,16 @@ def handle_task(task_id):
 
     if request.method == "GET":
         return task.to_json()
+
+        #     return {
+        #     "task": {
+        #         "id": task.task_id,
+        #         "goal_id": task.goal_id,
+        #         "title": task.title,
+        #         "description": task.description,
+        #         "is_complete": task.check_if_complete() # self.completed at != None
+        #         }
+        # }
     
     if request.method == "PUT":
 
@@ -198,3 +208,55 @@ def handle_goal(goal_id):
         }) 
 
 
+# { "task_ids": [1, 2, 3] }
+# { "id": 1, "task_ids": [1, 2, 3] }
+
+#  assert len(Goal.query.get(1).tasks) == 3
+
+@goals_bp.route("<goal_id>/tasks", methods=["POST", "GET"])
+def handle_goal_tasks(goal_id):
+
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return "", 404
+
+    if request.method == "POST":
+
+        associated_tasks = []
+
+        request_body = request.get_json()
+
+        for task_id in request_body["task_ids"]:
+            task = Task.query.get(task_id)
+            task.goal_id = goal_id
+            db.session.add(task)
+            db.session.commit()
+
+            associated_tasks.append(task.task_id)
+        
+        return {
+            "id": goal.goal_id,
+            "task_ids": associated_tasks
+        }
+    
+    if request.method == "GET":
+        
+        associated_tasks = Task.query.filter_by(goal_id=goal_id)
+
+        list_of_tasks = []
+
+        for task in associated_tasks:
+            list_of_tasks.append({
+                "id": task.task_id,
+                "goal_id": task.goal_id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": task.check_if_complete()
+            })
+
+        return {
+            "id": goal.goal_id,
+            "title": goal.title,
+            "tasks": list_of_tasks
+            }
