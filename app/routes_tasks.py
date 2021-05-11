@@ -40,16 +40,19 @@ def get_one_task(task_id):
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def post_task(): 
     request_body = request.get_json()
-    if len(request_body) == 3: 
-        new_task = Task(title=request_body["title"],
-                        description=request_body["description"], 
-                        completed_at=request_body["completed_at"])
-
-        db.session.add(new_task)
-        db.session.commit() 
-        return jsonify(new_task.specific_task_to_json()), 201
     
-    return {"details": "Invalid data"}, 400
+    keys = ["title", "description", "completed_at"]
+    for key in keys: 
+        if key not in request_body:
+            return {"details": "Invalid data"}, 400
+
+    new_task = Task(title=request_body["title"],
+                    description=request_body["description"], 
+                    completed_at=request_body["completed_at"])
+
+    db.session.add(new_task)
+    db.session.commit() 
+    return jsonify(new_task.specific_task_to_json()), 201
 
 @tasks_bp.route("<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id): 
@@ -80,16 +83,16 @@ def delete_task(task_id):
     
     return make_response("", 404)
 
-@tasks_bp.route("<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
-def task_mark_complete(task_id): 
-    task = Task.query.get(task_id)
+# @tasks_bp.route("<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+# def task_mark_complete(task_id): 
+#     task = Task.query.get(task_id)
 
-    if task:
-        task.completed_at = datetime.utcnow()
-        slack_post_message(task.title)
-        return jsonify(task.specific_task_to_json()), 200 
+#     if task:
+#         task.completed_at = datetime.utcnow()
+#         slack_post_message(task.title)
+#         return jsonify(task.specific_task_to_json()), 200 
     
-    return make_response("", 404) 
+#     return make_response("", 404) 
 
 
 def slack_post_message(title):
