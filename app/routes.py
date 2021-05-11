@@ -46,7 +46,7 @@ def handle_tasks(task_id):
     task = Task.query.get(task_id)
     if task is None:
         return make_response("", 404)
-    elif request.method == "GET":
+    if request.method == "GET":
         return {"task": task.to_json()}, 200
     elif request.method == "PUT":
         form_data = request.get_json()
@@ -98,17 +98,56 @@ def mark_incomplete(task_id):
         task.completed_at = None
     return {"task": task.to_json()}, 200
 
+
+
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
+
+
 
 @goals_bp.route("", methods = ["POST"])
 def goals():
     request_body = request.get_json()
-    new_goal = Goal(title = request_body("title"))
 
-    db.session.add(new_goal)
-    db.session.commit()
+    if "title" not in request_body:
+        return make_response({ "details": "Invalid data"}, 400)
+    else:
+        new_goal = Goal(title = request_body["title"])
 
-    return make_response(jsonify({"goal": new_goal.to_json()}), 201)
+        db.session.add(new_goal)
+        db.session.commit()
+
+        return make_response(jsonify({"goal": new_goal.to_json()}), 201)
+
+@goals_bp.route("", methods = ["GET"])
+def goal_index():
+    goals = Goal.query.all()
+        
+    goals_response = []
+    for goal in goals:
+        goals_response.append(goal.to_json())
+    return jsonify(goals_response), 200
+
+@goals_bp.route("/<goal_id>", methods = ["GET", "PUT", "DELETE"])
+def handle_goals(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
+    if request.method == "GET":
+        return {"goal": goal.to_json()}, 200
+    elif request.method == "PUT":
+        get_data = request.get_json()
+
+        goal.title = get_data["title"]
+        db.session.commit()
+        return {"goal": goal.to_json()}
+    elif request.method == "DELETE":
+        db.session.delete(goal)
+        db.session.commit()
+        return make_response({
+                "details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"
+}, 200)
+
+    
 
 
 
