@@ -4,10 +4,9 @@ from app import db
 from flask import request, Blueprint, make_response, Response, jsonify
 from datetime import date
 import requests
+from secrets import slack_token
 
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
-# goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
-
 
 @task_bp.route("", methods=["GET", "POST"])
 def handle_tasks():  # NameError
@@ -129,10 +128,6 @@ def handle_task(task_id):
             "details": f"Task {task.task_id} \"{task.title}\" successfully deleted"
         }
 
-# test wave3
-# creating new endpoint to update is_complete=True
-
-
 @task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
     task = Task.query.get(task_id)
@@ -144,7 +139,7 @@ def mark_complete(task_id):
 
     db.session.commit()
 
-    r = requests.post(f"https://slack.com/api/chat.postMessage?channel=task-notifications&text=Someone just completed the task {task.title}", headers={"Authorization":"Bearer xoxb-2074150077472-2050571681843-3D6IuUCZlo1NZ85gxV1DD9Hx"})
+    r = requests.post(f"https://slack.com/api/chat.postMessage?channel=task-notifications&text=Someone just completed the task {task.title}", headers={"Authorization":slack_token})
 
     return {
         "task": {
@@ -174,5 +169,4 @@ def mark_incomplete(task_id):
             "is_complete": False
         }
     }
-
 
