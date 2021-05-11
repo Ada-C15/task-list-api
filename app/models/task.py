@@ -6,20 +6,25 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable = True)
+    goal_id = db.Column(db.Integer, db.ForeignKey("goal.goal_id"), nullable=True)
 
     def is_complete(self):
         return self.completed_at != None
-        # if self.completed_at is None:
-        #     return False
-        # else:
-        #     return True
+
     
     def make_json(self):
-        return {
+        if self.goal_id == None:
+            return {
                 "id": self.task_id,
                 "title": self.title,
                 "description": self.description,
                 "is_complete": self.is_complete()
-        }
-    
-
+            }
+        else:
+            return {
+                "id": self.task_id,
+                "goal_id": self.goal_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.is_complete()
+            }
