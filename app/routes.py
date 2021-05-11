@@ -110,11 +110,11 @@ def delete_task(task_id):
     }, 200
 
 
-def slack_send_message():
+def slack_send_message(task):
     path = "https://slack.com/api/chat.postMessage"
     query_params = {
         "channel" : "task-notifications",
-        "text" : "Test from VSCode"
+        "text" : f"Task {task.id} with title {task.title} has been marked as complete"
     }
     authorization = os.environ.get('SLACK_URI')
     headers = {
@@ -132,7 +132,7 @@ def mark_status_task(task_id, complete_status):
     if complete_status == "mark_complete":
         completed_date = datetime.today()
         task.completed_at = completed_date
-        slack_send_message()
+        slack_send_message(task)
         print("I made it to this point")
     else:
         task.completed_at = None
