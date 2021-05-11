@@ -76,7 +76,6 @@ def retrieve_one_task(task_id):
         return jsonify({
             "task": {
                 "id": task.id,
-                "goal_id": task.goal_id,
                 "title": task.title,
                 "description": task.description,
                 "is_complete": task.is_complete()
