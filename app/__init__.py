@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 db = SQLAlchemy()
 migrate = Migrate()
 load_dotenv()
-
+SLACK_TOKEN = os.getenv("TASK_LIST_TOKEN")
 
 def create_app(test_config=None):
     app = Flask(__name__)

@@ -1,7 +1,8 @@
-from app import db
+from app import db, SLACK_TOKEN
 from app.models.task import Task
 from flask import request, Blueprint, make_response, jsonify
 from datetime import datetime
+import requests
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -85,22 +86,21 @@ def mark_complete(task_id):
     form_data = request.get_json()
     if task is None:
             return make_response("", 404)
-    if task.completed_at is None:
-        task.completed_at = datetime.now()
-        db.session.commit()   
-        return make_response(jsonify({"task":{
-                        "id": task.task_id,
-                        "title": task.title,
-                        "description": task.description,
-                        "is_complete": True}})) 
-    else:
-        task.completed_at = datetime.now()
-        db.session.commit()   
-        return make_response(jsonify({"task":{
-                        "id": task.task_id,
-                        "title": task.title,
-                        "description": task.description,
-                        "is_complete": True}}))
+    task.completed_at = datetime.now()
+    db.session.commit()
+    url = "https://slack.com/api/chat.postMessage"
+    key_params = {
+                "channel":"task-notifications",
+                "text": f"Someone just completed the task {task.title}"
+                }
+    headers = {"Authorization": f"Bearer {SLACK_TOKEN}"}
+    requests.post(url, data = key_params, headers = headers)
+    return make_response(jsonify({"task":{
+        "id": task.task_id,
+        "title": task.title,
+        "description": task.description,
+        "is_complete": True}}))
+    
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods = ["PATCH"])  
 def patch_incomplete_on_completed_task(task_id): 
