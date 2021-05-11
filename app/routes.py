@@ -100,7 +100,9 @@ def handle_tasks():
         db.session.add(new_task)
         db.session.commit()
         return {"task": new_task.get_resp()}, 201
-
+'''
+goals stuff
+'''
 @goals_bp.route("", methods=["GET","POST"])
 def handle_goals():
     if request.method == "GET":
@@ -143,3 +145,14 @@ def get_single_goal(goal_id):
         return {
             "details":f'Goal {goal.goal_id} "{goal.title}" successfully deleted'
         }, 200
+
+# How do I refer to this thing below???
+@goals_bp.route("/<goal_id>/<tasks>", methods=["POST"], strict_slashes=False)
+def retrieve_tasks(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return jsonify(None),404
+
+    request_body = request.get_json()
+
+    new_goal = Goal(title=request_body["title"])
