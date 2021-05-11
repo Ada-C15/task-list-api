@@ -31,7 +31,7 @@ def validate_datetime(user_input):
     Validates completed_at input to ensure it is either None
     or in proper datetime format
     """
-    if not user_input["completed_at"]: # should this be a try/except clause?
+    if not user_input["completed_at"]: # could/should this be a try/except clause?
         if not isinstance(user_input["completed_at"], datetime)\
         and user_input["completed_at"] != None:
             return make_response("completed_at must be in correct format", 401)

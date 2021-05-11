@@ -1,6 +1,5 @@
 from flask import current_app
 from app import db
-#from app.models.task import Task #is this necessary?
 
 
 class Goal(db.Model):
