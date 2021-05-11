@@ -120,7 +120,7 @@ def update_single_task(task_id):
     return jsonify({"task": task_dict}), 200
 
 
-# define a new route to DELETE one book by its id (route parameter between <>, treated as a variable):
+# define a new route to DELETE one task by its id (route parameter between <>, treated as a variable):
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
 def delete_single_task(task_id):
 
@@ -191,12 +191,6 @@ def mark_incomplete(task_id):
 # Create an endpoint specifically for goals (all the routes start with /goals):
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-def is_int(value):
-    try:
-        return int(value)
-    except ValueError:
-        return False
-
 # define a route with default empty string to GET all goals:
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def get_goals():
@@ -205,7 +199,7 @@ def get_goals():
     # build list that has all the goals in it:
     goals_response = []
     for goal in goals:
-        goals_response.append(goal.to_json())   
+        goals_response.append(goal.to_dict())   
 
     return jsonify(goals_response), 200
 
@@ -225,10 +219,10 @@ def create_goal():
     db.session.add(new_goal)   
     db.session.commit()  
 
-    # we need an extra step to transfer completed_at to is_completed:
+    # we need an extra step to transfer json to dict:
     goal_dict = new_goal.to_dict()
 
-    return jsonify({"task": goal_dict}), 201
+    return jsonify({"goal": goal_dict}), 201
 
 
 # define a new route to GET a specific goal
@@ -246,3 +240,45 @@ def get_one_goal(goal_id):
         goal_dict = goal.to_dict()
      
     return jsonify({"goal": goal_dict}), 200
+
+
+# define a new route to update (PUT) one goal by its id (route parameter between <>, treated as a variable):
+@goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
+def update_single_goal(goal_id):
+
+    if not is_int(goal_id):        
+        return {"message": f"ID {goal_id} must be an integer"}, 400
+    
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return jsonify(None), 404
+
+    form_data=request.get_json()
+    goal.title=form_data["title"]
+
+    db.session.commit()
+
+    # we need an extra step to transfer json to dict:
+    goal_dict = goal.to_dict()
+    
+    return jsonify({"goal": goal_dict}), 200
+
+
+# define a new route to DELETE one goal by its id (route parameter between <>, treated as a variable):
+@goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)
+def delete_single_goal(goal_id):
+
+    if not is_int(goal_id):        
+        return {"message": f"ID {goal_id} must be an integer"}, 400
+
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return jsonify(None), 404
+   
+    db.session.delete(goal)
+    db.session.commit()
+
+    return jsonify({"details": f'Goal {goal.id} "{goal.title}" successfully deleted'}), 200
+
