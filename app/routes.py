@@ -7,6 +7,7 @@ from sqlalchemy import asc, desc
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+from dateutil.parser import parse
 
 load_dotenv()
 
@@ -21,6 +22,8 @@ def get_tasks():
             tasks = Task.query.order_by(asc(Task.title))
         elif order_query == "desc":
             tasks = Task.query.order_by(desc(Task.title))
+        else: 
+            raise TypeError("Only asc or desc is accepted here")
     else:
         tasks = Task.query.all()
     tasks_response = []
@@ -42,18 +45,31 @@ def get_single_task(task_id):
 def create_task():
     request_body = request.get_json()
     if all(key in request_body for key in ("title", "description", "completed_at")):
-        new_task = Task(title = request_body["title"],
-                    description = request_body["description"],
-                    completed_at = request_body["completed_at"])
+        title = request_body["title"]
+        description = request_body["description"]
+        completed_at = request_body["completed_at"]
         
-        db.session.add(new_task)
-        db.session.commit()
-
-        return {
-                "task": new_task.to_json()
-        }, 201
+        if validate_data(title, description, completed_at): 
+            new_task = Task(title = title,
+                        description = description,
+                        completed_at = completed_at)
+            db.session.add(new_task)
+            db.session.commit()
+            return {
+                    "task": new_task.to_json()
+            }, 201
     else:
         return {"details": "Invalid data"}, 400
+      
+def validate_data(title, description, completed_at):
+    if type(title) != str or type(description) != str:
+        raise TypeError("Title and Description must be in string format") 
+    if completed_at is not None:
+        try:
+            parse(completed_at)
+        except:
+            raise TypeError("Completed_at must be in the format of datetime")
+    return True
       
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
@@ -63,10 +79,11 @@ def update_task(task_id):
         task.title = form_data["title"]
         task.description = form_data["description"]
         task.completed_at = form_data["completed_at"]
-        db.session.commit()
-        return {
-                "task": task.to_json()
-        }, 200
+        if validate_data(task.title, task.description, task.completed_at): 
+            db.session.commit()
+            return {
+                    "task": task.to_json()
+            }, 200
     else:
         return jsonify(None), 404
 
