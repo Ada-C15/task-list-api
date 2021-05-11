@@ -20,7 +20,7 @@ def create_task():
     new_task = Task(title=request_body["title"],
                     description=request_body["description"],
                     completed_at=request_body["completed_at"])
-    
+
     db.session.add(new_task)
     db.session.commit()
 
@@ -44,6 +44,7 @@ def get_all_tasks():
 @task_list_bp.route("/<task_id>", methods = ["GET", "PUT", "DELETE"])
 def handle_task(task_id):
     task = Task.query.get(task_id)
+
     if task is None:
         return make_response(" ", 404)
 
@@ -71,12 +72,12 @@ def handle_task(task_id):
 def update_completed_task(task_id):
     task = Task.query.get(task_id)
 
-    #Consider using the keyword argument data, json, and/or headers
     url = "https://slack.com/api/chat.postMessage"
     data = {
         "channel": "C020ZEDG7AS",
-        "text": f"Someone just completed {task.title}"
+        "text": f"Someone just completed the task {task.title}"
     }
+
     headers = {
         "Authorization": f"Bearer {slack_key}"
     }
@@ -86,6 +87,7 @@ def update_completed_task(task_id):
         return make_response(" ", 404)
 
     task.completed_at = datetime.now()
+    db.session.commit()
 
     db.session.commit()
     return make_response(jsonify({"task": task.to_json()}), 200)
@@ -100,3 +102,53 @@ def update_incompleted_task(task_id):
     db.session.commit()
 
     return make_response(jsonify({"task": task.to_json()}), 200)
+
+@goal_bp.route("", methods = ["POST", "GET"])
+def one_goal():
+    if request.method == "POST":
+        request_body = request.get_json()
+
+        if "title" not in request_body:
+            return make_response(jsonify({"details": f"Invalid data" }), 400)
+    
+        new_goal = Goal(title=request_body["title"])
+        
+        db.session.add(new_goal)
+        db.session.commit()
+
+        return make_response({
+            "goal": new_goal.goal_json()}, 201)
+
+    elif request.method == "GET":
+        goals = Goal.query.all()
+
+        goal_list = []
+        for goal in goals:
+            goal_list.append(goal.goal_json())
+        return make_response(jsonify(goal_list))
+
+@goal_bp.route("/<goal_id>", methods = ["GET", "PUT", "DELETE"])
+def deal_w_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return make_response(" ", 404)
+
+    if request.method == "GET":
+        return make_response(jsonify({
+            "goal": goal.goal_json()
+        }))
+
+    elif request.method == "PUT":
+        form_data = request.get_json()
+        goal.title = form_data["title"]
+
+        db.session.commit()
+        return make_response(jsonify({"goal": goal.goal_json()}))
+
+    elif request.method == "DELETE":
+        db.session.delete(goal)
+        db.session.commit()
+
+        return make_response({
+            "details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'})
