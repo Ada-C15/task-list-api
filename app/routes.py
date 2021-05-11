@@ -13,7 +13,6 @@ goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
 @task_bp.route("", methods=["POST"], strict_slashes=False)
 def add_task():
     request_body = request.get_json()
-    print(request_body)
     if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
         return jsonify({
         "details": "Invalid data"
@@ -204,3 +203,40 @@ def delete_goal(goal_id):
             "details": (f'Goal {goal.goal_id} "{goal.title}" successfully deleted')
         }), 200
     return "", 404
+
+@goal_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def assign_goal_to_tasks(goal_id):
+    goal = Goal.query.get(goal_id)
+    request_body = request.get_json()
+    task_list = request_body["task_ids"]
+
+    for task_id in task_list:
+        task = Task.query.get(task_id)
+        if task:
+            task.goal_id = goal_id
+    
+    return jsonify({
+        "id": goal.goal_id,
+        "task_ids": task_list
+    }), 200
+
+@goal_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_tasks_for_one_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal:
+        task_found = Task.query.filter_by(goal.goal_id)
+
+        if task_found:
+            return jsonify({
+                "id": goal.goal_id,
+                "title": goal.title,
+                "tasks":[
+                    {
+                        "id": task_found.task_id,
+                        "goal_id": task_found.goal_id,
+                        "title": task_found.title,
+                        "description": task_found.description,
+                        "is_complete": task_found.convert_complete()
+                    }]
+            }), 200
+    return "", 404 
