@@ -4,6 +4,7 @@ from flask import Blueprint, request, make_response, jsonify
 from datetime import datetime
 import requests
 from app import slack_key
+from app.models.goal import Goal
 
 task_list_bp = Blueprint("task_list", __name__, url_prefix = "/tasks")
 
@@ -109,3 +110,53 @@ def mark_incomplete(task_id):
     db.session.commit()
 
     return jsonify({"task": task.to_json()}), 200
+
+
+goals_bp = Blueprint("goal_list", __name__, url_prefix = "/goals")
+@goals_bp.route("", methods = ["POST"])
+def create_goal():
+    request_body = request.get_json()
+    if "title" not in request_body:
+        return jsonify({"details": "Invalid data"}), 400
+    else:
+        new_goal = Goal(title = request_body["title"])
+
+    db.session.add(new_goal)
+    db.session.commit()
+
+    return jsonify({"goal": new_goal.to_json()}), 201
+
+@goals_bp.route("", methods = ["GET"])
+def get_all_goals():
+    goals = Goal.query.all()
+    goal_response = []
+    
+    for goal in goals:
+        goal_response.append(goal.to_json())
+
+    return jsonify(goal_response), 200
+
+
+@goals_bp.route("/<goal_id>", methods = ["GET", "DELETE", "PUT"])
+def get_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal == None:
+        return (f"Goal not found", 404)
+
+    if request.method == "GET":
+        return make_response({"goal": goal.to_json()}), 200
+
+    elif request.method == "DELETE":
+        db.session.delete(goal)
+        db.session.commit()
+        return make_response({"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}), 200
+
+    if request.method == "PUT":
+        request_body = request.get_json()
+
+        goal.title = request_body["title"]
+
+        db.session.commit()
+
+        return jsonify({"goal": goal.to_json()}), 200
