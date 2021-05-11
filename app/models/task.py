@@ -8,5 +8,4 @@ class Task(db.Model):
     title = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False)
     completed_at = db.Column(db.DateTime, nullable=True) #nullable value
-
-#add jsonify class method
+    goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'))

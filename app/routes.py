@@ -4,6 +4,8 @@ from app.models.task import Task
 from app.models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify
 import datetime
+import os 
+import requests
 
 goal_bp = task_bp = Blueprint("goal", __name__, url_prefix="/goals")
 
@@ -100,7 +102,47 @@ def get_one_goal(goal_id):
         response = {"details": text}
 
         return jsonify(response), 200 
-    
+
+@goal_bp.route("/<goal_id>/tasks", methods=["POST"])
+
+def handle_goal_tasks(goal_id):
+
+        goal = Goal.query.get(goal_id)
+
+        if goal is None:
+            return jsonify(None), 404
+
+        elif request.method =="POST":
+
+            request_body = request.get_json()
+
+            for task_id in request_body["task_ids"]:
+                
+                tasks = []
+
+                tasks.append(Task.query.get(task_id))
+
+                for task in tasks:
+
+                    task.goal_id = goal_id
+
+                    db.session.commit()
+
+        response = {}
+        response["id"] = int(goal_id)
+        response["task_ids"] = request_body["task_ids"]
+
+        return jsonify(response), 200
+
+                
+
+
+
+
+
+
+
+
 
 task_bp = Blueprint("task", __name__, url_prefix="/tasks")
 
@@ -221,6 +263,11 @@ def get_one_task(task_id):
 
 @task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 
+#params: channel: task-notifications, text: text
+#headers: Authorization: Bearer xoxb-2044330967011-2041081116293-8MePJn0y44PiQcOHslsL2Jh6
+#channel id: C1234567890
+#method URL https://slack.com/api/chat.postMessage
+
 def mark_complete(task_id):
 
     task = Task.query.get(task_id)
@@ -233,6 +280,23 @@ def mark_complete(task_id):
         task.completed_at = datetime.datetime.now()
 
         db.session.commit()
+
+        #the slack way: this worked!
+
+        # client=WebClient(token=os.environ.get("SLACK_AUTHORIZATION_TOKEN"))
+
+        # channel_id="C020VA8FNSK"
+
+        # result = client.chat_postMessage(channel=channel_id, text=f"Someone just completed the task {task.title}")
+
+        SLACK_BOT_TOKEN = os.environ.get("SLACK_AUTHORIZATION_TOKEN")
+        headers = {"Authorization": f"Bearer {SLACK_BOT_TOKEN}"}
+        url = "https://slack.com/api/chat.postMessage"
+        params = dict(
+                channel="C020VA8FNSK",
+                text=f"Someone just completed the task {task.title}")
+        
+        req = requests.request("POST", url, params=params, headers=headers)
 
         tasks_response = {
                 "id": task.task_id,
