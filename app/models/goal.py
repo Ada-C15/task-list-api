@@ -7,8 +7,12 @@ from .task import Task
 class Goal(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
     title = db.Column(db.String)
-    tasks = relationship("Task", lazy=True)
+    tasks = db.relationship("Task", backref="goal", lazy=True)
+
+    #backref meaning: creates a column in the Task table called "goal"
 
     def to_dict(self):
-        return {"id": self.goal_id,
-                "title": self.title}
+        return {
+            "id": self.id,
+            "title": self.title
+        }
