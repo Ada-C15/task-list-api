@@ -19,6 +19,15 @@ def task_not_found(func):
     inner.__name__ = func.__name__
     return inner
 
+def goal_not_found(func):
+    def inner(goal_id):
+        if Goal.query.get(goal_id) is None:
+            return jsonify(None), 404
+        return func(goal_id)
+    #renames the function for each endpoint it's wrapping so there isn't the endpoint conflict
+    inner.__name__ = func.__name__
+    return inner
+
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def tasks_index():
     sort_order = request.args.get('sort')
@@ -37,8 +46,6 @@ def tasks_index():
 @task_not_found
 def single_task(task_id):
     task = Task.query.get(task_id)
-    # if task is None:
-    #     return jsonify(None), 404
     return jsonify(task.to_json()), 200
 
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
@@ -58,8 +65,6 @@ def create_task():
 @task_not_found
 def update_task(task_id):
     task = Task.query.get(task_id)
-    # if task is NonSe:
-    #     return jsonify(None), 404
     form_data = request.get_json()
     task.title = form_data["title"]
     task.description = form_data["description"]
@@ -71,8 +76,6 @@ def update_task(task_id):
 @task_not_found
 def delete_task(task_id):
     task = Task.query.get(task_id)
-    # if task is None:
-    #     return jsonify(None), 404
     db.session.delete(task)
     db.session.commit()
     return jsonify({"details":f'Task {task.id} "{task.title}" successfully deleted'}), 200
@@ -81,8 +84,6 @@ def delete_task(task_id):
 @task_not_found
 def complete_task(task_id):
     task = Task.query.get(task_id)
-    # if task is None:
-    #     return jsonify(None), 404
     task.completed_at = datetime.utcnow()
     db.session.commit()
     # Slack
@@ -93,8 +94,6 @@ def complete_task(task_id):
 @task_not_found
 def incomplete_task(task_id):
     task = Task.query.get(task_id)
-    # if task is None:
-    #     return jsonify(None), 404
     task.completed_at = None
     db.session.commit()
     return jsonify(task.to_json()), 200
@@ -118,10 +117,9 @@ def goals_index():
     return jsonify(goals_response), 200
 
 @goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
+@goal_not_found
 def single_goal(goal_id):
     goal = Goal.query.get(goal_id)
-    if goal is None:
-        return jsonify(None), 404
     return jsonify({"goal":goal.to_json()}), 200
 
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
@@ -135,20 +133,18 @@ def create_goal():
     return jsonify({"goal":new_goal.to_json()}), 201
 
 @goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
+@goal_not_found
 def update_goal(goal_id):
     goal = Goal.query.get(goal_id)
-    if goal is None:
-        return jsonify(None), 404
     form_data = request.get_json()
     goal.title = form_data["title"]
     db.session.commit()
     return jsonify({"goal":goal.to_json()}), 200
 
 @goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)
+@goal_not_found
 def delete_goal(goal_id):
     goal = Goal.query.get(goal_id)
-    if goal is None:
-        return jsonify(None), 404
     db.session.delete(goal)
     db.session.commit()
     return jsonify({"details":f'Goal {goal.id} "{goal.title}" successfully deleted'}), 200
@@ -156,10 +152,9 @@ def delete_goal(goal_id):
 
 # GOALS WITH TASKS
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+@goal_not_found
 def get_tasks_from_goal(goal_id):
     goal = Goal.query.get(goal_id)
-    if goal is None:
-        return jsonify(None), 404
     # Why does this line work?
     tasks = Task.query.filter_by(goal_id=goal.id)
     task_list = []
