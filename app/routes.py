@@ -21,7 +21,11 @@ def handle_tasks():
             db.session.commit()
 
             return {
-                "task": new_task.build_dict()
+                "task": {
+                    "title": new_task.title,
+                    "description": new_task.description,
+                    "is_complete": new_task.is_complete
+                }
             }, 201
         
         except KeyError:
