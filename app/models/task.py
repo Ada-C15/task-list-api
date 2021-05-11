@@ -20,7 +20,7 @@ class Task(db.Model):
         else:
             return True
 
-    def to_dict(self):
+    def to_json(self):
         response_body = {
             "id": self.task_id,
             "title": self.title,
@@ -32,3 +32,7 @@ class Task(db.Model):
             response_body["goal_id"] = self.goal_id
 
         return response_body
+
+    # def from_json(self, request_body):
+
+        

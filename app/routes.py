@@ -41,7 +41,7 @@ def handle_tasks_get():
 
     tasks_response = []
     for task in tasks:
-        tasks_response.append(task.to_dict())
+        tasks_response.append(task.to_json())
 
     return jsonify(tasks_response)
 
@@ -56,7 +56,7 @@ def handle_one_task_get(task_id):
     if task is None:
         return jsonify(None), 404
 
-    response_body = {"task": task.to_dict()}
+    response_body = {"task": task.to_json()}
     return (response_body, 200)
 
 
@@ -87,7 +87,7 @@ def handle_tasks_post():
     # todo: retrieve committed task to the db, not the one with id 1
     retrieve_task = Task.query.get(new_task.task_id)
 
-    return {"task": retrieve_task.to_dict()}, 201
+    return {"task": retrieve_task.to_json()}, 201
 
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"])
@@ -125,7 +125,7 @@ def handle_one_task_update(task_id):
 
     retrieve_task = Task.query.get(task.task_id)
 
-    return ({"task": retrieve_task.to_dict()}, 200)
+    return ({"task": retrieve_task.to_json()}, 200)
 
 
 def slack_send_message():
@@ -172,7 +172,7 @@ def handle_one_task_complete_patch(task_id):
     message = f"Someone just completed the task '{retrieve_task.title}'."
     slack_message(message)
 
-    return ({"task": retrieve_task.to_dict()}, 200)
+    return ({"task": retrieve_task.to_json()}, 200)
 
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
@@ -190,7 +190,7 @@ def handle_one_task_incomplete_patch(task_id):
 
     retrieve_task = Task.query.get(task.task_id)
 
-    return ({"task": retrieve_task.to_dict()}, 200)
+    return ({"task": retrieve_task.to_json()}, 200)
 
 
 # -------------- CRUD for Goals ---------------------------
@@ -323,7 +323,7 @@ def handle_tasks_of_goal_get(goal_id):
 
     tasks_list = []
     for task in tasks:
-        tasks_list.append(task.to_dict())
+        tasks_list.append(task.to_json())
 
     response_body = {
         "id": int(goal_id),
