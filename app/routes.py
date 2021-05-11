@@ -40,12 +40,12 @@ def handle_goal():
             db.session.add(new_goal)
             db.session.commit()
 
-            goal_response = {
-                    "id": new_goal.goal_id,
-                    "title": new_goal.title
-                    }
-            dict_copy = goal_response.copy()
-            response = {"goal": dict_copy}
+            # goal_response = {
+            #         "id": new_goal.goal_id,
+            #         "title": new_goal.title
+            #         }
+            # dict_copy = goal_response.copy()
+            response = {"goal": new_goal.json_response()}
 
             return jsonify(response), 201
         
@@ -64,13 +64,7 @@ def get_one_goal(goal_id):
 
     elif request.method == "GET":
 
-        goal_response = {
-                "id": goal.goal_id,
-                "title": goal.title,
-                }
-
-        dict_copy = goal_response.copy()
-        response = {"goal": dict_copy}
+        response = {"goal": goal.json_response()}
 
         return jsonify(response), 200
     
@@ -82,13 +76,7 @@ def get_one_goal(goal_id):
 
         db.session.commit()
 
-        goal_response = {
-                "id": goal.goal_id,
-                "title": goal.title
-                }
-
-        dict_copy = goal_response.copy()
-        response = {"goal": dict_copy}
+        response = {"goal": goal.json_response()}
 
         return jsonify(response), 200
     
@@ -158,8 +146,6 @@ def handle_goal_tasks(goal_id):
 
             return jsonify(response), 200
 
-            
-
 
 
 task_bp = Blueprint("task", __name__, url_prefix="/tasks")
@@ -207,14 +193,7 @@ def handle_task():
             db.session.add(new_task)
             db.session.commit()
 
-            tasks_response = {
-                    "id": new_task.task_id,
-                    "title": new_task.title,
-                    "description": new_task.description,
-                    "is_complete": bool(new_task.completed_at)
-                    }
-            dict_copy = tasks_response.copy()
-            response = {"task": dict_copy}
+            response = {"task": new_task.json_response()}
 
             return jsonify(response), 201
         
@@ -222,7 +201,6 @@ def handle_task():
             response = {"details": "Invalid data"}
             return jsonify(response), 400
         
-
     
 @task_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
 
@@ -235,13 +213,6 @@ def get_one_task(task_id):
         
     elif request.method == "GET":
 
-        # tasks_response = {
-        #         "id": task.task_id,
-        #         "title": task.title,
-        #         "description": task.description,
-        #         "is_complete": bool(task.completed_at)
-        #         }
-        # dict_copy = tasks_response.copy()
         response = {"task": task.json_response()}
 
         return jsonify(response)
@@ -272,11 +243,6 @@ def get_one_task(task_id):
         return jsonify(response), 200 
 
 @task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
-
-#params: channel: task-notifications, text: text
-#headers: Authorization: Bearer xoxb-2044330967011-2041081116293-8MePJn0y44PiQcOHslsL2Jh6
-#channel id: C1234567890
-#method URL https://slack.com/api/chat.postMessage
 
 def mark_complete(task_id):
 
