@@ -10,7 +10,6 @@ class Task(db.Model):
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True, default=None)
     goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'))
-    # goals = db.Relationship("Goal", back_populates="tasks")
 
     __tablename__="task"
     def get_resp(self):

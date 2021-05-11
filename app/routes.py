@@ -13,9 +13,7 @@ goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 @tasks_bp.route("/<task_id>/<status>", methods=["PATCH"], strict_slashes=False)
 def patch_status(task_id, status):
-    '''
-    
-    '''
+
     task = Task.query.get(task_id)
     if task is None:
         return jsonify(None),404
@@ -100,9 +98,7 @@ def handle_tasks():
         db.session.add(new_task)
         db.session.commit()
         return {"task": new_task.get_resp()}, 201
-'''
-goals stuff
-'''
+
 @goals_bp.route("", methods=["GET","POST"])
 def handle_goals():
     if request.method == "GET":
@@ -157,20 +153,17 @@ def retrieve_tasks(goal_id, tasks):
 
     if request.method == "GET":
         tasks_list = []
-        # tasks = Task.query.join(Goal).filter(Task.goal_id==goal_id).all()
         tasks = goal.tasks
         for task in tasks:
             tasks_list.append((task.get_resp()))
         goal_dict = goal.get_resp()
         goal_dict["tasks"] = tasks_list
-        print(goal_dict)
         return jsonify(goal_dict), 200
 
     elif request.method == "POST":
         for task_id in request_body["task_ids"]:
             task = Task.query.get(task_id)
             task.goal_id = int(goal_id)
-            # goal.tasks.append(task)
 
         db.session.commit()
         return jsonify({
