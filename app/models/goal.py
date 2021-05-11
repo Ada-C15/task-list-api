@@ -20,16 +20,14 @@ class Goal(db.Model):
         }  
     
     def goal_associated_tasks(self, task): 
+        task_list = []
+        
+        if task != None:
+            task_list.append(task.tasks_to_json())
+            
         return {
             "id": self.goal_id,
             "title": self.title,
-            "tasks": [task.tasks_to_json()]
-            }
-    
-    def goal_no_associated_tasks(self): 
-        return {
-            "id": self.goal_id,
-            "title": self.title,
-            "tasks": []
-            }
+            "tasks": task_list
+        }
 

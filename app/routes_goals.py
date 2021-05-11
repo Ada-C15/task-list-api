@@ -85,7 +85,7 @@ def get_list_of_tasks(goal_id):
         task = Task.query.get(goal_id)
         if task: 
             return jsonify(goal.goal_associated_tasks(task)), 200 
-        return jsonify(goal.goal_no_associated_tasks()), 200
+        return jsonify(goal.goal_associated_tasks(task)), 200
     
     return make_response("", 404)
 
