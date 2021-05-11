@@ -1,4 +1,4 @@
-# if you see this, you're pushing from the waves-1-and-3-refactored branch!
+# if you see this, you're pushing from the waves-1-2-3-refactored branch!
 import datetime 
 from app import db
 from app.models.task import Task
