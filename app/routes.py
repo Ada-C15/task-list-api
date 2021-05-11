@@ -122,6 +122,7 @@ def mark_task_complete(task_id):
 
     return {"task": task.to_json()}, 200
 
+
 @tasks_bp.route("/<task_id>/mark_incomplete", methods = ["PATCH"], strict_slashes = False)
 def mark_task_incomplete(task_id):
     task = Task.query.get(task_id)
