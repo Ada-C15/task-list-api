@@ -22,14 +22,22 @@ def handle_tasks_get():
     - Get all saved tasks.
     - Get all saved tasks filtered by title in asc and desc order.
     """
-    sort_query = request.args.get("sort")
 
-    if sort_query == "desc":
-        tasks = Task.query.order_by(Task.title.desc())
-    elif sort_query == "asc":
-        tasks = Task.query.order_by(Task.title.asc())
-    else:
+    if not request.args:
         tasks = Task.query.all()
+    else:
+        sort_query = request.args.get("sort", default=None, type=str)
+
+        if sort_query == "desc":
+            tasks = Task.query.order_by(Task.title.desc())
+        elif sort_query == "asc":
+            tasks = Task.query.order_by(Task.title.asc())
+        else:
+            return jsonify(
+                "Parameter sort is not defined. Use ?sort=desc or ?sort=asc to sort the tasks by title."), 404
+
+        # else:
+        #     return jsonify("Parameter sort is not defined"), 404
 
     tasks_response = []
     for task in tasks:
