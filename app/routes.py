@@ -1,5 +1,6 @@
 from app import db
 from app.models.task import Task
+from .models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify, Response
 from datetime import datetime
 from sqlalchemy import desc, asc
@@ -8,6 +9,7 @@ import requests
 
 #WAVE 1
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 def is_int(value):
     try:
