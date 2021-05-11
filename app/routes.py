@@ -1,11 +1,72 @@
 from flask import Blueprint, request, make_response, jsonify
 from app import db
 from app.models.task import Task
+from app.models.goal import Goal
 from datetime import datetime
 import datetime
 from sqlalchemy import DateTime, desc
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
+
+#post request
+@goals_bp.route("", methods=["POST"], strict_slashes= False)
+def create_goals():
+    request_body = request.get_json()
+    new_goal = Goal(title = request_body["title"])
+    if "title" in request_body:
+        db.session.add(new_goal)
+        db.session.commit()
+        return jsonify({"goal": new_goal.now_json()}), 201
+    else:
+        return jsonify({"details": "Invalid data"}), 400 
+
+
+#get request
+@goals_bp.route("", methods=["GET"], strict_slashes= False)
+def get_goals():
+    goals = Goal.query.order_by(Goal.title).all()
+    goals_response = []
+    for goal in goals:
+        goals_response.append(goal.now_json()) 
+    return jsonify(goals_response), 200
+
+#get request by id
+@goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes= False)
+def get_goal_by_id(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return jsonify(None), 404
+    else:
+        return make_response({"goal": goal.now_json()}, 200)
+
+#put request
+@goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes= False)
+def update_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return jsonify(None), 404
+    
+    form_data = request.get_json()
+
+    goal.title = form_data["title"]
+    
+    db.session.commit()
+    
+    return jsonify({"goal":goal.now_json()}), 200 
+
+#delete request
+@goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes= False)
+def abandon_goals(goal_id):
+    goal = Goal.query.get(goal_id) 
+    if goal is None:
+        return jsonify(None), 404
+    else:
+        db.session.delete(goal)
+        db.session.commit()
+    return jsonify({"details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"}), 200
+
+
 
 @tasks_bp.route("", methods=["GET", "POST"], strict_slashes= False)
 def deal_tasks():
@@ -45,7 +106,7 @@ def get_task_by_id(task_id):
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes= False)
 def delete_task(task_id):
-    print("in delete task")
+    print("in delete task") #what is this left over from, testing maybe? get rid of this you silly 
     task = Task.query.get(task_id) 
     if task is None:
         return jsonify(None), 404
