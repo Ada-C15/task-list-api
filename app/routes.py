@@ -19,7 +19,6 @@ def missing_data():
 @tasks_bp.route("", methods=["POST"])
 def handle_tasks():
     request_body = request.get_json()
-
     if not "title" in request_body or not request_body.get("title"): 
         return missing_data()
     if not "description" in request_body or not request_body.get("description"):
@@ -29,7 +28,6 @@ def handle_tasks():
     new_task = Task(title=request_body["title"], 
     description=request_body["description"], 
     completed_at=request_body["completed_at"])
-
     db.session.add(new_task)
     db.session.commit()
     return make_response({"task":new_task.to_json()}, 201)
@@ -80,7 +78,6 @@ def update_task(task_id):
         task.title = new_data["title"]
         task.description = new_data["description"]
         task.completed_at = new_data["completed_at"]
-
         db.session.commit()
         return make_response({"task":task.to_json()}, 200)
     return task_not_found(task_id)
@@ -92,17 +89,16 @@ def marking_complete(task_id):
     if task:
         new_data = request.get_json()
         if task.completed_at == None:
-            task.completed_at = datetime.today()
+            task.completed_at = datetime.now()
             db.session.commit()
 
             TOKEN = os.environ.get("SLACK_KEY")
             path = "https://slack.com/api/chat.postMessage"
             headers = {"authorization": f"Bearer {TOKEN}"}
-            
             query_params = {
                 "channel": "task-notifications",
                 "text": f"Someone just completed the task {task.title}", 
-            }
+                }
             response = requests.post(path, query_params, headers=headers)
 
         return make_response({"task":task.to_json()}, 200)
@@ -181,20 +177,25 @@ def update_goal(goal_id):
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"])
 def handle_tasked_goals(goal_id):
     tasked_goal = Goal.query.get(goal_id)
-    goal_data = request.get_json()
-    tasks = [] 
-    task_ids = []
-    for id in goal_data["task_ids"]:
-        task = Task.query.get(id)
-        tasks.append(task)
-        task_ids.append(int(id))
-    tasked_goal.tasks = tasks
-    db.session.commit()
-    response = {
-                "id": int(goal_id),
-                "task_ids": task_ids
-                }
-    return make_response(response, 200) 
+    if tasked_goal:
+        goal_data = request.get_json()
+        tasks = [] 
+        task_ids = []
+        for id in goal_data["task_ids"]:
+            task = Task.query.get(id)
+            if task:
+                tasks.append(task)
+                task_ids.append(int(id))
+            else:
+                return make_response("", 400)
+        tasked_goal.tasks = tasks
+        db.session.commit()
+        response = {
+                    "id": int(goal_id),
+                    "task_ids": task_ids
+                    }
+        return make_response(response, 200)
+    return goal_not_found(goal_id)
 
 
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"])
@@ -210,6 +211,6 @@ def get_tasked_goal(goal_id):
                     "id": int(goal_id),
                     "title": goal.title,
                     "tasks": tasks_json
-        }
+                    }
         return make_response(response, 200)
     return goal_not_found(goal_id)
