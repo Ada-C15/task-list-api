@@ -87,10 +87,8 @@ def update_task_with_completion(task_id):
         updated_task = task.to_json()
         updated_task["is_complete"] = task.is_complete()
         token = os.environ.get("SLACK_BOT_TOKEN")
-        completion_note = "Someone just completed the task " + str(task.title)
-        message = {"channel": "task-notifications", "text": completion_note}
-        auth = {"Authorization": token}
-        slackbot_request = requests.post("https://slack.com/api/chat.postMessage", json=message,  headers=auth)
+        message = {"channel": "task-notifications", "text": "Someone just completed the task " + str(task.title)}
+        slackbot_request = requests.post("https://slack.com/api/chat.postMessage", json=message,  headers={"Authorization": token})
 
 
 
@@ -148,3 +146,34 @@ def handle_single_goal(goal_id):
         db.session.delete(goal)
         db.session.commit()
         return make_response({"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}, 200)
+
+
+goal_bp.route("/<goal_id>/tasks/<task_id>", methods=["GET", "PUT", "DELETE"])
+def handle_tasks_with_a_goal(goal_id, task_id):
+    pass 
+
+
+@goal_bp.route("/<goal_id>/tasks", methods=["GET", "POST"])
+def add_tasks_to_goal(goal_id):
+    request_body = request.get_json()
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
+
+    if request.method == "POST":
+        for id in request_body["task_ids"]:
+            new_task = Task.query.get(id)
+            new_task.goal_id = goal_id
+            
+            db.session.commit()
+
+        return make_response({"id": int(goal_id) , "task_ids": request_body["task_ids"]}), 200
+    elif request.method == "GET": 
+        task_list = []
+        for task in goal.tasks:
+            task = task.to_json()
+            task_list.append(task)
+        
+        return {"id": goal.goal_id, 
+                "title": goal.title, 
+                "tasks": task_list}, 200
