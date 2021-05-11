@@ -18,27 +18,47 @@ class Task(db.Model):
             is_complete = True
         return is_complete
 
+    # def to_json(self):
+    #     """
+    #     Outputs formatted JSON dictionary of task attributes
+    #     """
+    #     if self.goal_id:
+    #         return {
+    #             "task": {
+    #                 "id": self.task_id,
+    #                 "goal_id": self.goal_id,
+    #                 "title": self.title,
+    #                 "description": self.description,
+    #                 "is_complete": self.is_complete()
+    #         }}
+    #     else:
+    #         return {
+    #                 "task": {
+    #                     "id": self.task_id,
+    #                     "title": self.title,
+    #                     "description": self.description,
+    #                     "is_complete": self.is_complete()
+    #             }}
+
     def to_json(self):
         """
         Outputs formatted JSON dictionary of task attributes
         """
         if self.goal_id:
             return {
-                "task": {
-                    "id": self.task_id,
-                    "goal_id": self.goal_id,
-                    "title": self.title,
-                    "description": self.description,
-                    "is_complete": self.is_complete()
-            }}
+                "id": self.task_id,
+                "goal_id": self.goal_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.is_complete()
+            }
         else:
             return {
-                    "task": {
-                        "id": self.task_id,
-                        "title": self.title,
-                        "description": self.description,
-                        "is_complete": self.is_complete()
-                }}
+                "id": self.task_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.is_complete()
+                }
 
     def from_json(self, input_data):
         """

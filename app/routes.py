@@ -10,7 +10,7 @@ import requests
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-
+# I am CHUFFED with this one
 def post_to_slack(text, request_method):
     """
     Posts a message to Slack channel
@@ -36,13 +36,6 @@ def validate_datetime(user_input):
         and user_input["completed_at"] != None:
             return make_response("completed_at must be in correct format", 401)
 
-# def check_instance(instance): # why does this not work?
-#     """
-#     Returns 404 error if instance not found
-#     """
-#     if instance is None:
-#         return make_response("", 404)
-
 @tasks_bp.route("", methods=["GET"])
 def get_tasks():
     """
@@ -56,14 +49,9 @@ def get_tasks():
     else:
         tasks = Task.query.all()
 
-    tasks_response = [] # Can I use to_json() in a loop like this?
+    tasks_response = []
     for task in tasks:
-        tasks_response.append({
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": task.is_complete()
-        })
+        tasks_response.append(task.to_json())
     return jsonify(tasks_response)
 
 @tasks_bp.route("", methods=["POST"])
@@ -86,7 +74,9 @@ def post_task():
         db.session.add(new_task)
         db.session.commit()
 
-        return new_task.to_json(), 201
+        return {
+            "task": new_task.to_json()
+        }, 201
 
 
 @tasks_bp.route("/<task_id>", methods=["GET"])
@@ -95,11 +85,12 @@ def get_task(task_id):
     Gets task by task_id
     """
     task = Task.query.get(task_id)
-    # check_instance(task)
     if task is None:
         return make_response("", 404)
 
-    return task.to_json()
+    return {
+        "task": task.to_json()
+        }
 
 
 @tasks_bp.route("/<task_id>", methods=["PUT"])
@@ -121,7 +112,9 @@ def update_task(task_id):
 
     db.session.commit()
 
-    return task.to_json()
+    return {
+        "task": task.to_json()
+        }
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"])
 def delete_task(task_id):
@@ -152,7 +145,9 @@ def mark_complete(task_id):
     post_to_slack(f"Someone just completed the task {task.title}",
     requests.patch)
 
-    return task.to_json()
+    return {
+        "task": task.to_json()
+        }
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
 def mark_incomplete(task_id):
@@ -165,7 +160,9 @@ def mark_incomplete(task_id):
 
     task.completed_at = None
 
-    return task.to_json()
+    return {
+        "task": task.to_json()
+        }
 
 @goals_bp.route("", methods=["GET"])
 def display_goals():
@@ -176,10 +173,7 @@ def display_goals():
 
     goals_response = []
     for goal in goals:
-        goals_response.append({
-            "id": goal.goal_id,
-            "title": goal.title,
-        })
+        goals_response.append(goal.to_json())
     return jsonify(goals_response)
 
 @goals_bp.route("", methods=["POST"])
@@ -200,7 +194,7 @@ def post_goal():
     db.session.add(new_goal)
     db.session.commit()
 
-    return (new_goal.to_json(), 201)
+    return ({"goal": new_goal.to_json()}, 201)
 
 @goals_bp.route("/<goal_id>", methods=["GET"])
 def get_task(goal_id):
@@ -211,7 +205,9 @@ def get_task(goal_id):
     if goal is None:
         return make_response("", 404)
 
-    return goal.to_json()
+    return {
+        "goal": goal.to_json()
+    }
 
 @goals_bp.route("/<goal_id>", methods=["PUT"])
 def update_task(goal_id):
@@ -228,7 +224,9 @@ def update_task(goal_id):
 
     db.session.commit()
 
-    return goal.to_json()
+    return {
+        "goal": goal.to_json()
+    }
 
 @goals_bp.route("/<goal_id>", methods=["DELETE"])
 def delete_task(goal_id):
@@ -258,15 +256,9 @@ def get_goals_tasks(goal_id):
     tasks = Task.query.filter_by(goal_id=goal.goal_id)
 
     tasks_response = []
-    for task in tasks: # Can I use to_json() in a loop like this?
-        tasks_dict = {
-            "id": task.task_id,
-            "goal_id": task.goal_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": task.is_complete()
-        }
-        tasks_response.append(tasks_dict) # task.to_json()?
+    for task in tasks:
+        tasks_dict = task.to_json()
+        tasks_response.append(tasks_dict)
 
     return {
         "id": goal.goal_id,
