@@ -5,9 +5,6 @@ from .models.goal import Goal
 from datetime import datetime
 import requests
 import os
-from requests import post, patch
-#from dotenv import load_dotenv
-#load_dotenv()
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
@@ -110,6 +107,33 @@ def create_goal():
     db.session.add(new_goal)
     db.session.commit()
     return jsonify({"goal":new_goal.to_json()}), 201
+
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def post_tasks_to_goal(goal_id):
+    request_body = request.get_json()
+    goal = Goal.query.get(goal_id)
+    # if "task_ids" not in request_body:
+    #     return jsonify({"details":"Invalid data"}), 400
+    task_ids = request_body["task_ids"]
+    for id in task_ids:
+        task = Task.query.get(id)
+        # Once we set the task's goal_id attribute to the current goal, it automatically gets referenced from goal
+        task.goal_id = goal_id
+    db.session.commit()
+    return jsonify({"id":int(goal_id), "task_ids":task_ids}), 200
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_tasks_from_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return jsonify(None), 404
+    # Why does this work?
+    tasks = Task.query.filter_by(goal_id=goal.id)
+    task_list = []
+    for task in tasks:
+        task_list.append(task.to_json())
+    # the tasks are not stored directly in goals.tasks and are not dictionaries (solve this!!!)
+    return jsonify(goal.to_json()), 200
 
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def goals_index():
