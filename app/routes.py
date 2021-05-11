@@ -51,6 +51,7 @@ def is_int(value):
     except ValueError:
         return False
 
+# Handles GET requests for 1 method with the provided task id. 
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def get_one_task(task_id):
     if not is_int(task_id):
@@ -63,8 +64,26 @@ def get_one_task(task_id):
 
     if task is None:
         return make_response("", 404)
-    
     else:
         return {
             "task": task.to_json()
         }, 200
+
+# @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
+# def update_task():
+
+
+@tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
+def delete_task(task_id):
+
+    task = Task.query.get(task_id)
+
+    if task is None:
+        return make_response("", 404)
+    else:
+        db.session.delete(task)
+        db.session.commit()
+
+        return {
+            "details": f'Task {task.task_id} "{task.title}" successfully deleted'
+        }
