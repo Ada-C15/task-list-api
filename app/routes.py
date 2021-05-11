@@ -3,6 +3,8 @@ from app.models.task import Task
 from flask import Blueprint, request, make_response, jsonify
 from datetime import datetime
 import requests
+import flask_migrate
+import os
 
 
 
@@ -71,9 +73,21 @@ def mark_complete(task_id):
     if task == None:
         return make_response(), 404
     
-    task.completed_at = datetime.utcnow()
-    db.session.add(task)
-    return jsonify({"task": task.to_json()}), 200
+    if task:
+        task.completed_at = datetime.utcnow()   
+        db.session.commit()  
+        call_slack(task)
+        return make_response({"task": task.to_json()}, 200)
+
+
+
+def call_slack(task):
+    key = os.environ.get("API_KEY")
+    url = "https://slack.com/api/chat.postMessage"
+    slack_str = f"Someone just completed the task {task.title}"
+    requests.post(url, data={"token":key ,"channel":"general" , "text": slack_str})
+
+
 
 @task_bp.route('/<task_id>/mark_incomplete', methods=["PATCH"])
 def mark_incomplete(task_id):
