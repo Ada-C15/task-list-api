@@ -39,61 +39,47 @@ def add_tasks():
     slack_message(f"Someone just added {new_task.title} to the task list.")
     db.session.add(new_task)
     db.session.commit()
-
     return {"task":new_task.build_dict()}, 201
 
 
 @tasks_bp.route("/<task_id>", methods = ["GET"])
 def get_task(task_id):
-    task = Task.query.get(task_id)
-    if task is None:
-        return make_response("", 404)
-
+    task = Task.query.get_or_404(task_id)
     return make_response(jsonify({"task":task.build_dict()}))
         
 
 @tasks_bp.route("/<task_id>", methods = ["PUT"])
 def update_task(task_id):
-    task = Task.query.get(task_id)
-    if task is None:
-        return make_response("", 404)
+    task = Task.query.get_or_404(task_id)
     form_data = request.get_json()
     task.title = form_data["title"]
     task.description = form_data["description"]
     task.completed_at = form_data["completed_at"]
 
     db.session.commit()
-
     return make_response(jsonify({"task":task.build_dict()}))
 
 @tasks_bp.route("/<task_id>", methods = ["DELETE"])
 def delete_task(task_id):
-    task = Task.query.get(task_id)
-    if task is None:
-        return make_response("", 404)
+    task = Task.query.get_or_404(task_id)
     db.session.delete(task)
     db.session.commit()
-
     return {"details": f"Task {task_id} \"{task.title}\" successfully deleted"}
     
 @tasks_bp.route("/<task_id>/mark_complete", methods = ["PATCH"])
 def mark_complete(task_id):
-    task = Task.query.get(task_id)
+    task = Task.query.get_or_404(task_id)
     if task:
         task.completed_at = datetime.now()
         slack_message(f"Someone just completed {task.title}.")
         db.session.commit()
         return {"task": task.build_dict()}, 200
-    else:
-        return jsonify(None), 404
 
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods = ["PATCH"])
 def mark_incomplete(task_id):
-    task = Task.query.get(task_id)
-    if task:
-        if task.completed_at:
-            task.completed_at = None
-        return jsonify({"task": task.build_dict()}), 200
-    else:
-        return jsonify(None), 404   
+    task = Task.query.get_or_404(task_id)
+    if task.completed_at:
+        task.completed_at = None
+    return jsonify({"task": task.build_dict()}), 200
+

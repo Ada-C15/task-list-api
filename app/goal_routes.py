@@ -3,11 +3,9 @@ from app import db
 from flask import request, Blueprint, make_response, jsonify
 from app.models.task import Task
 from app.models.goal import Goal
-from sqlalchemy import desc, asc
 from dotenv import load_dotenv
 import os
-from app.slack_bot import slack_message
-from datetime import datetime
+
 
 load_dotenv()
 
