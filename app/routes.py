@@ -1,6 +1,8 @@
 from flask import request, Blueprint, Response, jsonify, make_response
 from app import db
 from app.models.task import Task
+# wave 5 
+from app.models.goal import Goal
 
 # wave #2 
 from sqlalchemy import asc, desc
@@ -12,6 +14,8 @@ from app import slack_token
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+# bp path for wave 5
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 @tasks_bp.route("", methods=["GET", "POST"])
 def all_tasks():
@@ -112,3 +116,56 @@ def edit_one_task_incomplete(task_id):
     db.session.commit()
     
     return make_response({"task" : task.to_json()}), 200
+
+
+
+# wave 5 
+
+@goals_bp.route("", methods=["GET", "POST"])
+def all_goals():    
+    if request.method == "POST":
+        request_body = request.get_json()
+    # Create a Goal: Invalid title or With Missing Data
+        if "title" not in request_body:
+            return make_response ({"details": "Invalid data"}),400
+        else:
+            new_goal = Goal(title=request_body["title"])
+
+        db.session.add(new_goal)
+        db.session.commit()
+        return make_response({"goal": new_goal.to_json()}), 201
+    elif request.method == "GET":
+        goals = Goal.query.all()
+        
+        goals_response =[]
+        for goal in goals:
+            goals_response.append(goal.to_json())
+        
+        return jsonify(goals_response)
+
+
+@goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
+def one_goal_only(goal_id):    
+    goal = Goal.query.get(goal_id)
+    
+    # GET/PUT/DELETE request to /goals/1 when there are no matching goals and get this response
+    if goal == None:
+        return make_response("",404)
+
+    if request.method == "GET":
+        return make_response({"goal" : goal.to_json()}), 200
+    elif request.method == "PUT":
+        # converting postman json to a dict table
+        form_data = request.get_json()
+
+        goal.title = form_data["title"]
+
+        db.session.commit()
+        return make_response({"goal" : goal.to_json()}), 200
+    
+    elif request.method == "DELETE":
+# DELETE requests do not generally include a request body, so 
+# no additional planning around the request body is needed        
+        db.session.delete(goal)
+        db.session.commit()
+        return make_response ({"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'})
