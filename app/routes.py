@@ -10,26 +10,34 @@ task_bp = Blueprint("task", __name__, url_prefix="/tasks")
 def create_task():
     
     request_body = request.get_json()
-    #checks to see if 'title' is found as a key in request_body
+    #checks to see if 'title' is found as a key in request_body called 'validation'
     if 'title' not in request_body:
         return make_response(jsonify({"details":"Invalid data"}), 400)
     if 'description' not in request_body:
         return make_response(jsonify({"details":"Invalid data"}), 400)
+    # checking to see if key exists in the dictionary
     if 'completed_at' not in request_body:
         return make_response(jsonify({"details":"Invalid data"}), 400)
+    # checking to see what the value is in the completed_at key 
+    if request_body["completed_at"] is None:
+        completed_date = None
     
-    new_task = Task(title = request_body["title"], description = request_body["description"],completed_at = request_body['completed_at'])
+    else:
+       # i am providing the format that the string date is currently in so the built in function can return it back in the correct format
+       completed_date = datetime.strptime(request_body["completed_at"],'%a, %d %b %Y %H:%M:%S GMT')
+
+    new_task = Task(
+        title = request_body["title"], 
+        description = request_body["description"],
+        completed_at = completed_date
+    )
     
     db.session.add(new_task)
     db.session.commit()
         
     return jsonify({
-    "task": {
-    "id": new_task.task_id,
-    "title": new_task.title,
-    "description": new_task.description,
-    "is_complete": False
-  }}), 201
+    "task": new_task.to_json()
+    }), 201
 
 
 
@@ -68,9 +76,10 @@ def tasks():
 @task_bp.route("/<task_id>", methods=["GET","PUT","DELETE"],)
 def task(task_id):
     task = Task.query.get(task_id)
+    # if task is not found
     if not task:
         return '',404
-   
+    #
     if request.method == "GET":
         return jsonify(task=task.to_json()), 200
    
@@ -92,22 +101,22 @@ def task(task_id):
 
     
 
-#endpoint for giving completed_at attribute column with a datetime value in the DB
+#endpoint for giving completed_at attribute column with a datetime value in the DB. route parameter is mark_complete
 @task_bp.route("<task_id>/mark_complete",methods=["PATCH"])
 def complete(task_id):
     task = Task.query.get(task_id)
-    if task is None:
+    if not task:
         return '', 404 
     # in order to make variable truthy we need to have datatype as value
     task.completed_at = datetime.utcnow()
     db.session.commit()
     return make_response({"task": task.to_json()}, 200)
 
-#endpoint for giving completed_at column/attribute the value null/NONE in the DB
+#endpoint for giving completed_at column/attribute the value null/NONE in the DB. route parameter is mark_incomplete
 @task_bp.route("<task_id>/mark_incomplete",methods=["PATCH"])
 def in_complete(task_id):
     task = Task.query.get(task_id)
-    if task is None:
+    if not task:
         return '', 404    
     task.completed_at = None 
     db.session.commit()
