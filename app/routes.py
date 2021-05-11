@@ -112,3 +112,10 @@ def delete_task(task_id):
         return {
             "details": f'Task {task.task_id} "{task.title}" successfully deleted'
         }
+
+@tasks_bp.route("/<task_id>/marked_complete", methods=["PATCH"], strict_slashes=False)
+def mark_complete(task_id):
+
+    task = Task.query.get(task_id)
+    
+
