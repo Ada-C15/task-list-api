@@ -42,14 +42,18 @@ class Task(db.Model):
         complete_time = (datetime.now()).strftime("%c")
         self.completed_at = complete_time 
 
-# for later reference when using slack
+
+
+# references
+# 
+# https://github.com/SlackAPI/python-slack-sdk
+# https://api.slack.com/methods/chat.postMessage/code
+# https://pypi.org/project/requests/
+
 # import datetime
 # now = datetime.datetime.now()
 # print(now.strftime("%A"), now) 
 # ==> Friday 2021-05-07 16:26:45.456577
-
-# OR 
-# import datetime
 
 # x = datetime.datetime.now()
 # print(x.strftime("%c")) ==> Fri May 07 09:29:22 2021 
@@ -62,3 +66,5 @@ class Task(db.Model):
 # %c 	Local version of date and time 	Mon Dec 31 17:41:00 2018
 
 # https://stackoverflow.com/questions/15707532/import-datetime-v-s-from-datetime-import-datetime
+
+

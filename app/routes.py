@@ -5,6 +5,11 @@ from .models.goal import Goal
 from flask import request
 from flask import jsonify, make_response
 from sqlalchemy import asc, desc
+# for wave_04 slack bot, import requests
+import requests
+import os
+# for wave_04 slack bot, import this to get slack api connection
+# import os ## don't think I need it here since slack token variable is on init.py
 
 # creating instance of the model, first arg is name of app's module
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -94,6 +99,7 @@ def delete_task(task_id):
         return jsonify(details = details_str), 200
     return make_response(""), 404
 
+# Wave 3 routes
 # Modify part of a task to mark complete
 @task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])  
 def patch_task_mark_complete(task_id):
@@ -103,12 +109,22 @@ def patch_task_mark_complete(task_id):
     if task:                         
         # then call function that changes it to complete
         task.set_completion() # updates it with a date in "completed_at" field
-        # print(task.set_completion())
+        call_slack(task)
+        # insert pos for slack here
         db.session.commit()
         return task.to_json_response(), 200
     return make_response(""), 404
 
-# Wave 3 routes
+    #helper function that posts message to slack
+def call_slack(task):
+    # calling slack bot token from .env
+    API_KEY = os.environ.get("SLACK_BOT_TOKEN")
+    # API_KEY = os.environ.get("SLACK_BOT_TOKEN") # os.environ.get("SLACK_BOT_TOKEN") from .env with 
+    url = "https://slack.com/api/chat.postMessage"
+    slack_str = f"Someone just completed the task {task.title}"
+    channel_id = "C0211KC1QSK" # comes from postman body # ID of the channel you want to send the message to
+    requests.post(url, data={"token": API_KEY, "channel": channel_id, "text": slack_str})
+
 # Modify part of a task to mark incomplete
 @task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])  
 def patch_task_mark_incomplete(task_id):
@@ -119,7 +135,7 @@ def patch_task_mark_incomplete(task_id):
         return task.to_json_response(), 200
     return make_response(""), 404
 
-# Wave 4 routes
+# Wave 5 routes
 # GOAL ROUTES start here 
 @goal_bp.route("", methods = ["POST"], strict_slashes = False)
 def create_goal():
