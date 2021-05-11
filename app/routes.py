@@ -3,8 +3,10 @@ from app.models.task import Task
 from app import db
 from flask import request, Blueprint, make_response, Response, jsonify
 from datetime import date
+import requests
 
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+# goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 
 @task_bp.route("", methods=["GET", "POST"])
@@ -131,10 +133,36 @@ def handle_task(task_id):
 # creating new endpoint to update is_complete=True
 
 
-@task_bp.route("/<task_id>", methods=["PATCH"])
+@task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
     task = Task.query.get(task_id)
+
+    if task == None:
+        return "",404
+
     task.completed_at = date.today()  # todays date
+
+    db.session.commit()
+
+    r = requests.post(f"https://slack.com/api/chat.postMessage?channel=task-notifications&text=Someone just completed the task {task.title}", headers={"Authorization":"Bearer xoxb-2074150077472-2050571681843-3D6IuUCZlo1NZ85gxV1DD9Hx"})
+
+    return {
+        "task": {
+            "id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": True
+        }
+    }
+
+@task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
+def mark_incomplete(task_id):
+    task = Task.query.get(task_id)
+    
+    if task == None:
+        return "",404
+
+    task.completed_at = None
 
     db.session.commit()
 
@@ -143,6 +171,8 @@ def mark_complete(task_id):
             "id": task.task_id,
             "title": task.title,
             "description": task.description,
-            "is_complete": completed_at
+            "is_complete": False
         }
     }
+
+
