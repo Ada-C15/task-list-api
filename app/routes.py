@@ -3,6 +3,7 @@ from werkzeug.wrappers import PlainRequest
 from app import db
 from flask.helpers import make_response
 from app.models.task import Task
+from datetime import date
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -83,7 +84,6 @@ def update_task(task_id):
     task = Task.query.get(task_id)
 
     if task:
-
         task_data = request.get_json()
 
         task.title = task_data["title"]
@@ -92,9 +92,8 @@ def update_task(task_id):
         db.session.commit()
 
         return{
-            "task": task.update_json()
+            "task": task.to_json()
         }, 200
-    
     else:
         return make_response("", 404)
 
@@ -113,9 +112,18 @@ def delete_task(task_id):
             "details": f'Task {task.task_id} "{task.title}" successfully deleted'
         }
 
-@tasks_bp.route("/<task_id>/marked_complete", methods=["PATCH"], strict_slashes=False)
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
 def mark_complete(task_id):
 
     task = Task.query.get(task_id)
-    
+
+    if task is None:
+        return make_response("", 404)
+    else:
+        task.completed_at = date.today()
+        db.session.commit()
+
+        return{
+            "task": task.to_json()
+        }, 200
 
