@@ -52,13 +52,9 @@ def task_index():
 def get_task(task_id):
     task = Task.query.get(task_id)
     if task: 
+        task_fd = task.to_json()
         return jsonify({
-            "task":{
-            "id": task.task_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": task.convert_complete()
-            }
+            "task": task_fd
             }), 200
     return "", 404
 
