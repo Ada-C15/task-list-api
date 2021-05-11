@@ -2,7 +2,6 @@ from flask import current_app
 from app import db
 from sqlalchemy import DateTime
 
-
 class Task(db.Model):
     task_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)

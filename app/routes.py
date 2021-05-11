@@ -22,7 +22,11 @@ def handle_tasks():
 
         for task in tasks:
             tasks_response.append(task.to_json())
-
+        
+        if "asc" in request.full_path:
+            sorted_ascending = sorted(tasks_response, key=lambda x: x.get("title"))
+            return jsonify(sorted_ascending)
+        
         return jsonify(tasks_response), 200
 
     elif request.method == "POST":
