@@ -6,6 +6,8 @@ from datetime import datetime
 import requests
 import os
 from requests import post, patch
+#from dotenv import load_dotenv
+#load_dotenv()
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
@@ -90,8 +92,7 @@ def incomplete_task(task_id):
 #Helper function posting to slack
 def post_message(message):
     path = "https://slack.com/api/chat.postMessage"
-    SLACK_KEY = os.environ.get("SLACK_TOKEN")
-    headers = {"Authorization": f"Berer {SLACK_KEY}"}
+    headers = {"Authorization": f"Bearer {os.environ.get('SLACK_TOKEN')}"}
     query_params = {"channel": "task-notifications",
                     "text": message
                     }
@@ -143,3 +144,5 @@ def delete_goal(goal_id):
     db.session.delete(goal)
     db.session.commit()
     return jsonify({"details":f'Goal {goal.id} "{goal.title}" successfully deleted'}), 200
+
+    # inside goal can be a list of tasks and we append tasks to a goal?
