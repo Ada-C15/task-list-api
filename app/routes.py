@@ -12,15 +12,16 @@ def handle_tasks():
         task_response = []
         for task in tasks:
             task_response.append({
-                'task_id': task.task_id,
+                'id': task.task_id,
                 'title': task.title,
                 'description': task.description,
-                #'is_complete': task.is_complete
+                'is_complete': task.completed_at != None
             })
         return jsonify(task_response)
     elif request.method == 'POST':
         request_body = request.get_json()
-        new_task = Task(title = request_body['title'],
+        new_task = Task(
+            title = request_body['title'],
             description = request_body['description'],
             
         )
@@ -28,7 +29,7 @@ def handle_tasks():
         db.session.commit()
         return{
             'task':{
-                'task_id': new_task.task_id,
+                'id': new_task.task_id,
                 'title': new_task.title,
                 'description': new_task.description,
                 # 'is_complete': new_task.is_complete
@@ -43,10 +44,10 @@ def handle_task(task_id):  # same name as parameter route
         return "", 404
     return({
         'task':{
-            'id': task.id,
+            'id': task.task_id,
             'title': task.title,
             'description': task.description,
-            'is_complete': task.is_complete
+            'is_complete': task.completed_at != None
         }      
     })
 
