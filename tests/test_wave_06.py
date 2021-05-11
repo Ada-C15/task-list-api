@@ -68,7 +68,7 @@ def test_get_tasks_for_specific_goal_no_tasks(client, one_goal):
 def test_get_tasks_for_specific_goal(client, one_task_belongs_to_one_goal):
     # Act
     response = client.get("/goals/1/tasks")
-    response_body = response.get_json()
+    response_body = response.get_json() # stopped here
 
     # Assert
     assert response.status_code == 200

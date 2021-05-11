@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, Blueprint
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
@@ -25,10 +25,14 @@ def create_app(test_config=None):
     # Import models here for Alembic setup
     from app.models.task import Task
     from app.models.goal import Goal
+    from .routes import task_bp
+    from .routes import goal_bp
 
     db.init_app(app)
     migrate.init_app(app, db)
 
     # Register Blueprints here
+    app.register_blueprint(task_bp)
+    app.register_blueprint(goal_bp)
 
     return app
