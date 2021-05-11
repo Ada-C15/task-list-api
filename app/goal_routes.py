@@ -52,3 +52,19 @@ def get_goal_by_id(goal_id):
         return ("", 404)
 
     return {"goal": goal.to_json()}, 200
+
+
+@goals_bp.route("/<goal_id>", methods = ["PUT"], strict_slashes = False)
+def update_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return ("", 404)
+
+    form_data = request.get_json()
+
+    goal.title = form_data["title"]
+
+    db.session.commit()
+
+    return {"goal": goal.to_json()}, 200
