@@ -7,7 +7,23 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @tasks_bp.route("", methods=["GET","POST"], strict_slashes=False)
 def handle_tasks():
-    if request.method == "POST":
+    if request.method == "GET":
+        task_title_from_url = request.args.get("title")
+        # search for task by title
+        if task_title_from_url:
+            tasks = Task.query.filter_by(title=task_title_from_url)
+        # all tasks
+        else:
+            tasks = Task.query.all()
+    
+        tasks_response = []
+
+        for task in tasks:
+            tasks_response.append(task.to_json())
+
+        return jsonify(tasks_response), 200
+
+    elif request.method == "POST":
         # try and except block for KeyError
         try:
             request_body = request.get_json()
@@ -21,28 +37,8 @@ def handle_tasks():
             db.session.commit()
 
             return {
-                "task": {
-                    "title": new_task.title,
-                    "description": new_task.description,
-                    "is_complete": new_task.is_complete
-                }
+                "task": new_task.to_json()
             }, 201
         
         except KeyError:
             return{"details": "Invalid data"}, 400
-
-    elif request.method == "GET":
-        task_title_from_url = request.args.get("title")
-        # search for task by title
-        if task_title_from_url:
-            tasks = Task.query.filter_by(title=task_title_from_url)
-        # all tasks
-        else:
-            tasks = Task.query.all()
-    
-            tasks_response = []
-
-            for task in tasks:
-                tasks_response.append(task.to_json())
-    
-            return jsonify(tasks_response), 200
