@@ -154,22 +154,22 @@ def create_goal():
     #Reads the HTTP request boby with:
     request_body = request.get_json()
     
-    if len(request_body) == 1:
-        new_goal = Goal(title = request_body["title"])
-            
-        db.session.add(new_goal)
-        db.session.commit()
-
-        return {
-            "goal" : new_goal.to_json()
-        }, 201
-
-    elif "title" not in request_body:
+    if "title" not in request_body:
         response = {
             "details" : "Invalid data"
         }
         return make_response(response,400)
 
+    new_goal = Goal(title = request_body["title"])
+    print("New goal created",new_goal.id)    
+    db.session.add(new_goal)
+    db.session.commit()
+
+    return {
+        "goal" : new_goal.to_json()
+    }, 201
+
+ 
     #return make_response(jsonify(new_task)), 201
     # elif ("title" not in request_body) or ("description" not in request_body) or ("completed_at" not in request_body):
     #     response = {
