@@ -193,6 +193,43 @@ def handle_goals(goal_id):
 
 # Wave 6
 # Establishing a One-to-Many Relationship
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"])
+def create_goals_tasks(goal_id):
+
+    request_body = request.get_json()
+
+    number = int(goal_id)
+    for task_id in request_body["task_ids"]:
+        task = Task.query.get(task_id)
+
+        task.goal_id = number
+
+    db.session.commit()
+    return {
+        "id": number, 
+        "task_ids": request_body["task_ids"]
+    }
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
+def get_goals_tasks(goal_id):
+    goal = Goal.query.get(goal_id)
+    if not goal:
+        return ("", 404)
+
+    else:
+        number = int(goal_id)
+        tasks = Task.query.filter_by(goal_id=number)
+
+        list_of_tasks = []
+        for task in tasks:
+            list_of_tasks.append(task.to_json())
+
+        return {
+            "id": number, 
+            "title": goal.title,
+            "tasks": list_of_tasks
+        }, 200
+
 
 #optional- deployment
 
