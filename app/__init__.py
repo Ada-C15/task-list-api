@@ -4,11 +4,10 @@ from flask_migrate import Migrate
 import os
 from dotenv import load_dotenv
 
-
 db = SQLAlchemy()
 migrate = Migrate()
 load_dotenv()
-
+slack_key = os.environ.get("SLACK_API_KEY")
 
 def create_app(test_config=None):
     app = Flask(__name__)
@@ -22,13 +21,18 @@ def create_app(test_config=None):
         app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
             "SQLALCHEMY_TEST_DATABASE_URI")
 
+    db.init_app(app)
+    migrate.init_app(app, db)
+
     # Import models here for Alembic setup
     from app.models.task import Task
     from app.models.goal import Goal
 
-    db.init_app(app)
-    migrate.init_app(app, db)
-
     # Register Blueprints here
+    from .routes import task_list_bp
+    app.register_blueprint(task_list_bp)
+
+    from .routes import goal_bp
+    app.register_blueprint(goal_bp)
 
     return app
