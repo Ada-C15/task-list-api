@@ -18,8 +18,11 @@ class Goal(db.Model):
             "task_ids": self.tasks
         }
     def return_goal_tasks(self):
+        tasks_list = []
+        for task in self.tasks:
+            tasks_list.append(task.make_json())
         return{
             "id": self.goal_id,
             "title": self.title,
-            "tasks": self.tasks
+            "tasks": tasks_list
         }

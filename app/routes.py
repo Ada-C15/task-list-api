@@ -1,4 +1,4 @@
-# from werkzeug.wrappers import ETagRequestMixin
+from werkzeug.wrappers import ETagRequestMixin
 from app.models.goal import Goal
 from flask import Blueprint, request, make_response, jsonify
 from app import db
@@ -168,15 +168,8 @@ def handle_goal_tasks(goal_id):
     if goal == None:
         return make_response("", 404)
     
-    elif request.method == "GET":
-        # tasks_list = Task.query.get(goal_id)
+    elif request.method == "GET":        
         return make_response(goal.return_goal_tasks())
-
-        # return make_response({
-        #     "id": goal.goal_id,
-        #     "title": goal.title,
-        #     "tasks": tasks_list
-        # })
     
     elif request.method == "POST":
         request_body = request.get_json()
@@ -188,4 +181,4 @@ def handle_goal_tasks(goal_id):
         
         db.session.commit()
 
-        return make_response(jsonify({"id": goal.goal_id, "task_ids": task_ids}))
+        return make_response({"id": goal.goal_id, "task_ids": task_ids})
