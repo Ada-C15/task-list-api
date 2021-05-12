@@ -1,10 +1,8 @@
 from flask import current_app
 from app import db
-from flask import jsonify
-from datetime import datetime
+
 
 class Task(db.Model):
-    __tablename__ = "task"
     task_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False)
@@ -19,4 +17,8 @@ class Task(db.Model):
             "description": self.description,
             "is_complete": True if self.completed_at is not None else False,
             }
+        if self.goal is not None:
+            task_to_json["goal_id"] = self.goal
         return task_to_json
+
+

@@ -5,10 +5,16 @@ from app import db
 from datetime import datetime
 import requests
 import os
+from sqlalchemy import asc, desc
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
+def err_404():
+    """Helper function for 404 errors"""
+    return "", 404
+
+#===============================TASKS===============================#
 def retrieve_tasks_ordered_by_title(is_desc=False):
     """Helper function to get all tasks."""
     current_tasks = []
@@ -26,6 +32,7 @@ def retrieve_tasks_ordered_by_title(is_desc=False):
 
 
 def is_sort_descending(query_args):
+    """Helper function to verify the requested sorting order."""
     if "sort" in query_args and query_args["sort"] == "asc":
         return False
     return True
@@ -39,13 +46,12 @@ def is_sort_descending(query_args):
         #: comparing byte strings I allowed any query 
         #: with matching characters to be passed in the query.
         #: "/?SORTeio_de_trapezio_DESCendente" was ordering by desc. 
-        #: if b"sort" in query_str and b"desc" in query_str:
-        #: ...
+        #: if b"sort" in query_str and b"desc" in query_str.. 
 
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_all_tasks():
-
+    """Main GET request for tasks"""
     return jsonify(retrieve_tasks_ordered_by_title(is_sort_descending(request.args)))
         #: 1. jsonify() -> jsonifies
         #: 2. retrieve_tasks_ordered_by_title -> gets all tasks (by title)
@@ -57,12 +63,13 @@ def get_task(task_id):
     """Selects a single task with specified ID"""
     single_task = Task.query.get(task_id)
     if not single_task:
-        return "", 404
+        return err_404()
 
-    return jsonify({"task": single_task.to_json_format()}), 200
+    return jsonify({"task": single_task.to_json_format()})
 
 
 def validate_field(field, dic):
+    """A field validator, accepts a key-value pair (value-key to be precise)"""
     if (field not in dic or dic[field] is None):
         return False
     else:
@@ -74,6 +81,7 @@ def validate_field(field, dic):
 
 
 def post_request_validation(post_request):
+    """Helper function to validate post request's bodies"""
     valid = True
     valid &= validate_field("title", post_request)
     valid &= validate_field("description", post_request)
@@ -111,12 +119,12 @@ def update_task(task_id):
     to_update = request.get_json()
     ongoing_task = Task.query.get(task_id)
     if not ongoing_task:
-        return "", 404
+        return err_404()
 
     ongoing_task.title = to_update["title"]
     ongoing_task.description = to_update["description"]
     db.session.commit()
-    return jsonify({"task": ongoing_task.to_json_format()}), 200
+    return jsonify({"task": ongoing_task.to_json_format()})
 
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
@@ -124,7 +132,7 @@ def discard_task(task_id):
     ongoing_task = Task.query.get(task_id)
 
     if not ongoing_task:
-        return "", 404
+        return err_404()
 
     db.session.delete(ongoing_task)
     db.session.commit()
@@ -138,28 +146,28 @@ def mark_task_is_complete(task_id):
 
     ongoing_task = Task.query.get(task_id)
     if not ongoing_task:
-        return "", 404
+        return err_404()
 
     ongoing_task.completed_at = datetime.utcnow()
     db.session.commit()
     glados(ongoing_task)
-    return jsonify({"task": ongoing_task.to_json_format()}), 200
+    return jsonify({"task": ongoing_task.to_json_format()})
 
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def mark_task_incomplete(task_id):
     ongoing_task = Task.query.get(task_id)
     if not ongoing_task:
-        return "", 404
+        return err_404()
 
     ongoing_task.completed_at = None
     db.session.commit()
 
-    return jsonify({"task": ongoing_task.to_json_format()}), 200
+    return jsonify({"task": ongoing_task.to_json_format()})
 
 
 def glados(ongoing_task):
-    
+    """Implements GLAdOS as a bot in Slack"""
     glados_first_msgs = os.environ.get('BOT_SLACK_IVA')
     path = "https://slack.com/api/chat.postMessage"
     channel = "task-notifications"
@@ -171,7 +179,9 @@ def glados(ongoing_task):
     }
     sarcasm = requests.post(path, data=body)
     return sarcasm
-        #TODO: import GLaDOS quotes from the csv
+        #:TODO: import GLaDOS quotes from the csv
+        #: Give GLaDOS her own class because she deserves it 
+        #: (will try not violate naming conventions here)
         #: Aplly different quotes to different contexts (like 3 or 4)
         #: replace human with *username* maybe but 'human' 
         #: already sounds like GLaDOS herself
@@ -188,12 +198,12 @@ def get_all_goals():
 def get_goal(goal_id):
     single_goal = Goal.query.get(goal_id)
     if not single_goal:
-        return "", 404
+        return err_404()
     return jsonify({"goal": single_goal.goal_to_json_format()})
 
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
 def add_goal():
-    goal_request = request.get_json() # response string 
+    goal_request = request.get_json()
     if not validate_field("title", goal_request):
         return {"details": "Invalid data"}, 400
     goal_to_add = Goal(title=goal_request["title"])
@@ -206,18 +216,18 @@ def update_goal(goal_id):
     goal_to_update = request.get_json()
     ongoing_goal = Goal.query.get(goal_id)
     if not ongoing_goal:
-        return "", 404
+        return err_404()
 
     ongoing_goal.title = goal_to_update["title"]
     db.session.commit()
-    return jsonify({"goal": ongoing_goal.goal_to_json_format()}), 200
+    return jsonify({"goal": ongoing_goal.goal_to_json_format()})
 
 @goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)
 def abandon_goal(goal_id):
     ongoing_goal = Goal.query.get(goal_id)
 
     if not ongoing_goal:
-        return "", 404
+        return err_404()
 
     db.session.delete(ongoing_goal)
     db.session.commit()
@@ -229,16 +239,15 @@ def abandon_goal(goal_id):
 def add_tasks_to_goal(goal_id):
 
     available_goal = Goal.query.get(goal_id)
-    request_body = request.get_json() 
-    
-    if not validate_field("task_ids", request_body):
-        return "", 404
-    
-    
-    for t in request_body["task_ids"]:
+    tasks_to_add = request.get_json()
+
+    if not validate_field("task_ids", tasks_to_add):
+        return err_404()
+
+    for t in tasks_to_add["task_ids"]:
         task = Task.query.get(t)
         if task is None:
-            return "", 404
+            return err_404()
         task.goal = goal_id
         available_goal.tasks.append(task)
         db.session.add(task)
@@ -246,17 +255,23 @@ def add_tasks_to_goal(goal_id):
     db.session.add(available_goal)
     db.session.commit()
 
-    return jsonify(available_goal.add_task_response_to_json()) , 200
-    
+    return jsonify(available_goal.add_task_response_to_json())
 
-# def 
-# if not "task_ids" in request_body:
-#         return "", 404
-        
-# for t in request_body["task_ids"]:
-#         task = Task.query.get(t)
-#         if task is None:
-#             return "", 404
-#         task.goal = goal_id
-#         available_goal.tasks.append(task)
-#         db.session.add(task)
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_tasks_for_one_goal(goal_id):
+    available_goal = Goal.query.get(goal_id)
+    if not available_goal:
+        return err_404()
+
+    return jsonify(available_goal.tasks_to_many_goals_to_json_format())
+
+
+
+#:TODO: document every function later!!!
+#: I'm currently getting this error:
+#: "psycopg2.errors.UndefinedColumn) column task.goal"
+#: yet all tests are passing. yay
+#: Don't think it's an issue in my code, as the error hints
+#: that this has something to do with the Goal table:
+#: 
+#: Will investigate this further.

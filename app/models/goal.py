@@ -7,13 +7,11 @@ class Goal(db.Model):
     title = db.Column(db.String, nullable=False)
     tasks = db.relationship('Task', backref='task', lazy=True)
 
-
     def goal_to_json_format(self):
-        goal_to_json = {
+        return {
             "id": self.goal_id,
             "title": self.title,
             }
-        return goal_to_json
     
     def add_task_response_to_json(self):
 
@@ -21,4 +19,11 @@ class Goal(db.Model):
             "id": self.goal_id,
             "task_ids": [t.task_id for t in self.tasks]
         }
-        
+
+    def tasks_to_many_goals_to_json_format(self):
+        return {
+            "id": self.goal_id,
+            "title": self.title,
+            "tasks": [t.to_json_format() for t in self.tasks]
+        }
+
