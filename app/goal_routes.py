@@ -46,103 +46,68 @@ def handle_tasks():  # NameError
             }
         }, 201
 
+#get 1 goal
+@goal_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
+def handle_goal(goal_id):
+    goal = Goal.query.get(goal_id)
 
+    if goal == None:
+        return make_response(f"Goal{goal_id} not found", 404)
 
-# # getting 1 task
+    if request.method == "GET":
+        return {
+            "goal": {
+                "id": goal.goal_id,
+                "title": goal.title
+            }
+        }
+    elif request.method == "PUT":
+        form_data = request.get_json()
 
+        goal.title = form_data["title"]
 
-# @goal_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
-# def handle_task(task_id):
-#     task = Task.query.get(task_id)
+        db.session.commit()
 
-#     if task == None:
-#         return make_response(f"Task {task_id} not found", 404)
+    elif request.method == "DELETE":
+        db.session.delete(goal)
+        db.session.commit()
+        
+        return {
+            "details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"
+        }
 
-#     if request.method == "GET":
-#         if task.completed_at == None:
-#             completed_at = False
-#         else:
-#             completed_at = True
-#         return {
-#             "task": {
-#                 "id": task.task_id,
-#                 "title": task.title,
-#                 "description": task.description,
-#                 "is_complete": completed_at
-#             }
-#         }
-#     elif request.method == "PUT":
-#         form_data = request.get_json()
+@goal_bp.route("/<goal__id>/mark_complete", methods=["PATCH"])
+def mark_complete(goal_id):
+    goal = Goal.query.get(goal_id)
 
-#         task.title = form_data["title"]
-#         task.description = form_data["description"]
-#         task.completed_at = form_data["completed_at"]
+    if goal == None:
+        return "",404
 
-#         db.session.commit()
+    db.session.commit()
 
-#         if task.completed_at == None:
-#             completed_at = False
-#         else:
-#             completed_at = True
-#         return {
-#             "task": {
-#                 "id": task.task_id,
-#                 "title": task.title,
-#                 "description": task.description,
-#                 "is_complete": completed_at
-#             }
-#         }
+    r = requests.post(f"https://slack.com/api/chat.postMessage?channel=goal-notifications&text=Someone just completed the goal {goal.title}", headers={"Authorization":slack_token})
 
-#     elif request.method == "DELETE":
-#         db.session.delete(task)
-#         db.session.commit()
-#         if task.completed_at == None:
-#             completed_at = False
-#         else:
-#             completed_at = True
-#         return {
-#             "details": f"Task {task.task_id} \"{task.title}\" successfully deleted"
-#         }
+    return {
+        "goal": {
+            "id": goal.goal_id,
+            "title": "Updated Goal Title"
+        }
+    }
 
-# @task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
-# def mark_complete(task_id):
-#     task = Task.query.get(task_id)
-
-#     if task == None:
-#         return "",404
-
-#     task.completed_at = date.today()  # todays date
-
-#     db.session.commit()
-
-#     r = requests.post(f"https://slack.com/api/chat.postMessage?channel=task-notifications&text=Someone just completed the task {task.title}", headers={"Authorization":slack_token})
-
-#     return {
-#         "task": {
-#             "id": task.task_id,
-#             "title": task.title,
-#             "description": task.description,
-#             "is_complete": True
-#         }
-#     }
-
-# @task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
-# def mark_incomplete(task_id):
-#     task = Task.query.get(task_id)
+@goal_bp.route("/<goal_id>/mark_incomplete", methods=["PATCH"])
+def mark_incomplete(goal_id):
+    goal = Goal.query.get(goal_id)
     
-#     if task == None:
-#         return "",404
+    if goal == None:
+        return "",404
 
-#     task.completed_at = None
+    # goal.completed_at = None
 
-#     db.session.commit()
+    db.session.commit()
 
-#     return {
-#         "task": {
-#             "id": task.task_id,
-#             "title": task.title,
-#             "description": task.description,
-#             "is_complete": False
-#         }
-#     }
-
+    return {
+        "goal": {
+            "id": goal.goal_id,
+            "title": goal.title
+        }
+    }

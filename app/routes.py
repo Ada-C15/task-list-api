@@ -73,8 +73,6 @@ def handle_tasks():  # NameError
         }, 201
 
 # getting 1 task
-
-
 @task_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
 def handle_task(task_id):
     task = Task.query.get(task_id)
