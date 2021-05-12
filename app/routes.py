@@ -152,8 +152,10 @@ def retrieve_tasks(goal_id, tasks):
     request_body = request.get_json()
 
     if request.method == "GET":
+
         tasks_list = []
         tasks = goal.tasks
+
         for task in tasks:
             tasks_list.append((task.get_resp()))
         goal_dict = goal.get_resp()
