@@ -8,13 +8,22 @@ class Task(db.Model):
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime)
 
-# def task_response(self):
-#     task_response = {
-#         task: {
-#             "id": self.task_id,
-#             "title": self.title,    
-#             "description": self.description,
-#             "is_complete": bool(self.completed_at)
-#         }
-#     }
-#     return task_response
+    def task_response(self):
+        task_response = {
+            "task":{   
+                "id": self.task_id,
+                "title": self.title,    
+                "description": self.description,
+                "is_complete": bool(self.completed_at)
+                }
+            }
+        return task_response
+    
+    def task_response_lean(self):
+        task_response = {
+                "id": self.task_id,
+                "title": self.title,    
+                "description": self.description,
+                "is_complete": bool(self.completed_at)
+                }
+        return task_response    
