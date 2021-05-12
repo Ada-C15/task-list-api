@@ -189,5 +189,20 @@ def get_goals():
         goals_response.append(goal.goal_to_json())
     return jsonify(goals_response)
 
+# endpoint to add list of tasks to one goal
+@goal_bp.route("/<goal_id>/tasks",methods=["POST"])
+def tasks_to_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if not goal:
+        return '',404
+    # request body has a goal and list of tasks to assign to that goal
+    request_body = request.get_json()
 
-
+#gets goal_id for the tasks
+    for task_id in request_body['task_ids']:
+        task = Task.query.get(task_id)
+        task.goal_id = int(goal_id)
+    
+    db.session.commit()
+    
+    return make_response({"id": int(goal_id), "task_ids": request_body["task_ids"]}, 200)                                                                                                                                                                       
