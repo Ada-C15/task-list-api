@@ -14,6 +14,7 @@ load_dotenv()
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
+# relation_bp = Blueprint("est_relation", __name__, url_prefix="/goals")
 
 #=============================================================================
 
@@ -261,3 +262,20 @@ def delete_goal(goal_id):
     db.session.delete(saved_goal)
     db.session.commit()
     return {"details": f"Goal {saved_goal.goal_id} \"{saved_goal.title}\" successfully deleted"}, 200
+
+    #=========================================================================
+
+    @goals_bp.route("/<goal_id>/tasks", methods=["POST"])
+    def task_ids_to_goal():
+        pass
+
+
+
+
+
+
+
+
+    
+
+
