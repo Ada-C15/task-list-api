@@ -9,6 +9,7 @@ class Task(db.Model):
     goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True)
 
     def check_if_complete(self):
+        
         if self.completed_at == None:
             return False
         else:
@@ -38,7 +39,6 @@ class Task(db.Model):
                     "is_complete": self.check_if_complete()
                     }
             }
-
 
 
 

@@ -6,7 +6,7 @@ from app.models.goal import Goal
 import datetime
 import requests
 
-# Class Task routes
+# class Task routes
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 
@@ -34,11 +34,16 @@ def handle_tasks():
     if request.method == "GET":
 
         sort_query = request.args.get("sort")
+        title_query = request.args.get("title")
 
         if sort_query == 'asc':
-                tasks = Task.query.order_by(Task.title)
+            tasks = Task.query.order_by(Task.title)
         elif sort_query == 'desc':
-                tasks = Task.query.order_by(Task.title.desc())
+            tasks = Task.query.order_by(Task.title.desc())
+        elif sort_query == 'id':
+            tasks = Task.query.order_by(Task.task_id)
+        elif title_query:
+            tasks = Task.query.filter_by(title=title_query)
         else: 
             tasks = Task.query.all()
         
@@ -74,7 +79,6 @@ def handle_task(task_id):
         task.description = task_data["description"]
         task.completed_at = task_data["completed_at"]
 
-        # db.session.add(task)
         db.session.commit()
 
         return task.to_json()
@@ -157,7 +161,12 @@ def handle_goals():
 
     if request.method == "GET":
 
-        goals = Goal.query.all()
+        title_query = request.args.get("title")
+
+        if title_query:
+            goals = Goal.query.filter_by(title=title_query)
+        else:
+            goals = Goal.query.all()
 
         goal_list=[]
 
