@@ -45,6 +45,8 @@ def is_int(input_id):
     except ValueError:
         return False
 
+
+
 #=============================================================================
     
 # Get One Saved Task (Successful = Returns 200 OK); No Matching Task Returns 404 Not Found
@@ -263,11 +265,22 @@ def delete_goal(goal_id):
     db.session.commit()
     return {"details": f"Goal {saved_goal.goal_id} \"{saved_goal.title}\" successfully deleted"}, 200
 
-    #=========================================================================
+#=========================================================================
 
-    @goals_bp.route("/<goal_id>/tasks", methods=["POST"])
-    def task_ids_to_goal():
-        pass
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"])
+def task_ids_to_goal(goal_id):
+
+    saved_goal = Goal.query.get_or_404(goal_id)
+
+    form_data = request.get_json()
+
+    for each_task_id in form_data["task_ids"]:
+        updated_task = Task.query.get_or_404(each_task_id)
+        updated_task.matching_goal_id = saved_goal.goal_id
+
+    db.session.commit()
+
+    return make_response({"test"}, 200)
 
 
 
@@ -276,6 +289,7 @@ def delete_goal(goal_id):
 
 
 
-    
+
+
 
 
