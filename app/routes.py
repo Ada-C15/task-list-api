@@ -44,7 +44,7 @@ def handle_missing_task_inputs(func):
 def handle_invalid_datetime(func):
     def inner(*args, **kwargs):
         request_body = request.get_json()
-        # since request_body["completed"] is string not datetime, this tests correct datetime format
+        # since request_body["completed"] is a string not a datetime, this tests for correct datetime format
         if request_body["completed_at"]:
             completed_at = str(request_body["completed_at"])
             try:
@@ -81,14 +81,11 @@ def tasks_index():
         tasks = Task.query.order_by(Task.title)
     elif sort_by == "desc":
         tasks = Task.query.order_by(Task.title.desc())
-    elif sort_by == "id" or sort_by == "description" or sort_by == "goal_id":
+    elif sort_by == "id":
         tasks = Task.query.order_by(Task.id)
-    elif sort_by == "description":
-        tasks = Task.query.order_by(Task.description)
     elif sort_by:
         return invalid_input()
     else:
-        print(sort_by)
         tasks = Task.query.all()
     tasks_response = []
     for task in tasks:
@@ -204,13 +201,15 @@ def get_tasks_from_goal(goal_id):
     goal = Goal.query.get(goal_id)
     #Only need this b/c I reconfigured .to_json() to pass previous tests 
     if "tasks" not in goal.to_json():
-        return jsonify({"id": goal.id,
+        return jsonify({
+                    "id": goal.id,
                     "title": goal.title,
                     "tasks": []
-                    })
+                    }), 200
     return jsonify(goal.to_json()), 200
 
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+@goal_not_found
 def post_tasks_to_goal(goal_id):
     request_body = request.get_json()
     if "task_ids" not in request_body:
@@ -218,7 +217,9 @@ def post_tasks_to_goal(goal_id):
     task_ids = request_body["task_ids"]
     for id in task_ids:
         task = Task.query.get(id)
-        # Once we set the task's goal_id attribute to the current goal, it automatically gets referenced from goal
         task.goal_id = int(goal_id)
     db.session.commit()
-    return jsonify({"id":int(goal_id), "task_ids":task_ids}), 200
+    return jsonify({
+                "id":int(goal_id), 
+                "task_ids":task_ids
+                }), 200
