@@ -12,6 +12,7 @@ goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 @task_list_bp.route("", methods = ["POST"], strict_slashes = False)
 def create_task():
+    """fdfd"""
     request_body = request.get_json()
 
     if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
@@ -34,6 +35,10 @@ def get_all_tasks():
         tasks = Task.query.order_by(Task.title)
     elif request.args.get("sort") == "desc":
         tasks = Task.query.order_by(Task.title.desc())
+    elif request.args.get("sort") == "id":
+        tasks = Task.query.order_by(Task.task_id)
+    elif request.args.get("title"):
+        tasks = Task.query.order_by(Task.task_id)
     else:
         tasks = Task.query.all()
 
@@ -46,6 +51,7 @@ def get_all_tasks():
 def handle_task(task_id):
     return handle_task_helper(task_id, request.method, request.get_json())
 
+#Wave6 and 7 Optional Enh- Created helper method to re-use it in my one-to-many relation logic.
 def handle_task_helper(task_id, request_method, form_data):
     task = Task.query.get(task_id)
     if task is None:
@@ -77,7 +83,7 @@ def update_completed_task(task_id):
 
     if task is None:
         return make_response(" ", 404)
-
+    
     url = "https://slack.com/api/chat.postMessage"
     data = {
         "channel": "C020ZEDG7AS",
