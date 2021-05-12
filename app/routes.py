@@ -70,12 +70,21 @@ def handle_one_task(task_id):
     if task is None:
         return make_response("", 404)
     if request.method == "GET":
-        return {"task":{
-            "id": task.id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": bool(task.completed_at)
-        }}, 200        
+        if not task.goal_identity:
+            return {"task":{
+                "id": task.id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": bool(task.completed_at)
+            }}, 200       
+        else:
+            return {"task":{
+                "id": task.id,
+                "goal_id": task.goal_identity, 
+                "title": task.title,
+                "description": task.description,
+                "is_complete": bool(task.completed_at)
+            }}, 200       
     elif request.method == "PUT":
         form_data = request.get_json()  #what is request.get_json? 
         task.title = form_data["title"]
@@ -180,3 +189,56 @@ def get_all_goals():
         })
 
     return make_response(jsonify(goals_response), 200)
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET", "POST"], strict_slashes=False)
+def tasks_by_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    request_body = request.get_json()
+
+    if not goal:
+        return make_response("", 404)
+    
+    elif request.method == "POST":
+        for task_id in request_body["task_ids"]:
+            task = Task.query.get(task_id)   
+            task.goal_identity = goal_id
+        db.session.commit()
+
+        return make_response({"id": goal.goal_id,
+                "task_ids": request_body["task_ids"]
+        }, 200) 
+
+    elif request.method == "GET":
+        # goal = Goal.query.get(goal_id)
+        tasks = goal.tasks
+        if tasks == []:
+            response = {
+                "id": goal.goal_id,
+                "title": goal.title,
+                "tasks": []
+            }
+            return response
+
+        else:
+            tasks_response = []
+            for task in tasks:
+                if task.goal_identity == goal.goal_id:
+                    tasks_response.append(
+                            {
+                                "id": task.id,
+                                "goal_id": task.goal_identity,
+                                "title": task.title,
+                                "description": task.description,
+                                "is_complete": bool(task.completed_at)
+                        })
+                response = {
+                        "id": goal.goal_id,
+                        "title": goal.title,
+                        "tasks": tasks_response
+                        }
+            return make_response(jsonify(response), 200)
+
+
+
+
+
