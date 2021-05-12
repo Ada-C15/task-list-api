@@ -32,6 +32,7 @@ def patch_status(task_id, status):
     },200
 
 def slack_post_message(title):
+
     url = 'https://slack.com/api/chat.postMessage'
     params = {
         "channel":"task-notification",
@@ -168,7 +169,12 @@ def retrieve_tasks(goal_id, tasks):
             task.goal_id = int(goal_id)
 
         db.session.commit()
+
+        tasks_list = []
+        for task in goal.tasks:
+            tasks_list.append(task.task_id)
+
         return jsonify({
                 "id": int(goal_id),
-                "task_ids": request_body["task_ids"]
+                "task_ids": tasks_list
             }), 200
