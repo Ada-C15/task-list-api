@@ -2,7 +2,9 @@ from app import db
 from app.models.task import Task
 from flask import request, Blueprint, make_response, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import select, asc, desc
+from sqlalchemy import asc, desc
+import datetime
+from datetime import datetime, date, time, timezone
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -128,3 +130,37 @@ def delete_single_task(task_id):
 
     return jsonify({"details" : f"Task {task.task_id} \"{task.title}\" successfully deleted"}), 200
 
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def mark_single_task_complete(task_id):
+    task = Task.query.get(task_id)
+    
+    if not task:
+        return jsonify(None), 404
+
+    task.completed_at = datetime.now()
+
+    db.session.commit()
+
+    return jsonify({"task": {
+        "id": task.task_id,
+        "title": task.title,
+        "description": task.description,
+        "is_complete": is_complete_function(task.completed_at)}}), 200
+
+    
+@tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
+def mark_single_task_incomplete(task_id):
+    task = Task.query.get(task_id)
+    
+    if not task:
+        return jsonify(None), 404
+        
+    task.completed_at = None
+
+    db.session.commit()
+
+    return jsonify({"task": {
+        "id": task.task_id,
+        "title": task.title,
+        "description": task.description,
+        "is_complete": is_complete_function(task.completed_at)}}), 200
