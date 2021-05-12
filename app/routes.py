@@ -18,6 +18,7 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 def get_tasks():
     order_query = request.args.get("sort")
     order_by_id = request.args.get("sort_by_id")
+    filter_by_title = request.args.get("filter_by_title")
     if order_query:
         if order_query == "asc":
             tasks = Task.query.order_by(asc(Task.title))
@@ -32,6 +33,8 @@ def get_tasks():
             tasks = Task.query.order_by(desc(Task.task_id))
         else: 
             raise TypeError("Only asc or desc is accepted here")
+    elif filter_by_title:
+        tasks = Task.query.filter_by(title=filter_by_title).all()
     else:
         tasks = Task.query.all()
     tasks_response = [task.to_json() for task in tasks]
