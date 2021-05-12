@@ -3,6 +3,7 @@ import requests
 from flask.wrappers import Response 
 from app import db
 from app.models.task import Task
+from app.models.goal import Goal
 from sqlalchemy import asc, desc
 from flask import request, Blueprint, make_response, jsonify
 from dotenv import load_dotenv
@@ -12,6 +13,7 @@ import os
 load_dotenv()
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 #=============================================================================
 
@@ -173,6 +175,89 @@ def create_task():
 
     return make_response({"task":(new_task.convert_to_json())}, 201)
 
+#=============================================================================
 
+@goals_bp.route("", methods=["POST"], strict_slashes=False)
+def create_goal():
+
+    request_body = request.get_json()
+
+    if (not request_body) or ("title" not in request_body):
+        return { "details": "Invalid data"
+        }, 400
+
+    new_goal = Goal(title=request_body["title"])
+
+    db.session.add(new_goal)
+    db.session.commit()
+
+    return make_response({"goal":(new_goal.convert_to_json())}, 201)
     
 
+@goals_bp.route("", methods=["GET"], strict_slashes=False)
+def goal_index():
+
+    query_sort_direction = request.args.get("sort")
+    goals_response = []
+
+    if query_sort_direction == "asc":
+        goals = Goal.query.order_by(asc(Goal.title))
+    
+    elif query_sort_direction == "desc": 
+        goals = Goal.query.order_by(desc(Goal.title))
+
+    else:
+        goals = Goal.query.all()
+
+    for goal in goals:
+        goals_response.append(goal.convert_to_json())
+
+    return jsonify(goals_response), 200
+
+
+@goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
+def get_single_goal(goal_id):
+
+    if not is_int(goal_id):
+        return {
+            "message": f"ID {goal_id} must be an integer",
+            "success": False
+        }, 400
+
+    saved_goal = Goal.query.get_or_404(goal_id)
+
+    return make_response({"goal":(saved_goal.convert_to_json())}, 200)
+
+@goals_bp.route("/<goal_id>", methods=["PUT"])
+def update_goal(goal_id):
+
+    if not is_int(goal_id):
+        return {
+            "message": f"ID {goal_id} must be an integer",
+            "success": False
+        }, 400
+
+    saved_goal = Goal.query.get_or_404(goal_id)
+    
+    form_data = request.get_json()
+
+    saved_goal.title = form_data["title"]
+
+    db.session.commit()
+
+    return make_response({"goal":(saved_goal.convert_to_json())}, 200)
+
+@goals_bp.route("/<goal_id>", methods=["DELETE"])
+def delete_goal(goal_id):
+
+    if not is_int(goal_id):
+        return {
+            "message": f"ID {goal_id} must be an integer",
+            "success": False
+        }, 400
+
+    saved_goal = Goal.query.get_or_404(goal_id)
+
+    db.session.delete(saved_goal)
+    db.session.commit()
+    return {"details": f"Goal {saved_goal.goal_id} \"{saved_goal.title}\" successfully deleted"}, 200
