@@ -1,10 +1,13 @@
 from app import db
 from app.models.task import Task
-# from app.models.goal import Goal
 from datetime import datetime
 from flask import request, Blueprint, make_response, jsonify
 import requests
 import os
+# from app.models.goal import Goal
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
+
 
 tasks_bp = Blueprint(
     "tasks", __name__, url_prefix="/tasks")
@@ -26,7 +29,6 @@ def create_task():
         db.session.add(new_task)
         db.session.commit()
         return jsonify({"task": new_task.to_dict()}), 201
-
     else:
         return make_response({"details": "Invalid data"}, 400)
 
@@ -100,7 +102,7 @@ def handle_complete(task_id):
 
 
 # WAVE 4
-def call_slack_api(task_name):
+def call_slack_api(task):
     SLACK_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
     url = "https://slack.com/api/chat.postMessage"
     payload = {
@@ -110,6 +112,20 @@ def call_slack_api(task_name):
         "Authorization": f"Bearer {SLACK_TOKEN}",
     }
     return requests.request("POST", url, headers=headers, data=payload)
+
+
+# def call_slack_api(task):
+#     client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
+#     channel_id = "T0226NANZ9N"
+#     try:
+#         result = client.chat_postMessage(
+#             channel=channel_id,
+#             text=f"Someone just completed the task {task.title}"
+#         )
+#         logger.info(result)
+
+#     except SlackApiError as e:
+#         logger.error(f"Error posting message: {e}")
 
 
 # -------------------------
