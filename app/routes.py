@@ -19,8 +19,8 @@ def create_task():
     
     new_task = Task(title=request_body["title"],
                     description=request_body["description"],
-                    completed_at=request_body["completed_at"])
-                    #goal_id=request_body["goal_id"] if request_body.get("goal_id") else None) #Wave6 one to many relation
+                    completed_at=request_body["completed_at"],
+                    goal_id=request_body["goal_id"] if request_body.get("goal_id") else None) #Wave6 one to many relation
 
     db.session.add(new_task)
     db.session.commit()
