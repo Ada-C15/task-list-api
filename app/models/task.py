@@ -9,7 +9,7 @@ class Task(db.Model):
     completed_at = db.Column(db.DateTime, nullable=True)
 
     def dict_response(self):
-        return {
+        return{
             "id": self.task_id,
             "title": self.title,
             "description": self.description,
