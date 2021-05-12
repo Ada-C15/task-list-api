@@ -8,10 +8,12 @@ from sqlalchemy import asc, desc
 import requests
 import json
 import os
-task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+from app.models.goal import Goal
 
-#localhost:9000/tasks/2
+
+task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 @task_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
+
 def get_single_task(task_id):
 
     task = Task.query.get(task_id)
@@ -49,8 +51,8 @@ def handle_tasks():
         if request_value == None:
             tasks = Task.query.all()
 
-        if request_value == "asc": # checking if there is a sort arg with the value of asc.
-            tasks = Task.query.order_by(Task.title.asc()) #Task is the the model and query is a class method 
+        if request_value == "asc":
+            tasks = Task.query.order_by(Task.title.asc()) 
         
         
         if request_value == "desc":
@@ -58,7 +60,7 @@ def handle_tasks():
         task_response = []
 
         for task in tasks:
-            # using jsonobject helper to create a dictionary with id, title, description, isComplete
+        
             task_response.append(task.json_object())
         
         return jsonify(task_response), 200
@@ -77,9 +79,7 @@ def handle_tasks():
 
         db.session.add(new_task)
         db.session.commit()
-        # called my new_task.completed_at_helper.
-        # created a new task and changed my task objet into JSON
-        # using jsonobject helper to create a dictionary with id, title, description, isComplete
+        
         return jsonify({"task": new_task.json_object()}), 201
 
         db.session.add(new_task)
@@ -94,37 +94,36 @@ def slack_bot(task):
 
     return requests.request("PATCH", url, headers=headers, data=payload)
 
-#PATCH localhost:9000/tasks/1/mark_complete
+
 @task_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
 def mark_complete(task_id):
-    # If POSTMAN (request)searches for a patch path 
+    
     if request.method == "PATCH":
-        #query is seaching TASK (ID, TITLE, DESCRIPTION, AND COMPLEATED_AT) and "get" getting the task_id
+        
         task = Task.query.get(task_id)
-        # If the task is NONE return the not found 404 code 
+        
         if task is None:
             return jsonify(None), 404
-        # If None is found than my code searches for what id is being mark_compleated and with my compleated_at_helper() marking complete turn/
-        # into a true statement which then timestamps the date and time completed.
+        
         task.completed_at = datetime.now()
 
-        # where I saved the change to db
+    
         db.session.commit()
         
         # call slackbot
         slack_bot(task)
 
-        #jsonify my object and "task"(STR) json_object is the jsonifyed id, title, description, and compleated_at function 
-        return jsonify({"task": task.json_object()}),200 # 200 ok code 
+        
+        return jsonify({"task": task.json_object()}),200 
 
-#PATCH localhost:9000/tasks/2/mark_incomplete(is saying this id should be marked as complete)
+
 @task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def mark_incomplete(task_id):
     
     if request.method == "PATCH":
-        #query is seaching TASK (ID, TITLE, DESCRIPTION, AND COMPLEATED_AT) and "get" getting the task_id
+        
         task = Task.query.get(task_id)
-        # If the task is NONE return the not found 404 code 
+        
         if task is None:
             return jsonify(None), 404
         
@@ -132,6 +131,15 @@ def mark_incomplete(task_id):
         
         return jsonify({"task":task.json_object()}),200
     
+goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-# post man testing eviroment
-#API request using url request can i find route that matches
+@goal_bp.route("", methods=["POST"])
+def one_goal():
+
+    if request.method == "POST":
+        goal = Goal.query.post()
+
+        request_body = request.goal_json_object()
+        db.session.commit()
+        
+        return jsonify({"goal":goal.goal_json_object()}),201
