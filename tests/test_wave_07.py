@@ -6,7 +6,6 @@ def test_task_sort_by_column_name(client, three_tasks):
     # Act
     response = client.get("/tasks?sort=id")
     response_body = response.get_json()
-
     # Assert
     assert response.status_code == 200
     assert len(response_body) == 3
@@ -26,14 +25,12 @@ def test_task_sort_by_column_name(client, three_tasks):
             "title": "Pay my outstanding tickets 😭",
             "description": "",
             "is_complete": False}
-        
     ]
     
 def test_task_sort_by_invalid_parameter(client, three_tasks):
     # Act
     response = client.get("/tasks?sort=blah_blah_blah")
     response_body = response.get_json()
-
     # Assert
     assert response.status_code == 400
     assert response_body == {"details":"Invalid 'sort' parameter"}
@@ -45,7 +42,6 @@ def test_update_task_missing_attributes(client, one_task):
         "completed_at": None
     })
     response_body = response.get_json()
-
     # Assert
     assert response.status_code == 400
     assert "details" in response_body
@@ -53,47 +49,34 @@ def test_update_task_missing_attributes(client, one_task):
         "details": "Invalid data"
     }
 
-# def test_create_task_invalid_string_timestamp(client):
-#     # Act
-#     response = client.post("/tasks", json={
-#         "title": "A Brand New Task",
-#         "description": "Test Description",
-#         "completed_at": "I Love Bananas!!!!"
-#     })
-#     response_body = response.get_json()
+def test_create_task_invalid_timestamp(client):
+    # Act
+    response = client.post("/tasks", json={
+        "title": "A Brand New Task",
+        "description": "Test Description",
+        "completed_at": "I Love Bananas!!!!"
+    })
+    response_body = response.get_json()
+    # Assert
+    assert response.status_code == 400
+    assert response_body == {"details": "Invalid Data --'completed_at' must be Type:datetime"}
 
-#     # Assert
-#     assert response.status_code == 400
-#     assert "task" in response_body
-#     assert response_body == {
-#         "task": {
-#             "id": 1,
-#             "title": "A Brand New Task",
-#             "description": "Test Description",
-#             "is_complete": True
-#         }
-#     }
-#     new_task = Task.query.get(1)
-#     assert new_task
-#     assert new_task.title == "A Brand New Task"
-#     assert new_task.description == "Test Description"
-#     assert new_task.completed_at
-
-
-def test_creat_task_invalid_integer_timestamp():
-    pass
-
-def test_update_task_invalid_string_timestamp():
-    pass
-
-def test_update_task_invalid_integer_timestamp():
-    pass
+def test_update_task_invalid_timestamp(client, one_task):
+    # Act
+    response = client.put("/tasks/1", json={
+        "title": "A Brand New Task",
+        "description": "Test Description",
+        "completed_at": 1324566
+    })
+    response_body = response.get_json()
+    # Assert
+    assert response.status_code == 400
+    assert response_body == {"details": "Invalid Data --'completed_at' must be Type:datetime"}
 
 def test_post_task_ids_to_goal_missing_task_ids(client, one_goal, three_tasks):
     # Act
     response = client.post("/goals/1/tasks", json={})
     response_body = response.get_json()
-
     # Assert
     assert response.status_code == 400
     assert response_body == {"details":"Invalid data"}
@@ -105,7 +88,6 @@ def test_post_task_ids_to_goal_empty_list(client, one_goal, three_tasks):
         "task_ids": []
     })
     response_body = response.get_json()
-
     # Assert
     assert response.status_code == 200
     assert "id" in response_body

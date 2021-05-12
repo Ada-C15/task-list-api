@@ -34,13 +34,12 @@ def handle_task_request_body(func):
         if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
             return jsonify({"details":"Invalid data"}), 400
         completed_at = request_body["completed_at"]
-        format = "%a, %d %B %Y %H:%M:%S %Z"
         # since request_body["completed"] is string not datetime, this tests correct datetime format
         if completed_at:
             #converts input to string so it works with 'try' statement
             completed_at = str(completed_at)
             try:
-                datetime.strptime(completed_at, format)
+                datetime.strptime(completed_at, "%a, %d %B %Y %H:%M:%S %Z")
             except ValueError:
                 return jsonify({"details": "Invalid Data --'completed_at' must be Type:datetime"}), 400
         return func(*args, **kwargs)
