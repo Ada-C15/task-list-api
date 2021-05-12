@@ -5,11 +5,49 @@ from app.models.goal import Goal
 from datetime import datetime
 import datetime
 from sqlalchemy import DateTime, desc
+import os
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-#post request
+#wave6
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes= False)
+def task_goal(goal_id):
+    request_body = request.get_json()
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return make_response("", 404)
+
+    for task_id in request_body["task_ids"]:
+        task = Task.query.get(task_id)
+        task.goal_id = goal.goal_id
+ 
+    db.session.commit()   
+    return make_response({"id": goal.goal_id, "task_ids": request_body["task_ids"]}, 200)
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes= False)
+def get_goal_task(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal == None:
+        return make_response("", 404)
+    
+    tasks = Task.query.filter_by(goal_id = goal_id)
+    task_list = []
+
+
+    for task in tasks:
+        #call to_json stored in a local variable here 
+        #insert the goal id key
+         task_list.append(task)
+    
+    return make_response({"id": int(goal_id), "title": goal.title, "tasks": task_list }, 200)
+
+
+
+
+
+#wave 5
 @goals_bp.route("", methods=["POST"], strict_slashes= False)
 def create_goals():
     request_body = request.get_json()
@@ -21,8 +59,6 @@ def create_goals():
     else:
         return jsonify({"details": "Invalid data"}), 400 
 
-
-#get request
 @goals_bp.route("", methods=["GET"], strict_slashes= False)
 def get_goals():
     goals = Goal.query.order_by(Goal.title).all()
@@ -31,7 +67,6 @@ def get_goals():
         goals_response.append(goal.now_json()) 
     return jsonify(goals_response), 200
 
-#get request by id
 @goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes= False)
 def get_goal_by_id(goal_id):
     goal = Goal.query.get(goal_id)
@@ -40,7 +75,6 @@ def get_goal_by_id(goal_id):
     else:
         return make_response({"goal": goal.now_json()}, 200)
 
-#put request
 @goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes= False)
 def update_goal(goal_id):
     goal = Goal.query.get(goal_id)
@@ -55,7 +89,6 @@ def update_goal(goal_id):
     
     return jsonify({"goal":goal.now_json()}), 200 
 
-#delete request
 @goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes= False)
 def abandon_goals(goal_id):
     goal = Goal.query.get(goal_id) 
@@ -65,13 +98,12 @@ def abandon_goals(goal_id):
         db.session.delete(goal)
         db.session.commit()
     return jsonify({"details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"}), 200
-
-
+#end wave 5
 
 @tasks_bp.route("", methods=["GET", "POST"], strict_slashes= False)
 def deal_tasks():
     if request.method == "GET":
-        sort_query = request.args.get("sort")
+        sort_query = request.args.get("sort")#<- handles second wave 2
         if sort_query == "desc":
             tasks = Task.query.order_by(Task.title.desc()).all()
         else:

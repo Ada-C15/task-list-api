@@ -12,9 +12,10 @@ from app import db
 class Goal(db.Model):
     goal_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)
-
+    tasks = db.relationship("Task", backref='goal', lazy=True) #originally had task and not tasks
+    
     def now_json(self):
         return{
-            "id": self.goal_id,
+            "goal_id": self.goal_id,
             "title": self.title,
         }
