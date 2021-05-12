@@ -19,3 +19,7 @@ class Task(db.Model):
         if self.goal_id:
             task["goal_id"] = self.goal_id
         return task
+      
+    @classmethod  
+    def from_json(cls, json_file):
+        return cls(**json_file)

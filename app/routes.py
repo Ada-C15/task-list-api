@@ -42,14 +42,8 @@ def get_single_task(task_id):
 def create_task():
     request_body = request.get_json()
     if all(key in request_body for key in ("title", "description", "completed_at")):
-        title = request_body["title"]
-        description = request_body["description"]
-        completed_at = request_body["completed_at"]
-        
-        if validate_data(title, description, completed_at): 
-            new_task = Task(title = title,
-                        description = description,
-                        completed_at = completed_at)
+        if validate_data(request_body): 
+            new_task = Task.from_json(request_body)
             db.session.add(new_task)
             db.session.commit()
             return {
@@ -63,10 +57,11 @@ def update_task(task_id):
     task = Task.query.get(task_id)
     if task:
         form_data = request.get_json()
-        task.title = form_data["title"]
-        task.description = form_data["description"]
-        task.completed_at = form_data["completed_at"]
-        if validate_data(task.title, task.description, task.completed_at): 
+        if validate_data(form_data): 
+            updated_task = Task.from_json(form_data)
+            task.title = form_data["title"]
+            task.description = form_data["description"]
+            task.completed_at = form_data["completed_at"]
             db.session.commit()
             return {
                     "task": task.to_json()
@@ -172,7 +167,6 @@ def update_goal(goal_id):
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
 def post_tasks_to_goal(goal_id):
     request_body = request.get_json()
-    goal = Goal.query.get(goal_id)
     for task_id in request_body["task_ids"]:
         task = Task.query.get(task_id)
         task.goal_id = goal_id
@@ -193,7 +187,19 @@ def get_goals_tasks(goal_id):
     return {"id":int(goal_id),"title":goal.title,"tasks":task_list},200
   
 #################### Helper function #################### 
-def validate_data(title, description, completed_at):
+# def validate_data(title, description, completed_at):
+#     if type(title) != str or type(description) != str:
+#         raise TypeError("Title and Description must be in string format") 
+#     if completed_at is not None:
+#         try:
+#             parse(completed_at)
+#         except:
+#             raise TypeError("Completed_at must be in the format of datetime")
+#     return True
+def validate_data(request_body):
+    title = request_body["title"]
+    description = request_body["description"]
+    completed_at = request_body["completed_at"]
     if type(title) != str or type(description) != str:
         raise TypeError("Title and Description must be in string format") 
     if completed_at is not None:
@@ -202,7 +208,6 @@ def validate_data(title, description, completed_at):
         except:
             raise TypeError("Completed_at must be in the format of datetime")
     return True
-
 def send_slack_notifications(task):
     access_token = os.environ.get("AUTH_TOKEN")
     path = "https://slack.com/api/chat.postMessage"
