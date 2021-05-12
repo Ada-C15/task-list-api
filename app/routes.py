@@ -10,12 +10,15 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 #DECORATORS AND HELPER FUNCTIONS:
+def invalid_input():
+    return jsonify({"details":"Invalid data"}), 400
+
 def task_not_found(func):
     def inner(task_id):
         if Task.query.get(task_id) is None:
             return jsonify(None), 404
         return func(task_id)
-    #renames the function for each endpoint it's wrapping so there isn't the endpoint conflict
+    #renames the function for each wrapped endpoint to avoid endpoint conflict
     inner.__name__ = func.__name__
     return inner
 
@@ -27,27 +30,32 @@ def goal_not_found(func):
     inner.__name__ = func.__name__
     return inner
 
-#Decorator to handle invalid task input for POST and PUT endpoints
-def handle_task_request_body(func):
+def handle_missing_task_inputs(func):
     def inner(*args, **kwargs):
         request_body = request.get_json()
         if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
-            return jsonify({"details":"Invalid data"}), 400
-        completed_at = request_body["completed_at"]
-        # since request_body["completed"] is string not datetime, this tests correct datetime format
-        if completed_at:
-            #converts input to string so it works with 'try' statement
-            completed_at = str(completed_at)
-            try:
-                datetime.strptime(completed_at, "%a, %d %B %Y %H:%M:%S %Z")
-            except ValueError:
-                return jsonify({"details": "Invalid Data --'completed_at' must be Type:datetime"}), 400
+            return invalid_input()
+        if not request_body["title"] or not request_body["description"]:
+            return invalid_input()
         return func(*args, **kwargs)
     inner.__name__ = func.__name__
     return inner
 
-#Helper function posting to slack
-def post_message(message):
+def handle_invalid_datetime(func):
+    def inner(*args, **kwargs):
+        request_body = request.get_json()
+        # since request_body["completed"] is string not datetime, this tests correct datetime format
+        if request_body["completed_at"]:
+            completed_at = str(request_body["completed_at"])
+            try:
+                datetime.strptime(completed_at, "%a, %d %B %Y %H:%M:%S %Z")
+            except ValueError:
+                return invalid_input()
+        return func(*args, **kwargs)
+    inner.__name__ = func.__name__
+    return inner
+
+def post_to_slack(message):
     path = "https://slack.com/api/chat.postMessage"
     headers = {"Authorization": f"Bearer {os.environ.get('SLACK_TOKEN')}"}
     query_params = {"channel": "task-notifications",
@@ -55,15 +63,15 @@ def post_message(message):
                     }
     requests.post(path, params=query_params, headers=headers)
 
-#Decorator to handle invalid goal input for POST and PUT endpoints
-def handle_goal_request_body(func):
+def handle_missing_goal_inputs(func):
     def inner(*args, **kwargs):
         request_body = request.get_json()
-        if "title" not in request_body:
-            return jsonify({"details":"Invalid data"}), 400
+        if "title" not in request_body or not request_body["title"]:
+            return invalid_input()
         return func(*args, **kwargs)
     inner.__name__ = func.__name__
     return inner
+
 
 #TASKS ENDPOINTS
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
@@ -77,12 +85,8 @@ def tasks_index():
         tasks = Task.query.order_by(Task.id)
     elif sort_by == "description":
         tasks = Task.query.order_by(Task.description)
-    elif sort_by == "goal_id":
-        tasks = Task.query.order_by(Task.goal_id)
-    elif sort_by == "completed_at":
-        tasks = Task.query.order_by(Task.completed_at)
     elif sort_by:
-        return jsonify({"details":"Invalid 'sort' parameter"}), 400
+        return invalid_input()
     else:
         print(sort_by)
         tasks = Task.query.all()
@@ -98,7 +102,8 @@ def single_task(task_id):
     return jsonify(task.to_json()), 200
 
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
-@handle_task_request_body
+@handle_missing_task_inputs
+@handle_invalid_datetime
 def create_task():
     request_body = request.get_json()
     new_task = Task(title = request_body["title"],
@@ -110,7 +115,8 @@ def create_task():
 
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 @task_not_found
-@handle_task_request_body
+@handle_missing_task_inputs
+@handle_invalid_datetime
 def update_task(task_id):
     task = Task.query.get(task_id)
     response_body = request.get_json()
@@ -135,7 +141,7 @@ def complete_task(task_id):
     task.completed_at = datetime.utcnow()
     db.session.commit()
     # Slack
-    post_message(f"Someone just completed the task {task.title}")
+    post_to_slack(f"Someone just completed the task {task.title}")
     return jsonify(task.to_json()), 200
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
@@ -150,10 +156,11 @@ def incomplete_task(task_id):
 # GOALS ENDPOINTS:
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def goals_index():
+    sort_by = request.args.get('sort')
+    if sort_by == "asc" or sort_by == "title":
+        goals = Goal.query.order_by(Goal.title)
     goals = Goal.query.all()
-    goals_response = []
-    for goal in goals:
-        goals_response.append(goal.to_json())
+    goals_response = [goal.to_json() for goal in goals]
     return jsonify(goals_response), 200
 
 @goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
@@ -163,7 +170,7 @@ def single_goal(goal_id):
     return jsonify({"goal":goal.to_json()}), 200
 
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
-@handle_goal_request_body
+@handle_missing_goal_inputs
 def create_goal():
     request_body = request.get_json()
     new_goal = Goal(title = request_body["title"])
@@ -173,7 +180,7 @@ def create_goal():
 
 @goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
 @goal_not_found
-@handle_goal_request_body
+@handle_missing_goal_inputs
 def update_goal(goal_id):
     goal = Goal.query.get(goal_id)
     form_data = request.get_json()
@@ -195,11 +202,7 @@ def delete_goal(goal_id):
 @goal_not_found
 def get_tasks_from_goal(goal_id):
     goal = Goal.query.get(goal_id)
-    # Why does this line work?
-    # tasks = Task.query.filter_by(goal_id=goal.id)
-    # task_list = []
-    # for task in tasks:
-    #     task_list.append(task.to_json()["task"])
+    #Only need this b/c I reconfigured .to_json() to pass previous tests 
     if "tasks" not in goal.to_json():
         return jsonify({"id": goal.id,
                     "title": goal.title,
@@ -211,7 +214,7 @@ def get_tasks_from_goal(goal_id):
 def post_tasks_to_goal(goal_id):
     request_body = request.get_json()
     if "task_ids" not in request_body:
-        return jsonify({"details":"Invalid data"}), 400
+        return invalid_input()
     task_ids = request_body["task_ids"]
     for id in task_ids:
         task = Task.query.get(id)

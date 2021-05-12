@@ -33,7 +33,7 @@ def test_task_sort_by_invalid_parameter(client, three_tasks):
     response_body = response.get_json()
     # Assert
     assert response.status_code == 400
-    assert response_body == {"details":"Invalid 'sort' parameter"}
+    assert response_body == {"details":"Invalid data"}
 
 def test_update_task_missing_attributes(client, one_task):
     # Act
@@ -59,7 +59,7 @@ def test_create_task_invalid_timestamp(client):
     response_body = response.get_json()
     # Assert
     assert response.status_code == 400
-    assert response_body == {"details": "Invalid Data --'completed_at' must be Type:datetime"}
+    assert response_body == {"details": "Invalid data"}
 
 def test_update_task_invalid_timestamp(client, one_task):
     # Act
@@ -71,7 +71,7 @@ def test_update_task_invalid_timestamp(client, one_task):
     response_body = response.get_json()
     # Assert
     assert response.status_code == 400
-    assert response_body == {"details": "Invalid Data --'completed_at' must be Type:datetime"}
+    assert response_body == {"details": "Invalid data"}
 
 def test_post_task_ids_to_goal_missing_task_ids(client, one_goal, three_tasks):
     # Act

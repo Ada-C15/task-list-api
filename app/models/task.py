@@ -26,6 +26,6 @@ class Task(db.Model):
         if self.goal_id is None:
             del json_data["task"]["goal_id"]
         return json_data
-    
+
     def to_string(self):
         return f"{self.id}: {self.title} Description: {self.description}"
