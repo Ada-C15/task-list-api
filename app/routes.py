@@ -1,13 +1,16 @@
 from app import db
 from app.models.task import Task
 # from app.models.goal import Goal
-from flask import request, Blueprint, make_response, jsonify
 from datetime import datetime
+from flask import request, Blueprint, make_response, jsonify
+import requests
+import os
 
 tasks_bp = Blueprint(
     "tasks", __name__, url_prefix="/tasks")
 
 
+# WAVE 1
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_task():
     request_body = request.get_json()
@@ -26,6 +29,7 @@ def create_task():
         return make_response({"details": "Invalid data"}, 400)
 
 
+# WAVE 2
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def task_index():
     sort_query = request.args.get("sort")
@@ -42,6 +46,7 @@ def task_index():
     return make_response(jsonify(tasks_response), 200)
 
 
+# WAVE 1
 @tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
 def handle_task(task_id):
     task = Task.query.get(task_id)
@@ -68,17 +73,7 @@ def handle_task(task_id):
         return make_response(task_response), 200
 
 
-@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
-def handle_complete(task_id):
-    task = Task.query.get(task_id)
-    if task is None:
-        return make_response("", 404)
-    else:
-        task.completed_at = datetime.now()
-        db.session.commit()
-        return jsonify({"task": task.to_dict()}), 200
-
-
+# WAVE 3
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def handle_incomplete(task_id):
     task = Task.query.get(task_id)
@@ -87,4 +82,29 @@ def handle_incomplete(task_id):
     else:
         task.completed_at = None
         db.session.commit()
-        return jsonify({"task": task.to_dict()}), 200
+        return jsonify({"task": task.to_dict()}),   200
+
+
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def handle_complete(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return make_response("", 404)
+    else:
+        task.completed_at = datetime.now()
+        db.session.commit()
+        call_slack_api(task)
+    return jsonify({"task": task.to_dict()}), 200
+
+
+# WAVE 4
+def call_slack_api(task):
+    SLACK_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
+    url = "https://slack.com/api/chat.postMessage"
+    payload = {
+        "channel": "task-notifications",
+        "text": f"Someone just completed the task {task.title}"}
+    headers = {
+        "Authorization": f"Bearer {SLACK_TOKEN}",
+    }
+    return requests.request("POST", url, headers=headers, data=payload)
