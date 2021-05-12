@@ -121,21 +121,56 @@ def update_incomplete_task(task_id):
     if task == None:
         return ("", 404)
 
-    task.completed_at = None
-    db.session.commit()
+    else:
+        task.completed_at = None
+        db.session.commit()
 
-    return {"task": task.to_json()}, 200
+        return {"task": task.to_json()}, 200
 
 #------------------------routes_for_goals----------------------
 
-@goals_bp.route("", methods=["GET"])
-def read_goals():
-    response_body = []
-    goals = Goal.query.all()
+@goals_bp.route("", methods=["GET"], strict_slashes=False)
+def read_by_title():
+    query_string = request.args.get("sort")
+
+    if query_string == "asc":
+        goals = Goal.query.order_by(asc(Goal.title))
+    
+    elif query_string == "desc":
+        goals = Goal.query.order_by(desc(Goal.title))
+
+    else:
+        goals = Goal.query.all()
+    
+    goal_response = []
 
     for goal in goals:
-        response_body.append(goal)
-    return jsonify(response_body), 200
+        goal_response.append(goal.json_response())
+    
+    return jsonify(goal_response), 200
+
+@goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
+def handle_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal == None:
+        return("", 404)
+        
+    else: 
+        if request.method == "GET":
+            return {"goal": goal.json_response()}, 200
+
+        elif request.method == "PUT":
+            goals = request.get_json()
+            goal.title = goals["title"]
+            db.session.commit()
+            return {"goal": goal.json_response()}, 200
+
+        elif request.method == "DELETE":
+            db.session.delete(goal)
+            db.session.commit() 
+            goal_response = {"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}
+            return make_response(goal_response, 200)
 
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
 def create_goals():
@@ -153,15 +188,25 @@ def create_goals():
         "goal": goal.json_response()
     }, 201
 
-@goals_bp.route("", methods=["DELETE"], strict_slashes=False)
-def delete_goal(goal_id):
-    goal = Goal.query.get(goal_id)
-    db.session.delete(goal)
-    db.session.commit()
-    return {
-        "details":f'Goal {goal.goal_id} "{goal.title}" successfully deleted'
-        }, 200
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
+def read_by_id(goal_id):
+    goal = Task.query.get(goal_id)
+
+    if goal == None:
+        return("", 404)
     
+    else:
+        tasks = Task.query.filter_by(goal_id=goal.id)
+        response_body = []
+        for task in tasks:
+            response_body.append(task.to_json())
+            return jsonify(response_body), 200
+        
+
+
+
+    
+
 
 
 
