@@ -45,7 +45,7 @@ def all_tasks():
                     completed_at=request_body["completed_at"])
         db.session.add(new_task)
         db.session.commit()
-# this needs to return task that was added in a dict and 201 code 
+
         return make_response({"task": new_task.to_json()}), 201 
 
 
@@ -59,7 +59,11 @@ def one_task_only(task_id):
         return make_response("",404)
 
     if request.method == "GET":
-        return make_response({"task" : task.to_json()}), 200
+        if task.goal_id:
+            return make_response({"task" : task.goal_json()}), 200
+        else:
+            return make_response({"task" : task.to_json()}), 200
+
     elif request.method == "PUT":
         # converting postman json to a dict table
         form_data = request.get_json()
@@ -186,20 +190,18 @@ def one_goal_many_tasks(goal_id):
         return make_response({
             "id":goal.goal_id,
             "task_ids":request_body["task_ids"]}), 200
-    # elif request.method == "GET":
-    #     return {
-    #         "id": goal.goal_id,
-    #         "title": goal.title,
-    #         "tasks": [
-    #             {
-    #             "id": task.task_id,
-    #             "goal_id": task.goal_id,
-    #             "title": task.title,
-    #             "description": task.description,
-    #             "is_complete": task.completed_at
-    #             }
-    #         ]
-    #     }
+    elif request.method == "GET":
+        tasks = Task.query.filter_by(goal_id=goal_id)
+        task_list =[]
+        for task in tasks:
+            task_list.append(task.goal_json())
+        return make_response({
+            "id":goal.goal_id,
+            "title":goal.title,
+            "tasks":task_list
+        })
+
+
     #     this format needs to combine my two json helper methods
     #     return make_response({"tasks" : Task.to_json()}), 200
 

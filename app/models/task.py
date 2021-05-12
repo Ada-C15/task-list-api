@@ -18,10 +18,15 @@ class Task(db.Model):
     def to_json(self):
         return {
             "id": self.task_id,
-            "goal_id":self.goal_id,
             "title": self.title,
             "description": self.description,
             "is_complete": self.is_completed()
         }   
-
-
+    def goal_json(self):
+        return {
+            "id": self.task_id,
+            "goal_id": self.goal_id,
+            "title": self.title,
+            "description": self.description,
+            "is_complete": self.is_completed()
+        }       
