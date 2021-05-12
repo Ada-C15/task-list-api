@@ -38,7 +38,7 @@ def add_tasks():
         description = request_body["description"],
         completed_at = request_body["completed_at"],
     )
-    slack_message(f"Someone just added {new_task.title} to the task list.")
+    # slack_message(f"Someone just added {new_task.title} to the task list.")
     db.session.add(new_task)
     db.session.commit()
 
