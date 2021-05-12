@@ -19,8 +19,8 @@ class Goal(db.Model):
 
     def simple_response(self):
         '''
-        Converts a Goals's instance columns (atributes?) into JSON response including
-        the foreign key goal id.
+        Converts a Goals's instance columns (atributes) into JSON response
+        including the foreign key goal id.
         Output: Returns a Python dictionary in the shape JSON response 
         for a goal.
         '''
