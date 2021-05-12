@@ -12,7 +12,7 @@ from app.models.goal import Goal
 task_bp = Blueprint("task", __name__, url_prefix='/tasks')
 goal_bp = Blueprint("goal", __name__, url_prefix='/goals')
 
-@task_bp.route("", methods=["POST"])
+@task_bp.route("", methods=["POST"], strict_slashes = False)
 def post_task():
     request_body = request.get_json()
 
@@ -26,7 +26,7 @@ def post_task():
         return make_response({"details": "Invalid data"}), 400     
         
     
-@task_bp.route("", methods=["GET"])
+@task_bp.route("", methods=["GET"], strict_slashes = False)
 def get_all_tasks():
     sort_method = request.args.get("sort")
     if sort_method == "asc":
@@ -40,7 +40,7 @@ def get_all_tasks():
         task_response_body.append(task.to_json())
     return jsonify(task_response_body), 200
 
-@task_bp.route('/<task_id>', methods=['GET'])
+@task_bp.route('/<task_id>', methods=['GET'], strict_slashes = False)
 def get_single_task(task_id):  # same name as parameter route
     task = Task.query.get(task_id)
     if not task:
@@ -48,7 +48,7 @@ def get_single_task(task_id):  # same name as parameter route
     return make_response({"task": task.to_json()}), 200    
    
     
-@task_bp.route("/<task_id>", methods=['DELETE', 'PUT'])
+@task_bp.route("/<task_id>", methods=['DELETE', 'PUT'], strict_slashes = False)
 def delete_or_put_tasks(task_id):
     task = Task.query.get(task_id)
     if not task:
@@ -69,7 +69,7 @@ def delete_or_put_tasks(task_id):
         return jsonify({"task": task.to_json()}), 200
         
    
-@task_bp.route('/<task_id>/mark_complete', methods=["PATCH"]) 
+@task_bp.route('/<task_id>/mark_complete', methods=["PATCH"], strict_slashes = False) 
 def mark_complete(task_id):
     task = Task.query.get(task_id)
     if task == None:
@@ -91,7 +91,7 @@ def call_slack(task):
 
 
 
-@task_bp.route('/<task_id>/mark_incomplete', methods=["PATCH"])
+@task_bp.route('/<task_id>/mark_incomplete', methods=["PATCH"], strict_slashes = False)
 def mark_incomplete(task_id):
     task = Task.query.get(task_id)
     if task == None:
@@ -103,7 +103,7 @@ def mark_incomplete(task_id):
 
 
 
-@goal_bp.route("", methods=["POST"])
+@goal_bp.route("", methods=["POST"], strict_slashes = False)
 def post_new_goal():
     request_body = request.get_json()
 
@@ -115,7 +115,7 @@ def post_new_goal():
     else: 
         return make_response({"details": "Invalid data"}), 400
 
-@goal_bp.route("", methods=["GET"])
+@goal_bp.route("", methods=["GET"], strict_slashes = False)
 def get_all_goals():
     sort_method = request.args.get("sort")
     if sort_method == "asc":
@@ -131,14 +131,14 @@ def get_all_goals():
 
 
 
-@goal_bp.route('/<goal_id>', methods=['GET'])
+@goal_bp.route('/<goal_id>', methods=['GET'], strict_slashes = False)
 def get_single_goal(goal_id):  # same name as parameter route
     goal = Goal.query.get(goal_id)
     if not goal:
         return "", 404
     return make_response({"goal": goal.now_json()}), 200
     
-@goal_bp.route("/<goal_id>", methods=['DELETE', 'PUT'])
+@goal_bp.route("/<goal_id>", methods=['DELETE', 'PUT'], strict_slashes = False)
 def delete_or_put_goals(goal_id):
     goal = Goal.query.get(goal_id)
     if not goal:
@@ -155,6 +155,19 @@ def delete_or_put_goals(goal_id):
         goal.title = request_body["title"]
         db.session.commit()
         return jsonify({"goal": goal.now_json()}), 200
+
+
+@goal_bp.route("<goal_id>/tasks", methods=["POST"], strict_slashes = False)
+def post_new_task():
+    request_body = request.get_json()
+
+    if "title" in request_body:
+        new_goal = Goal(title=request_body["title"])
+        db.session.add(new_goal)
+        db.session.commit()
+        return jsonify({"goal": new_goal.now_json()}), 201
+    else: 
+        return make_response({"details": "Invalid data"}), 400
 
 
 
