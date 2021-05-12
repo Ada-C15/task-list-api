@@ -6,8 +6,9 @@ import requests
 import os
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-
 from app.models.goal import Goal
+
+
 goals_bp = Blueprint(
     "goals", __name__, url_prefix="/goals")
 
@@ -45,7 +46,6 @@ def task_index():
         tasks = Task.query.order_by(Task.title.desc())
     else:
         tasks = Task.query.all()
-
     tasks_response = []
     for task in tasks:
         tasks_response.append(task.to_dict())
@@ -68,7 +68,6 @@ def handle_task(task_id):
         task.description = form_data['description']
         task.completed_at = form_data["completed_at"]
         db.session.commit()
-
         return jsonify({"task": task.to_dict()}), 200
 
     elif request.method == "DELETE":
@@ -115,25 +114,21 @@ def call_slack_api(task):
     }
     return requests.request("POST", url, headers=headers, data=payload)
 
-
+# IGNORE - WORKS BUT USES SLACK BOLT/PYTHON SDK (from slack API documentation) instead of requests.package
 # def call_slack_api(task):
 #     client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
-#     channel_id = "T0226NANZ9N"
-#     try:
-#         result = client.chat_postMessage(
-#             channel=channel_id,
-#             text=f"Someone just completed the task {task.title}"
-#         )
-#         logger.info(result)
-
-#     except SlackApiError as e:
-#         logger.error(f"Error posting message: {e}")
+#     channel_id = "task-notifications"
+#     # try:
+#     result = client.chat_postMessage(
+#         channel=channel_id,
+#         text=f"Someone just completed the task {task.title}"
+#     )
+#     return result
 
 
 # -------------------------
 # WAVE 5 - GOAL ENDPOINTS
 # -------------------------
-
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
 def create_goal():
     request_body = request.get_json()
