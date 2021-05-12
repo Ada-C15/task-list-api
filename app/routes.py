@@ -9,7 +9,7 @@ import os
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-#Decorator functions for error messages:
+#DECORATORS AND HELPER FUNCTIONS:
 def task_not_found(func):
     def inner(task_id):
         if Task.query.get(task_id) is None:
@@ -24,18 +24,59 @@ def goal_not_found(func):
         if Goal.query.get(goal_id) is None:
             return jsonify(None), 404
         return func(goal_id)
-    #renames the function for each endpoint it's wrapping so there isn't the endpoint conflict
     inner.__name__ = func.__name__
     return inner
 
+#Decorator to handle invalid task input for POST and PUT endpoints
+def handle_task_request_body(func):
+    def inner(*args, **kwargs):
+        request_body = request.get_json()
+        if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
+            return jsonify({"details":"Invalid data"}), 400
+        completed_at = request_body["completed_at"]
+        format = "%a, %d %B %Y %H:%M:%S %Z"
+        if completed_at:
+            #converts input to string so it works with 'try' statement
+            completed_at = str(completed_at)
+            #completed is a string so this tests whether the string is in the correct datetime format
+            try:
+                datetime.strptime(completed_at, format)
+            except ValueError:
+                return jsonify({"details": "Invalid Data --'completed_at' must be Type:datetime"}), 400
+        return func(*args, **kwargs)
+    inner.__name__ = func.__name__
+    return inner
+
+#Helper function posting to slack
+def post_message(message):
+    path = "https://slack.com/api/chat.postMessage"
+    headers = {"Authorization": f"Bearer {os.environ.get('SLACK_TOKEN')}"}
+    query_params = {"channel": "task-notifications",
+                    "text": message
+                    }
+    requests.post(path, params=query_params, headers=headers)
+
+
+#TASKS ENDPOINTS
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def tasks_index():
-    sort_order = request.args.get('sort')
-    if sort_order == "asc":
+    sort_by = request.args.get('sort')
+    if sort_by == "asc" or sort_by == "title":
         tasks = Task.query.order_by(Task.title)
-    elif sort_order == "desc":
+    elif sort_by == "desc":
         tasks = Task.query.order_by(Task.title.desc())
+    elif sort_by == "id" or sort_by == "description" or sort_by == "goal_id":
+        tasks = Task.query.order_by(Task.id)
+    elif sort_by == "description":
+        tasks = Task.query.order_by(Task.description)
+    elif sort_by == "goal_id":
+        tasks = Task.query.order_by(Task.goal_id)
+    elif sort_by == "completed_at":
+        tasks = Task.query.order_by(Task.completed_at)
+    elif sort_by:
+        return jsonify({"details":"Invalid 'sort' parameter"}), 400
     else:
+        print(sort_by)
         tasks = Task.query.all()
     tasks_response = []
     for task in tasks:
@@ -49,11 +90,9 @@ def single_task(task_id):
     return jsonify(task.to_json()), 200
 
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
+@handle_task_request_body
 def create_task():
     request_body = request.get_json()
-    if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
-        return jsonify({"details":"Invalid data"}), 400
-    
     new_task = Task(title = request_body["title"],
                     description = request_body["description"],
                     completed_at = request_body["completed_at"])
@@ -63,6 +102,7 @@ def create_task():
 
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 @task_not_found
+@handle_task_request_body
 def update_task(task_id):
     task = Task.query.get(task_id)
     form_data = request.get_json()
@@ -98,16 +138,8 @@ def incomplete_task(task_id):
     db.session.commit()
     return jsonify(task.to_json()), 200
 
-#Helper function posting to slack
-def post_message(message):
-    path = "https://slack.com/api/chat.postMessage"
-    headers = {"Authorization": f"Bearer {os.environ.get('SLACK_TOKEN')}"}
-    query_params = {"channel": "task-notifications",
-                    "text": message
-                    }
-    requests.post(path, params=query_params, headers=headers)
 
-# GOALS:
+# GOALS ENDPOINTS:
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def goals_index():
     goals = Goal.query.all()
@@ -150,17 +182,21 @@ def delete_goal(goal_id):
     return jsonify({"details":f'Goal {goal.id} "{goal.title}" successfully deleted'}), 200
 
 
-# GOALS WITH TASKS
+# GOALS WITH TASKS:
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 @goal_not_found
 def get_tasks_from_goal(goal_id):
     goal = Goal.query.get(goal_id)
     # Why does this line work?
-    tasks = Task.query.filter_by(goal_id=goal.id)
-    task_list = []
-    for task in tasks:
-        task_list.append(task.to_json())
-## make individualized return so you don't mess up wave 5 trying to make this work
+    # tasks = Task.query.filter_by(goal_id=goal.id)
+    # task_list = []
+    # for task in tasks:
+    #     task_list.append(task.to_json()["task"])
+    if "tasks" not in goal.to_json():
+        return jsonify({"id": goal.id,
+                    "title": goal.title,
+                    "tasks": []
+                    })
     return jsonify(goal.to_json()), 200
 
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
@@ -172,6 +208,6 @@ def post_tasks_to_goal(goal_id):
     for id in task_ids:
         task = Task.query.get(id)
         # Once we set the task's goal_id attribute to the current goal, it automatically gets referenced from goal
-        task.goal_id = goal_id
+        task.goal_id = int(goal_id)
     db.session.commit()
     return jsonify({"id":int(goal_id), "task_ids":task_ids}), 200

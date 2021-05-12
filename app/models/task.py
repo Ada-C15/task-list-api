@@ -1,6 +1,7 @@
 from flask import current_app
 from app import db
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -11,7 +12,6 @@ class Task(db.Model):
     __tablename__ = "tasks"
 
     def to_json(self):
-        # refactor to format {task: {dict}}, then change all return statements
         complete = False
         if self.completed_at:
             complete = True
@@ -22,6 +22,7 @@ class Task(db.Model):
             "is_complete": complete,
             "goal_id": self.goal_id}
         }
+        # Lets beginning wave tests still pass
         if self.goal_id is None:
             del json_data["task"]["goal_id"]
         return json_data
