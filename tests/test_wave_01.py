@@ -59,11 +59,13 @@ def test_get_task_not_found(client):
 
 def test_create_task_with_none_completed_at(client):
     # Act
-    response = client.post("/tasks", json={
+
+    request_body = {
         "title": "A Brand New Task",
         "description": "Test Description",
         "completed_at": None
-    })
+    }
+    response = client.post("/tasks", json = request_body)
     response_body = response.get_json()
 
     # Assert
