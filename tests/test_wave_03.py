@@ -78,7 +78,7 @@ def test_mark_complete_on_completed_task(client, completed_task):
 
         # Act
         response = client.patch("/tasks/1/mark_complete")
-    response_body = response.get_json()
+        response_body = response.get_json()
 
     # Assert
     assert response.status_code == 200
