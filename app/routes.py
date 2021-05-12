@@ -14,6 +14,28 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 """
+Helper functions
+"""
+def wrong_input(task_id):
+    return {
+            "message": f"Task ID {task_id} must be an integer"
+        }
+
+def slack_send_message(message):
+    path = "https://slack.com/api/chat.postMessage"
+    query_params = {
+        "channel" : "task-notifications",
+        "text" : message
+        #"text" : f"Task {task.id} with title {task.title} has been marked as complete"
+    }
+    authorization = os.environ.get('SLACK_URI')
+    headers = {
+        "Authorization": f"Bearer {authorization}"
+    }
+    response = requests.post(path, data=query_params, headers=headers)
+
+
+"""
 CRUD for Tasks
 """
 
@@ -26,7 +48,7 @@ def create_task():
         
         db.session.add(new_task)
         db.session.commit()
-
+        slack_send_message("A new task has been created")
         return {
             "task" : new_task.to_json()
         }, 201
@@ -58,9 +80,7 @@ def get_tasks():
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def get_one_task(task_id):
     if not(re.match("[0-9]",task_id)): 
-        return {
-            "message": f"Task ID {task_id} must be an integer"
-        }, 400
+        return make_response(wrong_input(task_id),400)
 
     task = Task.query.get(task_id)
     if task:
@@ -73,9 +93,7 @@ def get_one_task(task_id):
 @tasks_bp.route("/<task_id>",methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
     if not(re.match("[0-9]",task_id)): 
-        return {
-            "message": f"Task ID {task_id} must be an integer"
-        }, 400
+        return make_response(wrong_input(task_id),400)
 
     task = Task.query.get(task_id)
     if task is None:
@@ -87,7 +105,7 @@ def update_task(task_id):
     task.completed_at = updates_body["completed_at"]
 
     db.session.commit()
-
+    slack_send_message(f"Task {task_id} has been successfully updated")
     return {
             "task" : task.to_json()
     }, 200
@@ -95,9 +113,7 @@ def update_task(task_id):
 @tasks_bp.route("/<task_id>",methods=["DELETE"], strict_slashes=False)
 def delete_task(task_id):
     if not(re.match("[0-9]",task_id)): 
-        return {
-            "message": f"Task ID {task_id} must be an integer"
-        }, 400
+        return make_response(wrong_input(task_id),400)
     
     task = Task.query.get(task_id)
     if task is None:
@@ -105,22 +121,10 @@ def delete_task(task_id):
 
     db.session.delete(task)
     db.session.commit()
+    slack_send_message(f"Task {task_id} has been successfully deleted")
     return {
-        "details" : f"Task 1 \"{task.title}\" successfully deleted"
+        "details" : f"Task {task.id} \"{task.title}\" successfully deleted"
     }, 200
-
-
-def slack_send_message(task):
-    path = "https://slack.com/api/chat.postMessage"
-    query_params = {
-        "channel" : "task-notifications",
-        "text" : f"Task {task.id} with title {task.title} has been marked as complete"
-    }
-    authorization = os.environ.get('SLACK_URI')
-    headers = {
-        "Authorization": f"Bearer {authorization}"
-    }
-    response = requests.post(path, data=query_params, headers=headers)
 
 
 @tasks_bp.route("/<task_id>/<complete_status>",methods=["PATCH"], strict_slashes=False)
@@ -132,7 +136,7 @@ def mark_status_task(task_id, complete_status):
     if complete_status == "mark_complete":
         completed_date = datetime.today()
         task.completed_at = completed_date
-        slack_send_message(task)
+        slack_send_message(f"Task {task_id} has been marked as complete")
         print("I made it to this point")
     else:
         task.completed_at = None
@@ -159,11 +163,11 @@ def create_goal():
             "details" : "Invalid data"
         }
         return make_response(response,400)
-
     new_goal = Goal(title = request_body["title"])
 
     db.session.add(new_goal)
     db.session.commit()
+    slack_send_message("A new goal has been created")
 
     return {
         "goal" : new_goal.to_json()
@@ -226,7 +230,8 @@ def get_tasks_for_one_goal(goal_id):
     if goal is None:
         return make_response("",404)
     
-    tasks = Task.query.filter_by(g_id=goal.g_id)
+    #tasks = Task.query.filter_by(g_id=goal.g_id)
+    tasks = goal.tasks
     tasks_response = []
     for task in tasks:
         tasks_response.append(task.to_json())
@@ -254,7 +259,7 @@ def update_goal(goal_id):
     goal.title = updates_body["title"]
 
     db.session.commit()
-
+    slack_send_message(f"Goal {goal_id} has been successfully updated")
     return {
             "goal" : goal.to_json()
     }, 200
@@ -274,6 +279,7 @@ def delete_goal(goal_id):
 
     db.session.delete(goal)
     db.session.commit()
+    slack_send_message(f"Goal {goal_id} has been successfully deleted")
     return {
         "details" : f"Goal {goal.g_id} \"{goal.title}\" successfully deleted"
     }, 200
