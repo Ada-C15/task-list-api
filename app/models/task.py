@@ -2,8 +2,6 @@ from flask import current_app
 from app import db
 from app.models.goal import Goal
 
-#messages in video
-
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)

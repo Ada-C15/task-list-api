@@ -7,8 +7,6 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 import re
-# from sqlachemy import asc, desc
-#why didn't those need to be imported? 
 
 load_dotenv()
 
@@ -113,7 +111,6 @@ def update_time(task_id, completion):
     if completion == "mark_complete":
         task.completed_at = datetime.utcnow()
         query_params = {
-            
             "channel": "task-notifications",
             "text" : f"Someone just completed the task {task.title}"
         }
@@ -209,7 +206,6 @@ def tasks_by_goal(goal_id):
         }, 200) 
 
     elif request.method == "GET":
-        # goal = Goal.query.get(goal_id)
         tasks = goal.tasks
         if tasks == []:
             response = {
@@ -237,8 +233,3 @@ def tasks_by_goal(goal_id):
                         "tasks": tasks_response
                         }
             return make_response(jsonify(response), 200)
-
-
-
-
-
