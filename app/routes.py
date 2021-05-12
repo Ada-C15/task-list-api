@@ -26,7 +26,6 @@ def task_index():
     return jsonify(tasks_response), 200
 
 
-
 @tasks_bp.route("", methods = ["POST"])
 def tasks():
     request_body = request.get_json()
@@ -47,7 +46,17 @@ def handle_tasks(task_id):
     if task is None:
         return make_response("", 404)
     if request.method == "GET":
-        return {"task": task.to_json()}, 200
+        if not task.goal_num:
+            return {"task": task.to_json()}, 200
+        else:
+            return {"task": {
+                "id": task.task_id, 
+                "goal_id": task.goal_num,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": task.is_complete(),
+            }}, 200
+
     elif request.method == "PUT":
         form_data = request.get_json()
 
@@ -63,7 +72,6 @@ def handle_tasks(task_id):
         return make_response({
             "details":f"Task {task.task_id} \"{task.title}\" successfully deleted"
         }, 200) 
-
 
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
@@ -146,6 +154,67 @@ def handle_goals(goal_id):
         return make_response({
                 "details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"
 }, 200)
+
+@goals_bp.route("/<goal_id>/tasks", methods = ["POST"])
+def goal_tasks(goal_id):
+    goal = Goal.query.get(goal_id)
+    request_body = request.get_json()
+    for elm in request_body["task_ids"]:
+        task = Task.query.filter_by(task_id = elm).first()
+        if task not in goal.tasks:
+            goal.tasks.append(task)
+    return {
+            "id": goal.goal_id,
+            "task_ids": [task.task_id for task in goal.tasks]
+        }, 200
+    
+@goals_bp.route("/<goal_id>/tasks", methods = ["GET"])
+def get_tasks(goal_id):
+    goal = Goal.query.get(goal_id)
+    task = Task.query.filter_by(goal_num=goal_id).first()
+    if goal is None:
+        return make_response("", 404)
+    if task is None:
+        return make_response({
+                "id": goal.goal_id,
+                "title": goal.title,
+                "tasks": []
+            }, 200)
+    elif task in goal.tasks:
+        return make_response({
+                "id": goal.goal_id,
+                "title": goal.title,
+                "tasks": [
+                    {
+                        "id": task.task_id, 
+                        "goal_id": task.goal_num,
+                        "title": task.title,
+                        "description": task.description,
+                        "is_complete": task.is_complete(),
+                    }
+                ]
+            }, 200)
+
+
+
+
+    
+    
+    
+        
+    
+
+
+
+
+        
+
+
+
+
+
+    
+    
 
     
 
