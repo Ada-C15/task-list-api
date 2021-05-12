@@ -10,7 +10,9 @@ tasks_bp = Blueprint(
     "tasks", __name__, url_prefix="/tasks")
 
 
-# WAVE 1
+# -------------------------
+# WAVE 1 - TASK ENDPOINTS
+# -------------------------
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_task():
     request_body = request.get_json()
@@ -98,7 +100,7 @@ def handle_complete(task_id):
 
 
 # WAVE 4
-def call_slack_api(task):
+def call_slack_api(task_name):
     SLACK_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
     url = "https://slack.com/api/chat.postMessage"
     payload = {
@@ -108,3 +110,8 @@ def call_slack_api(task):
         "Authorization": f"Bearer {SLACK_TOKEN}",
     }
     return requests.request("POST", url, headers=headers, data=payload)
+
+
+# -------------------------
+# WAVE 5 - GOAL ENDPOINTS
+# -------------------------
