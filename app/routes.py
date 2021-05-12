@@ -19,7 +19,8 @@ def create_task():
     
     new_task = Task(title=request_body["title"],
                     description=request_body["description"],
-                    completed_at=request_body["completed_at"])
+                    completed_at=request_body["completed_at"],
+                    goal_id=request_body["goal_id"] if request_body.get("goal_id") else None) #Wave6 one to many relation
 
     db.session.add(new_task)
     db.session.commit()
@@ -43,26 +44,28 @@ def get_all_tasks():
 
 @task_list_bp.route("/<task_id>", methods = ["GET", "PUT", "DELETE"])
 def handle_task(task_id):
-    task = Task.query.get(task_id)
+    return handle_task_helper(task_id, request.method, request.get_json())
 
+def handle_task_helper(task_id, request_method, form_data):
+    task = Task.query.get(task_id)
     if task is None:
         return make_response(" ", 404)
 
-    if request.method == "GET":
+    if request_method == "GET":
         return make_response(jsonify({
             "task": task.to_json()
         }))
 
-    elif request.method == "PUT":
-        form_data = request.get_json()
-        task.title = form_data["title"]
-        task.description = form_data["description"]
-        task.completed_at = form_data["completed_at"]
+    elif request_method == "PUT":
+        task.title = form_data["title"] if form_data.get("title") else task.title #Wave 6 enhancements
+        task.description = form_data["description"] if form_data.get("description") else task.description
+        task.completed_at = form_data["completed_at"] if form_data.get("completed_at") else task.completed_at
+        task.goal_id = form_data["goal_id"] if form_data.get("goal_id") else task.goal_id  #Wave6 Assign goal_id property in form data if its exist otherwise assign goal_id to itself
 
         db.session.commit()
         return make_response(jsonify({"task": task.to_json()}))
 
-    elif request.method == "DELETE":
+    elif request_method == "DELETE":
         db.session.delete(task)
         db.session.commit()
         return make_response({
@@ -72,19 +75,19 @@ def handle_task(task_id):
 def update_completed_task(task_id):
     task = Task.query.get(task_id)
 
+    if task is None:
+        return make_response(" ", 404)
+
     url = "https://slack.com/api/chat.postMessage"
     data = {
         "channel": "C020ZEDG7AS",
-        "text": f"Someone just completed the task {task.title}"
+        "text": f"Someone just completed the {task.title}"
     }
 
     headers = {
         "Authorization": f"Bearer {slack_key}"
     }
-    r = requests.post(url, data=data, headers=headers)
-
-    if task is None:
-        return make_response(" ", 404)
+    slack_response = requests.post(url, data=data, headers=headers)
 
     task.completed_at = datetime.now()
     db.session.commit()
@@ -104,7 +107,7 @@ def update_incompleted_task(task_id):
     return make_response(jsonify({"task": task.to_json()}), 200)
 
 @goal_bp.route("", methods = ["POST", "GET"])
-def one_goal():
+def handle_goal():
     if request.method == "POST":
         request_body = request.get_json()
 
@@ -152,3 +155,27 @@ def deal_w_goal(goal_id):
 
         return make_response({
             "details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'})
+
+@goal_bp.route("/<goal_id>/tasks", methods = ["POST", "GET"])
+def goal_by_task(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response(" ", 404)
+
+    if request.method == "POST":
+        request_body = request.get_json()
+        form_data = {
+            "goal_id": goal_id
+        }
+        for task_id in request_body["task_ids"]:
+            handle_task_helper(task_id, "PUT", form_data)
+        
+        return make_response({"id": int(goal_id), "task_ids": request_body["task_ids"]}, 200)
+
+    elif request.method == "GET":
+        task_goal = []
+    
+        for task in goal.tasks:
+            task_goal.append(task.to_json())
+
+        return make_response(jsonify(id=int(goal_id), title=goal.title, tasks=task_goal), 200)
