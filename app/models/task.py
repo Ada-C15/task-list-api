@@ -33,9 +33,17 @@ class Task(db.Model):
         }
     
     @classmethod
-    def make_a_task(cls, request_body): 
-        task = Task(title=request_body["title"],
-                    description=request_body["description"], 
-                    completed_at=request_body["completed_at"])
-        
-        return task
+    def make_a_task(cls, json, id): 
+        return cls(task_id=id,
+                    title=json["title"],
+                    description=json["description"], 
+                    completed_at=json["completed_at"])
+    
+    def db_to_json(self): 
+        to_json = {
+                "task_id": self.task_id,
+                "title": self.title,
+                "description": self.description,
+                "completed_at": self.completed_at
+        }
+        return to_json

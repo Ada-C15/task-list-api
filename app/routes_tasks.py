@@ -49,7 +49,7 @@ def post_task():
     # new_task = Task(title=request_body["title"],
     #                 description=request_body["description"], 
     #                 completed_at=request_body["completed_at"])
-    new_task = Task.make_a_task(request_body)
+    new_task = Task.make_a_task(request_body, id=None)
 
     db.session.add(new_task)
     db.session.commit() 
@@ -61,11 +61,11 @@ def update_task(task_id):
     
     if task: 
         update_data = request.get_json() 
-        task.title = update_data["title"]
-        task.description = update_data["description"]
-        task.completed_at = update_data["completed_at"]
-        # new_task = Task.make_or_update_a_task(request_body)
-        
+        update_data["task_id"] = task_id
+        db.session.query(Task).update(update_data)
+
+        # update_task = Task.make_a_task(update_data, task_id)
+        # db.session.query(Task).update(update_task.db_to_json())
         db.session.commit()
         return jsonify(task.specific_task_to_json()), 200
     
