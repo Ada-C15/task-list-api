@@ -28,7 +28,7 @@ def create_task():
     db.session.add(task)
     db.session.commit()
 
-    return make_response(task.return_task_json(), 201)
+    return make_response({"task": task.return_task_json()}, 201)
 
 #get requests
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
@@ -57,13 +57,13 @@ def get_single_task(task_id):
     if task is None:
         return make_response("", 404)
     if request.method == "GET":
-        return make_response(task.return_task_json())
+        return make_response({"task":task.return_task_json()})
     elif request.method == "PUT":        
         task.title = form_data["title"]
         task.description = form_data["description"]
         task.completed_at = form_data["completed_at"]
         db.session.commit()
-        return make_response(task.return_task_json())
+        return make_response({"task": task.return_task_json()})
     elif request.method == "DELETE":
         db.session.delete(task)
         db.session.commit()
@@ -89,7 +89,7 @@ def mark_task_complete(task_id):
     requests.post(path, data = query_dictionary)
     
     db.session.commit()
-    return make_response(task.return_task_json(), 200)
+    return make_response({"task": task.return_task_json()}, 200)
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
 def task_incomplete(task_id):
@@ -97,7 +97,7 @@ def task_incomplete(task_id):
     if task is None:
         return make_response("", 404) 
     task.completed_at = None
-    return make_response(task.return_task_json(), 200)
+    return make_response({"task": task.return_task_json()}, 200)
 
 @goals_bp.route("", methods=["POST"])
 def create_goal():
@@ -144,4 +144,41 @@ def get_single_goal(goal_id):
         db.session.delete(goal)
         db.session.commit()
         return make_response({"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}, 200)
+
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"])
+def goals_and_tasks(goal_id):
+    goal = Goal.query.get(goal_id)
     
+    request_body = request.get_json()
+    #for all these tasks, I want to get their task id
+    for task_id in request_body["task_ids"]:
+        #tasks = assign tasks_ids
+        task = Task.query.get(task_id)
+        #make relationship to goal_id 
+        task.goal_id = goal.goal_id
+
+
+
+    db.session.commit()
+    return make_response({"id": int(goal_id), "task_ids": request_body["task_ids"]}), 200
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
+def get_goals(goal_id):
+    goal = Goal.query.get(goal_id)
+    #if no goal, 404
+    if goal is None:
+        return make_response("", 404)
+    #else, goal_id is assign to a variable
+    #get by filter, goal_id, - tasks and save to varible
+    tasks = Task.query.filter_by(goal_id=goal_id)
+    #for no matching tasks, make a varible w empty list
+    task_list = []
+    #use for loop to go over tasks, apend those tasks to list
+    for task in tasks:
+        task_list.append(task.return_task_json())
+    #make use of task helper function to append to empty list
+    return make_response({"id": int(goal_id), "title": goal.title, "tasks": task_list }, 200)
+
+
+
+
