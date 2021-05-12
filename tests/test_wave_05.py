@@ -39,6 +39,16 @@ def test_get_goal(client, one_goal):
         }
     }
 
+def test_get_goal_with_text(client):
+    # Act
+    response = client.get("/goals/hi")
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 404
+    assert response_body == {
+        "details": "Task id must be an integer"
+        }
 
 def test_get_goal_not_found(client):
     # Act
@@ -135,3 +145,54 @@ def test_create_goal_missing_title(client):
     assert response_body == {
         "details": "Invalid data"
     }
+
+def test_get_goals_sorted_asc(client, three_goals):
+    # Act
+    response = client.get("/goals?sort=asc")
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 200
+    assert len(response_body) == 3
+    assert response_body == [
+        {
+            "id": 1,
+            "title": "Build a habit of going outside daily"},
+        {
+            "id": 2,
+            "title": "Build a habit of reading daily"},
+        {
+            "id": 3,
+            "title": "Build a habit of singing daily"}
+    ]
+
+def test_get_goals_sorted_desc(client, three_goals):
+    # Act
+    response = client.get("/goals?sort=desc")
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 200
+    assert len(response_body) == 3
+    assert response_body == [
+        {
+            "id": 3,
+            "title": "Build a habit of singing daily"},
+        {
+            "id": 2,
+            "title": "Build a habit of reading daily"},
+        {
+            "id": 1,
+            "title": "Build a habit of going outside daily"}
+    ]
+
+def test_invalid_tasks_sort(client):
+    # Act
+    response = client.get("/goals?sort=hi")
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 404
+    assert response_body == {
+            "details": 'Sort by "hi" is not an option'
+        }

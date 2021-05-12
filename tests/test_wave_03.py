@@ -1,7 +1,7 @@
-import unittest
 from unittest.mock import Mock, patch
 from datetime import datetime
 from app.models.task import Task
+
 
 
 def test_mark_complete_on_incomplete_task(client, one_task):
@@ -37,7 +37,7 @@ def test_mark_complete_on_incomplete_task(client, one_task):
             "is_complete": True
         }
     }
-    assert Task.query.get(1).completed_at
+    assert type(Task.query.get(1).completed_at) == datetime
 
 
 def test_mark_incomplete_on_complete_task(client, completed_task):
@@ -92,7 +92,7 @@ def test_mark_complete_on_completed_task(client, completed_task):
             "is_complete": True
         }
     }
-    assert Task.query.get(1).completed_at
+    assert type(Task.query.get(1).completed_at) == datetime
 
 
 def test_mark_incomplete_on_incomplete_task(client, one_task):
@@ -160,7 +160,7 @@ def test_create_task_with_valid_completed_at(client):
     assert new_task
     assert new_task.title == "A Brand New Task"
     assert new_task.description == "Test Description"
-    assert new_task.completed_at
+    assert type(new_task.completed_at) == datetime
 
 
 # Let's add this test for updating tasks, now that
@@ -188,4 +188,4 @@ def test_update_task_with_completed_at_date(client, completed_task):
     task = Task.query.get(1)
     assert task.title == "Updated Task Title"
     assert task.description == "Updated Test Description"
-    assert task.completed_at
+    assert type(task.completed_at) == datetime

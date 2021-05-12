@@ -46,6 +46,16 @@ def test_get_task(client, one_task):
         }
     }
 
+def test_get_task_with_text(client):
+    # Act
+    response = client.get("/tasks/hi")
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 404
+    assert response_body == {
+        "details": "Task id must be an integer"
+        }
 
 def test_get_task_not_found(client):
     # Act
