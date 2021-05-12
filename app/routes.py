@@ -54,7 +54,10 @@ def get_task(task_id):
         return (f"Task not found", 404)
 
     if request.method == "GET":
-        return make_response({"task": task.to_json()}), 200
+        if task.goal_id == None:
+            return jsonify({"task": task.to_json()}), 200
+        else:
+            return jsonify({"task": task.goal_json()}), 200
 
     elif request.method == "DELETE":
         db.session.delete(task)
@@ -160,3 +163,34 @@ def get_goal(goal_id):
         db.session.commit()
 
         return jsonify({"goal": goal.to_json()}), 200
+
+@goals_bp.route("/<goal_id>/tasks", methods = ["POST", "GET"])
+def tasks_to_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal == None:
+        return ("", 404)
+
+    if request.method == "POST":
+        request_body = request.get_json()
+        for task_id in request_body["task_ids"]:
+            task = Task.query.get(task_id)
+            task.goal_id = goal.goal_id
+
+        return make_response({
+            "id": goal.goal_id,
+            "task_ids": request_body["task_ids"]}), 200
+
+    elif request.method == "GET":
+
+        tasks = Task.query.filter_by(goal_id = goal_id)
+        goal_and_tasks = []
+
+        for task in tasks:
+            goal_and_tasks.append(task.goal_json())
+            print(goal_and_tasks)
+            
+        return make_response({
+            "id": goal.goal_id,
+            "title": goal.title,
+            "tasks": goal_and_tasks
+        }, 200)
