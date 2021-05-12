@@ -9,7 +9,6 @@ import requests
 
 #WAVE 1
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
-goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 def is_int(value):
     try:
@@ -32,7 +31,7 @@ def create_task():
     
         db.session.add(new_task)
         db.session.commit()
-        return {"task": new_task.to_json()}, 201
+        return {"task": new_task.task_to_json()}, 201
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_saved_tasks():
@@ -48,7 +47,7 @@ def get_saved_tasks():
     
     tasks_response = []
     for task in tasks:
-        tasks_response.append(task.to_json())
+        tasks_response.append(task.task_to_json())
 
     return jsonify(tasks_response), 200
 
@@ -64,7 +63,7 @@ def get_single_task(task_id):
 
     task = Task.query.get(task_id)
     if task:
-        return {"task": task.to_json()}, 200
+        return {"task": task.task_to_json()}, 200
     else:
         return Response("",status=404)
     
@@ -83,7 +82,7 @@ def update_task(task_id):
         task.completed_at = form_data["completed_at"]
 
         db.session.commit()
-        return {"task": task.to_json()}, 200
+        return {"task": task.task_to_json()}, 200
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)    
 def delete_single_task(task_id):
@@ -135,4 +134,75 @@ def patch_task(task_id, task_completion):
         task.completed_at = None
 
     db.session.commit()
-    return {"task": task.to_json()}, 200
+    return {"task": task.task_to_json()}, 200
+
+
+#WAVE 5
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
+
+@goals_bp.route("", methods=["POST"], strict_slashes=False)
+def create_goal():
+    request_body = request.get_json()
+    
+    if "title" not in request_body:
+        return jsonify(details="Invalid data"), 400
+    
+    new_goal = Goal(title=request_body["title"])
+    db.session.add(new_goal)
+    db.session.commit()
+    return {"goal": new_goal.goal_to_json()}, 201
+
+@goals_bp.route("", methods=["GET"], strict_slashes=False)
+def get_saved_goals():
+    
+    goals = Goal.query.all()
+    goals_response = []
+    for goal in goals:
+        goals_response.append(goal.goal_to_json())
+
+    return jsonify(goals_response), 200
+
+@goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
+def get_single_goal(goal_id):
+
+    if not is_int(goal_id):
+        return {
+            "message": f"ID {goal_id} must be an integer",
+            "success": False
+        }, 400
+
+    goal = Goal.query.get(goal_id)
+    if goal:
+        return {"goal": goal.goal_to_json()}, 200
+    else:
+        return Response("",status=404)
+    
+@goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
+def update_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    
+    if goal == None:
+        return Response("", status=404)
+    
+    if goal: 
+        form_data = request.get_json()
+
+        goal.title = form_data["title"]
+
+        db.session.commit()
+        return {"goal": goal.goal_to_json()}, 200
+
+@goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)    
+def delete_single_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal == None:
+        return Response("", status=404)
+
+    if goal:
+        db.session.delete(goal)
+        db.session.commit()
+
+        return {
+            "details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"}, 200
+
