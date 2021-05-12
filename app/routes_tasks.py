@@ -46,9 +46,6 @@ def post_task():
         if key not in request_body:
             return {"details": "Invalid data"}, 400
 
-    # new_task = Task(title=request_body["title"],
-    #                 description=request_body["description"], 
-    #                 completed_at=request_body["completed_at"])
     new_task = Task.make_a_task(request_body, id=None)
 
     db.session.add(new_task)
