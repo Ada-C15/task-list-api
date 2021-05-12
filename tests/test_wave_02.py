@@ -50,3 +50,30 @@ def test_get_tasks_sorted_desc(client, three_tasks):
             "is_complete": False,
             "title": "Answer forgotten email 📧"},
     ]
+
+def test_invalid_tasks_sort(client):
+    # Act
+    response = client.get("/tasks?sort=hi")
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 404
+    assert response_body == {
+            "details": 'Sort by "hi" is not an option'
+        }
+
+def test_get_tasks_filtered_title(client, three_tasks):
+    # Act
+    response = client.get("/tasks?title=Water the garden 🌷")
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 200
+    assert len(response_body) == 1
+    assert response_body == [
+        {
+            "id": 1,
+            "title": "Water the garden 🌷",
+            "description": "",
+            "is_complete": False}
+    ]
