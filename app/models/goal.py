@@ -6,6 +6,7 @@ class Goal(db.Model):
     goal_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
     __tablename__ = "goals"
+    child = db.relationship("Task", lazy=True)
 
     def to_json(self):
         return {

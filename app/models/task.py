@@ -7,6 +7,7 @@ class Task(db.Model):
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
     __tablename__ = "tasks"
+    goal_id = db.Column(db.Integer, db.ForeignKey("goals.goal_id"), nullable=True)
 
     def to_json(self):
         is_complete = self.completed_at

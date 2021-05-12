@@ -10,6 +10,14 @@ import slack
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
+@goals_bp.route("/goals/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def assign_tasks_to_one_goal(goal_id, task_ids):
+    pass
+
+@goals_bp.route("/goals/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_tasks_from_goal_id(goal_id):
+    pass
+
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
 def create_goal():
     request_body = request.get_json()
