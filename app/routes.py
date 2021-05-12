@@ -20,7 +20,7 @@ def tasks():
     if request.method == "GET":  
         task_order = request.args.get("sort") 
         if task_order == None:
-            tasks = Task.query.all() # Task is the model and query is a class method (query is like go get my info)
+            tasks = Task.query.all() # Task is the model and query is a class method (query is getting all task)
         elif task_order == "asc":
             tasks = Task.query.order_by(asc(Task.title))
         elif task_order == "desc":
@@ -134,15 +134,13 @@ def task_incomplete(task_id):
         
         return jsonify({"task": task.to_json()}),200
 
-# ********************************************************************
 
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
+
+
 @goals_bp.route("", methods=["POST", "GET"], strict_slashes=False)
 def goals():
-
-    # if goals is None:
-    #     return make_response("", 404)
 
     if request.method == "GET":  
         goals = Goal.query.all()
@@ -153,7 +151,7 @@ def goals():
             
                 
         return jsonify(goals_response)
-    # using the "PUT" to add a new task
+    # using the "PUT" to add a new goal
     else:
         request_body = request.get_json()
         if "title" not in request_body:
@@ -196,23 +194,36 @@ def handle_goal(goal_id):
     elif request.method == "DELETE":
         db.session.delete(goal)
         db.session.commit()
-        return make_response({"details": (f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted")})
-
-    # elif request.method == "DELETE":
-    #     db.session.delete(task)
-    #     db.session.commit()
-    #     return make_response({"details": (f"Task {task.task_id} \"{task.title}\" successfully deleted")})
-    
-
-    
-
-    
+        return make_response({"details": (f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted")})    
     
     return {
         "message": f"Goal with id {goal_id} was not found",
         "success": False,
     }, 404
+    
 
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def post_goals_task(goal_id):
+
+    form_data = request.get_json()
+
+    for task_id in form_data["task_ids"]: 
+        task = Task.query.get(task_id)
+        task.goal_id = goal_id
+
+    db.session.commit() 
+
+    return jsonify({"id": int(goal_id), "task_ids": form_data["task_ids"]}),200
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_goals_task(goal_id):
+
+    if request.method == "GET":  
+        goal = Goal.query.get(goal_id)
+        if goal is None:
+            return make_response("", 404)
+        
+                
+        return jsonify(goal.to_json_three())
 
 
 
