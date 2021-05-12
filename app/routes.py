@@ -282,3 +282,63 @@ def delete_single_goal(goal_id):
 
     return jsonify({"details": f'Goal {goal.id} "{goal.title}" successfully deleted'}), 200
 
+
+### WAVE 6 - ONE TO MANY RELATIONSHIP BETWEEN TASKS AND GOALS
+
+# All of our tasks are going to be nested inside of each GOAL, all routes will start with :
+# /goals/<goal_id>/tasks
+
+# GET all the tasks within a specific goal/no matching tasks?/no matching goal?
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_single_goal_tasks(goal_id):
+
+    if not is_int(goal_id):        
+        return {"message": f"ID {goal_id} must be an integer"}, 400
+
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return jsonify(None), 404
+
+    goal_tasks = Task.query.filter(Task.goals_id==goal.id)
+
+    goal_tasks_response = []
+    for task in goal_tasks:
+        goal_tasks_response.append(task.to_dict())
+    
+    goal_tasks_dict = {
+        "id": goal.id,
+        "title": goal.title,
+        "tasks": goal_tasks_response
+    }
+
+    # goal_tasks_dict = goal_tasks_response.to_dict()
+
+    return jsonify(goal_tasks_dict), 200
+
+
+# POST all the tasks within a specific goal
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def add_task_ids_to_goal(goal_id):
+    request_body = request.get_json()
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return jsonify(None), 404
+
+    for task_id in request_body["task_ids"]:
+        task = Task.query.get(task_id)
+        task.goals_id = goal.id
+    
+    # db.session.add(???)   
+    db.session.commit()  
+    
+    return jsonify({
+            "id": goal.id,
+            "task_ids": request_body["task_ids"]
+        }), 200
+
+# Send a list of task id's to a goal (task_ids)
+
+
+# Delete a task within a specific goal???
+
