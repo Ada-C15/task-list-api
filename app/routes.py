@@ -24,10 +24,13 @@ def from_json(body):
 @task_bp.route("", methods=["GET", "POST"])
 def get_tasks():
     sort_query = request.args.get("sort")
-    if sort_query == "asc":
-        tasks = Task.query.order_by(asc(Task.title))
-    elif sort_query == "desc":
-        tasks = Task.query.order_by(desc(Task.title))
+    if sort_query:
+        if sort_query == "asc":
+            tasks = Task.query.order_by(asc(Task.title))
+        elif sort_query == "desc":
+            tasks = Task.query.order_by(desc(Task.title))
+        else:
+            return make_response({"details": "Invalid query"}, 400)
     else:
         tasks = Task.query.all()
     if request.method == "GET":

@@ -50,3 +50,15 @@ def test_get_tasks_sorted_desc(client, three_tasks):
             "is_complete": False,
             "title": "Answer forgotten email 📧"},
     ]
+
+
+def test_get_response_invalid_sort_query(client, three_tasks):
+    #Act
+    response = client.get("/tasks?sort=noodle")
+    response_body = response.get_json()
+
+    #assert 
+
+    assert response.status_code == 400
+    assert response_body == {"details": "Invalid query"}
+
