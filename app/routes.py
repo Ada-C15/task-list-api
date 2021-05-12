@@ -5,6 +5,9 @@ from flask import request, Blueprint, make_response
 from flask import jsonify
 from datetime import datetime 
 from sqlalchemy import asc, desc
+import requests
+import json
+import os
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 #localhost:9000/tasks/2
@@ -81,7 +84,16 @@ def handle_tasks():
 
         db.session.add(new_task)
         db.session.commit()
-    
+
+def slack_bot(task):
+    url = "https://slack.com/api/chat.postMessage?channel=task-notifications"
+    slack_token = os.environ.get("SLACK")
+
+    payload = {"text": f"Someone just completed the task: '{task.title}'!"}
+    headers = {"Authorization": f"Bearer {slack_token}"}
+
+    return requests.request("PATCH", url, headers=headers, data=payload)
+
 #PATCH localhost:9000/tasks/1/mark_complete
 @task_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
 def mark_complete(task_id):
@@ -95,6 +107,13 @@ def mark_complete(task_id):
         # If None is found than my code searches for what id is being mark_compleated and with my compleated_at_helper() marking complete turn/
         # into a true statement which then timestamps the date and time completed.
         task.completed_at = datetime.now()
+
+        # where I saved the change to db
+        db.session.commit()
+        
+        # call slackbot
+        slack_bot(task)
+
         #jsonify my object and "task"(STR) json_object is the jsonifyed id, title, description, and compleated_at function 
         return jsonify({"task": task.json_object()}),200 # 200 ok code 
 
@@ -111,12 +130,8 @@ def mark_incomplete(task_id):
         
         task.completed_at = None
         
-        return jsonify({"task": task.json_object()}),200
+        return jsonify({"task":task.json_object()}),200
     
 
 # post man testing eviroment
 #API request using url request can i find route that matches
-
-
-
-
