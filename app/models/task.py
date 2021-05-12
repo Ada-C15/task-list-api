@@ -24,17 +24,11 @@ class Task(db.Model):
         "is_complete": is_complete
         }
     
-    # def is_complete(self):
-    #     if self.completed_at == None:
-    #         is_complete = False
-    #     else:
-    #         is_complete = True 
-
-    # # returns dictionary
-    # def to_dict(self):
-    #     return {
-    #     "id": self.task_id,
-    #     "title": self.title,
-    #     "description": self.description,
-    #     "is_complete": self.is_complete
-    #     } 
+    def to_json_goal_id(self):
+        return { 
+            "id": self.task_id,
+            "goal_id": self.goal_id,
+            "title": self.title,
+            "description": self.description,
+            "is_complete": False if self.completed_at is None else True
+            }

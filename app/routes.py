@@ -81,10 +81,13 @@ def task(task_id):
     # if task is not found
     if not task:
         return '',404
-    #
+    
+
     if request.method == "GET":
-        return jsonify(task=task.to_json()), 200
-   
+        if task.goal_id:
+            return {"task": task.to_json_goal_id()}
+        else:
+            return {"task":task.to_json()},200
     
     if request.method =='PUT':
         request_body = request.get_json()
@@ -164,6 +167,8 @@ def handle_goal(goal_id):
         return '',404
     #
     if request.method == "GET":
+        
+        response_body = request.to_json()
         return jsonify(goal=goal.goal_to_json()), 200
    
     
@@ -189,7 +194,9 @@ def get_goals():
         goals_response.append(goal.goal_to_json())
     return jsonify(goals_response)
 
-# endpoint to add list of tasks to one goal
+
+
+# POST endpoint to add list of task_ids to one goal
 @goal_bp.route("/<goal_id>/tasks",methods=["POST"])
 def tasks_to_goal(goal_id):
     goal = Goal.query.get(goal_id)
@@ -197,12 +204,31 @@ def tasks_to_goal(goal_id):
         return '',404
     # request body has a goal and list of tasks to assign to that goal
     request_body = request.get_json()
+    # request_body looks like {'tasks': [1,2]}  value of tasks refers to the task_id columm of Task 
 
-#gets goal_id for the tasks
     for task_id in request_body['task_ids']:
         task = Task.query.get(task_id)
+        # assigning goal_id column in Task with goal_id
         task.goal_id = int(goal_id)
     
     db.session.commit()
     
-    return make_response({"id": int(goal_id), "task_ids": request_body["task_ids"]}, 200)                                                                                                                                                                       
+    return make_response({"id": int(goal_id), "task_ids": request_body["task_ids"]}, 200)                                                                          
+
+#GET route to return tasks of a specific goal                
+@goal_bp.route("/<goal_id>/tasks",methods=["GET"])
+def get_goal_tasks(goal_id):
+    goal = Goal.query.get(goal_id)
+    if not goal:
+        return '',404
+    # request body contains a goal object with given goal_id
+    
+    tasks_for_goal = Goal.query.get(goal.goal_id)
+    list_of_tasks = []
+    #task titles are located in task.goal_id
+    for task in goal.tasks:
+        list_of_tasks.append(task.to_json_goal_id())
+        #goal.task(helper function with goal_id as a key)
+    
+    return jsonify(id=int(goal_id),title=goal.title,tasks=list_of_tasks), 200
+
