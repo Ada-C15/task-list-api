@@ -21,7 +21,7 @@ def get_tasks():
         tasks_query = Task.query.order_by(Task.title)
     else:
         tasks_query = Task.query.order_by(Task.title.desc())
-    return jsonify([task.build_dict() for task in tasks_query]), 200
+    return make_response(jsonify([task.build_dict() for task in tasks_query]), 200)
 
 
 @tasks_bp.route("", methods = ["POST"])
@@ -42,7 +42,7 @@ def add_tasks():
     db.session.add(new_task)
     db.session.commit()
 
-    return {"task":new_task.build_dict()}, 201
+    return make_response({"task":new_task.build_dict()}, 201)
 
 
 @tasks_bp.route("/<task_id>", methods = ["GET"])
@@ -67,7 +67,7 @@ def update_task(task_id):
 
     db.session.commit()
 
-    return make_response(jsonify({"task":task.build_dict()}))
+    return make_response({"task":task.build_dict()})
 
 @tasks_bp.route("/<task_id>", methods = ["DELETE"])
 def delete_task(task_id):
@@ -77,7 +77,7 @@ def delete_task(task_id):
     db.session.delete(task)
     db.session.commit()
 
-    return {"details": f"Task {task_id} \"{task.title}\" successfully deleted"}
+    return make_response({"details": f"Task {task_id} \"{task.title}\" successfully deleted"})
     
 @tasks_bp.route("/<task_id>/mark_complete", methods = ["PATCH"])
 def mark_complete(task_id):
@@ -90,7 +90,7 @@ def mark_complete(task_id):
     slack_message(f"Someone just completed {task.title}.")
     db.session.commit()
     
-    return {"task": task.build_dict()}, 200
+    return make_response({"task": task.build_dict()}, 200)
 
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods = ["PATCH"])
@@ -102,5 +102,5 @@ def mark_incomplete(task_id):
     if task.completed_at:
         task.completed_at = None
         
-    return jsonify({"task": task.build_dict()}), 200
+    return make_response({"task": task.build_dict()}, 200)
 

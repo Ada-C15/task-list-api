@@ -17,7 +17,7 @@ def get_goals():
 
     goals_query = Goal.query.all()
 
-    return jsonify([goal.build_dict() for goal in goals_query])
+    return make_response(jsonify([goal.build_dict() for goal in goals_query]))
 
 @goals_bp.route("/<goal_id>", methods = ["GET"])
 def get_goal(goal_id):
@@ -26,7 +26,7 @@ def get_goal(goal_id):
 
     goal = Goal.query.get_or_404(goal_id)
 
-    return ({"goal" : goal.build_dict()}, 200)
+    return make_response({"goal" : goal.build_dict()}, 200)
 
 @goals_bp.route("", methods = ["POST"])
 def post_goal():
@@ -40,7 +40,7 @@ def post_goal():
     db.session.add(new_goal)
     db.session.commit()
 
-    return {"goal":new_goal.build_dict()}, 201
+    return make_response({"goal":new_goal.build_dict()}, 201)
 
 @goals_bp.route("/<goal_id>", methods = ["PUT"])
 def update_goal(goal_id):
@@ -61,7 +61,7 @@ def delete_goal(goal_id):
     db.session.delete(goal)
     db.session.commit()
 
-    return {"details" : f'Goal {goal_id} \"{goal.title}\" successfully deleted'}
+    return make_response({"details" : f'Goal {goal_id} \"{goal.title}\" successfully deleted'})
 
 @goals_bp.route("/<goal_id>/tasks", methods = ["POST"])
 def add_tasks_to_goals(goal_id):
@@ -82,10 +82,10 @@ def add_tasks_to_goals(goal_id):
 def get_tasks_for_goal(goal_id):
     '''gets all tasks associated with one goal,
     returns a goal and task dictionaries using list comprehension'''
-    
+
     goal = Goal.query.get_or_404(goal_id)
     tasks = [task.build_dict() for task in goal.tasks]
     goal_dict = goal.build_dict()
     goal_dict["tasks"] = tasks
 
-    return goal_dict
+    return make_response(goal_dict)
