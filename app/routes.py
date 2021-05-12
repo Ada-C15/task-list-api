@@ -17,11 +17,19 @@ tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks():
     order_query = request.args.get("sort")
+    order_by_id = request.args.get("sort_by_id")
     if order_query:
         if order_query == "asc":
             tasks = Task.query.order_by(asc(Task.title))
         elif order_query == "desc":
             tasks = Task.query.order_by(desc(Task.title))
+        else: 
+            raise TypeError("Only asc or desc is accepted here")
+    elif order_by_id:
+        if order_by_id == "asc":
+            tasks = Task.query.order_by(asc(Task.task_id))
+        elif order_by_id == "desc":
+            tasks = Task.query.order_by(desc(Task.task_id))
         else: 
             raise TypeError("Only asc or desc is accepted here")
     else:
@@ -187,15 +195,6 @@ def get_goals_tasks(goal_id):
     return {"id":int(goal_id),"title":goal.title,"tasks":task_list},200
   
 #################### Helper function #################### 
-# def validate_data(title, description, completed_at):
-#     if type(title) != str or type(description) != str:
-#         raise TypeError("Title and Description must be in string format") 
-#     if completed_at is not None:
-#         try:
-#             parse(completed_at)
-#         except:
-#             raise TypeError("Completed_at must be in the format of datetime")
-#     return True
 def validate_data(request_body):
     title = request_body["title"]
     description = request_body["description"]
@@ -208,6 +207,7 @@ def validate_data(request_body):
         except:
             raise TypeError("Completed_at must be in the format of datetime")
     return True
+  
 def send_slack_notifications(task):
     access_token = os.environ.get("AUTH_TOKEN")
     path = "https://slack.com/api/chat.postMessage"
@@ -219,3 +219,4 @@ def send_slack_notifications(task):
           "text": f"Someone just completed the task {task.title}"
     }
     response = requests.post(path, headers=query_headers, params=query_params)
+    
