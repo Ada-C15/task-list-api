@@ -1,11 +1,19 @@
 from app import db
 from app.models.task import Task, to_dict
+from app.models.goal import Goal, to_json
 from flask import Blueprint, request, make_response, jsonify
+from datetime import datetime
+from dotenv import load_dotenv
+import os
+import requests
 
+tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
+load_dotenv()
 
-tasks_bp = Blueprint("tasks", __name__)
+# tasks
 
-@tasks_bp.route("/tasks", methods=["POST"])
+@tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_task():
     request_body = request.get_json()
 
@@ -24,40 +32,30 @@ def create_task():
         return jsonify(valid_task), 201
 
 
-# @tasks_bp.route("/tasks?sort=asc", methods=["GET"])
-# def asc_tasks_sort(tasks):
-#     tasks = Task.query.all()
-#     tasks_response = []
-
-#     if tasks is None:
-#         return jsonify(tasks_response)
-    
-#     else:
-#         for task in tasks:
-#             tasks_response.append(to_dict(task))
-        
-#         sorted_list = sorted(tasks_response, key=lambda x: (x["title"])) 
-
-#         return jsonify(sorted_list)
-
-
-
-@tasks_bp.route("/tasks", methods=["GET"])
+@tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks():
-    tasks = Task.query.all()
+
+
     tasks_response = []
 
-    if tasks is None:
-        return jsonify(tasks_response)
+    sort_query = request.args.get("sort")
+
+    if sort_query == "asc":
+        tasks = Task.query.order_by(Task.title.asc())
     
+    elif sort_query == "desc":
+        tasks = Task.query.order_by(Task.title.desc())
+
     else:
-        for task in tasks:
-            tasks_response.append(to_dict(task))
+        tasks = Task.query.all()
 
-        return jsonify(tasks_response)
+    for task in tasks:
+        tasks_response.append(to_dict(task))
+
+    return jsonify(tasks_response), 200
 
 
-@tasks_bp.route("/tasks/<task_id>", methods=["GET", "PUT", "DELETE"])
+@tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
 def handle_task(task_id):
 
     task = Task.query.get(task_id)
@@ -104,36 +102,102 @@ def handle_task(task_id):
             return make_response(f"", 404)
 
 
-# @tasks_bp.route("/tasks/<task_id>/mark_complete", methods=["PATCH"])
-# def mark_complete(task):
+@tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
+def mark_complete(task_id):
 
-#     request_body = request.get_json()
-#     complete_task = Task(title = request_body["title"], description = request_body["description"], completed_at = request_body["completed_at"])
+    task = Task.query.get(task_id)
 
-    
-#     mark_task_complete = {
-#             "id": complete_task.task_id,
-#             "title": complete_task.title,
-#             "description": complete_task.description,
-#             "is_complete": True
-#     }
+    if task is None:
+        return jsonify(None), 404
 
-#     return {"task": mark_task_complete}
+    task.completed_at = datetime.utcnow()
+    db.session.commit()
+
+    slack_bot_message("Did this work")
+
+    return jsonify({"task": to_dict(task)}), 200
+
+def slack_bot_message(message):
+    path = "https://slack.com/api/chat.postMessage"
+    SLACK_KEY = os.environ.get("SLACK_TOKEN")
+    headers = {"Authorization": f"Bearer {SLACK_KEY}"}
+    query_params = {"channel": "task-notifications", "text": message}
+    requests.post(path, params=query_params, headers=headers)
 
 
-# @tasks_bp.route("/tasks/<task_id>/mark_incomplete", methods=["PATCH"])
-# def mark_incomplete(task):
-#     request_body = request.get_json()
-#     incomplete_task = Task(title = request_body["title"], description = request_body["description"], completed_at = request_body["completed_at"])
 
-    
-#     mark_task_incomplete = {
-#             "id": incomplete_task.task_id,
-#             "title": incomplete_task.title,
-#             "description": incomplete_task.description,
-#             "is_complete": False
-#     }
+@tasks_bp.route("<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
+def mark_incomplete(task_id):
 
-#     return {"task": mark_task_incomplete}
+    task = Task.query.get(task_id)
 
-# comment 
+    if task is None:
+        return jsonify(None), 404
+
+    task.completed_at = None 
+    db.session.commit()
+
+    return jsonify({"task": to_dict(task)}), 200
+ 
+
+# goals
+
+@goals_bp.route("", methods=["POST"], strict_slashes=False)
+def create_goal():
+    request_body = request.get_json()
+
+    response = {"details": "Invalid data"}
+
+    if "title" not in request_body.keys():
+
+        return jsonify(response), 400
+
+    else:
+        new_goal = Goal(title = request_body["title"])
+        db.session.add(new_goal)
+        db.session.commit()
+        valid_goal = {"goal": to_json(new_goal)}
+
+        return jsonify(valid_goal), 201
+
+@goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
+def handle_goal(goal_id):
+
+    goal = Goal.query.get(goal_id)
+
+    if request.method == "GET":
+        if goal is None:
+            return make_response(f"404 Not Found", 404) 
+
+        else:
+            one_goal = to_json(goal)
+
+            return {"goal": one_goal}
+
+    elif request.method == "PUT":
+        if goal: 
+            form_data = request.get_json()
+            goal.title = form_data["title"]
+            db.session.commit()
+
+            updated_goal = {
+                    "id": goal.goal_id,
+                    "title": goal.title
+            }
+            
+        else: 
+            return make_response(f"", 404) 
+           
+        return {'goal': updated_goal}
+
+    elif request.method == "DELETE":
+        if goal:
+            db.session.delete(goal)
+            db.session.commit()
+
+            response = {"details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"}
+
+            return jsonify(response), 200
+        
+        else:
+            return make_response(f"", 404)

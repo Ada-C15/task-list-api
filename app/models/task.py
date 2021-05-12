@@ -6,7 +6,7 @@ class Task(db.Model):
     task_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
     description = db.Column(db.String)
-    completed_at = db.Column(db.DateTime)
+    completed_at = db.Column(db.DateTime, nullable=True)
 
 
 def to_dict(self):
@@ -16,4 +16,13 @@ def to_dict(self):
         "description": self.description,
         "is_complete": bool(self.completed_at)
     }
+
+# def completed_task(self):
+#     if self.completed_at == None:
+#         completed = False
+#     else:
+#         completed = True
+
+
+
 
