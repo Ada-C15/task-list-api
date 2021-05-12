@@ -1,6 +1,8 @@
 from app import db
 from app.models.task import Task
 from flask import request, Blueprint, make_response, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select, asc, desc
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -33,21 +35,48 @@ def handle_tasks():
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def tasks_index():
-    tasks = Task.query.all()
+    
+    sort_query = request.args.get("sort")
     tasks_response = []
-    
-    if tasks is None:
-        return jsonify(tasks_response), 200
-    
-    else:
+    if sort_query == "asc":
+        tasks = Task.query.order_by(asc(Task.title))
+
         for task in tasks:
-            tasks_response.append({
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": is_complete_function(task.completed_at)
-            })
+                tasks_response.append({
+                    "id": task.task_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": is_complete_function(task.completed_at)
+                })
         return jsonify(tasks_response), 200
+
+    elif sort_query == "desc":
+        tasks = Task.query.order_by(desc(Task.title))
+
+        for task in tasks:
+                tasks_response.append({
+                    "id": task.task_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": is_complete_function(task.completed_at)
+                })
+        return jsonify(tasks_response), 200
+
+    else:
+        tasks = Task.query.all()
+    
+        if tasks is None:
+            return jsonify(tasks_response), 200
+    
+        else:
+            for task in tasks:
+                tasks_response.append({
+                    "id": task.task_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": is_complete_function(task.completed_at)
+                })
+            return jsonify(tasks_response), 200
 
 
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
@@ -74,9 +103,6 @@ def update_single_task(task_id):
     if task is None:
             return jsonify(None), 404
     
-    # elif "title" not in request_body or "description" not in request_body:
-    #     return {"message": "Request requires both a title and description."}, 400
-
     task.title = request_body["title"]
     task.description = request_body["description"]
     task.completed_at = request_body["completed_at"]
