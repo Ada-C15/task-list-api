@@ -39,9 +39,9 @@ def get_task():
     elif sort == "desc":
         tasks = Task.query.order_by(Task.title.desc()).all()
 
-    tasks_response = []
-    for task in tasks:
-        tasks_response.append(task.to_json())
+    tasks_response = [task.to_json() for task in tasks]
+    # for task in tasks:
+    #     tasks_response.append(task.to_json())
 
     return jsonify(tasks_response), 200
 
@@ -54,14 +54,6 @@ def get_single_task(task_id):
         return make_response("", 404)
 
     if request.method == "GET":
-        tasks = Task.query.filter_by(goal_id=Goal.goal_id)
-    
-        if task.goal_id is not None:
-            for task in tasks:
-                tasks_dict = task.to_json()
-                tasks_dict["goal_id"] = task.goal_id
-                return jsonify({"task": tasks_dict})
-
         return jsonify({"task": task.to_json()}), 200
 
     elif request.method == "PUT":
@@ -91,7 +83,7 @@ def update_completed_at(task_id, complete):
     if complete == "mark_complete":
         task.completed_at = datetime.utcnow()
 
-        db.session.commit()
+        # db.session.commit()
 
         slack_url = "https://slack.com/api/chat.postMessage"
         headers = {
@@ -102,12 +94,13 @@ def update_completed_at(task_id, complete):
             "channel": "C021RGYNY48",
             "text": f"Someone just completed the task {task.title}"
         }
+
         requests.post(slack_url, json=slack_data, headers=headers)
 
     elif complete == "mark_incomplete":
         task.completed_at = None
 
-        db.session.commit()
+    db.session.commit()
 
     return jsonify({"task" :task.to_json()}), 200
 
@@ -131,15 +124,15 @@ def add_goal():
 @goals_bp.route("", methods=["GET"])
 def get_goal():
     goals = Goal.query.all()
-    goals_response = []
+    goals_response = [goal.to_json() for goal in goals]
 
-    for goal in goals:
-        goals_response.append(goal.to_json())
+    # for goal in goals:
+    #     goals_response.append(goal.to_json())
 
     return jsonify(goals_response), 200
 
 
-@goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
+@goals_bp.route("/<int:goal_id>", methods=["GET", "PUT", "DELETE"])
 def get_one_goal(goal_id):
     goal = Goal.query.get(goal_id)
 
@@ -167,7 +160,7 @@ def get_one_goal(goal_id):
 
 
 
-@goals_bp.route("<goal_id>/tasks", methods=["GET", "POST"])
+@goals_bp.route("<int:goal_id>/tasks", methods=["GET", "POST"])
 def goal_to_task(goal_id):
     goal = Goal.query.get(goal_id)
 
@@ -176,15 +169,17 @@ def goal_to_task(goal_id):
 
     if request.method == "GET":
         tasks = Task.query.filter_by(goal_id=goal.goal_id)
-
-        tasks_reponse = []
-        for task in tasks:
-            tasks_reponse.append(task.to_json())
+        print("*** tasks: ", tasks)
+        tasks_response = [task.to_json() for task in tasks]
+        # tasks_response = []
+        # for task in tasks:
+        #     print("*** tasks: ", )
+        #     tasks_response.append(task.to_json())
 
         return jsonify({
             "id": goal.goal_id,
             "title": goal.title,
-            "tasks": tasks_reponse
+            "tasks": tasks_response
         }), 200
 
     elif request.method == "POST":
@@ -193,6 +188,8 @@ def goal_to_task(goal_id):
         for task_id in request_body["task_ids"]:
             task = Task.query.get(task_id)
             task.goal_id = goal.goal_id
+
+            db.session.commit()
 
         return jsonify({"id": goal.goal_id,
                 "task_ids": request_body["task_ids"]

@@ -1,6 +1,7 @@
 from flask import current_app
 # from .goal import Goal
 from app import db
+import json
 
 
 class Task(db.Model):
@@ -26,3 +27,14 @@ class Task(db.Model):
         if self.goal:
             task_json["goal_id"] = self.goal_id
         return task_json
+
+    # def from_json(cls):
+
+
+    #     task_body = json.loads('{"__task__": "Task", "id": "task_id",\
+    #                         "title": "title",
+    #                         "description": "description",
+    #                         "is_complete": "completed_at"}')
+        
+
+
