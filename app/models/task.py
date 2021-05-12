@@ -1,10 +1,8 @@
-# from flask import current_app
 from app import db
 from dataclasses import dataclass
 import datetime
-# from .models.goal import Goal
 
-@dataclass # do i need this decorator and what is it doing?
+@dataclass # need this to get jsonify to work - but idk why
 class Task(db.Model): 
     id: int
     title: str
@@ -44,3 +42,6 @@ class Task(db.Model):
     # this is the refactor that Chris did in the 3rd video of Create and Read. 
     # I named the method "to_dictionary" so it's easier to tell apart from get_json() 
     # which is a different function that comes in the pytest package
+
+
+        

@@ -8,7 +8,6 @@ from dataclasses import dataclass
 class Goal(db.Model):
     id: int
     title: str
-
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)
     tasks = db.relationship('Task', backref='goal', lazy=True)

@@ -1,22 +1,20 @@
 from app import db 
 from .models.task import Task
 from .models.goal import Goal
-from flask import request, Blueprint, make_response, Response, jsonify
+from flask import request, Blueprint, make_response, Response, jsonify, render_template
 from sqlalchemy import desc
 from datetime import datetime
+import requests
+import os
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 ####################### POST TASK CRUD - CREATE #############################
-@tasks_bp.route("", methods=["POST"]) # The route usually starts with the model plural - but the tasks_bp Blueprint - is already providing the url_prefix="/tasks"
-def create_task(): # this function will execute when a request matched the decoractor. 
-    request_body = request.get_json() # the local variable request_body will hold the body contents of the HTTP request in a Python data structre (likely dictionaries, lists, and strings)
-    # request.get_json() ^^ use the request object <<imported from flask>> to get information about the HTTP request - the method .get_json() grabs the part of the HTTP request_body that's in JSON format
-    
-    ### if request_body['title'] == None: # there is no key in the request_body called title because the client didnt input correctly
-###############
-    if 'title' not in request_body.keys(): # this condition works withour the keys() function too
+@tasks_bp.route("", methods=["POST"]) 
+def create_task(): 
+    request_body = request.get_json() 
+    if 'title' not in request_body.keys(): 
         response_bod = {"details": "Invalid data"}
         return jsonify(response_bod), 400
     elif 'description' not in request_body.keys():
@@ -25,19 +23,16 @@ def create_task(): # this function will execute when a request matched the decor
     elif 'completed_at' not in request_body.keys():
         response_bod = {"details": "Invalid data"}
         return jsonify(response_bod), 400
-###############
     else:
-        new_task = Task(title=request_body["title"], # We can create an instance of Task using the data in request_body. We assign this new instance to the new_task variable
-                    description=request_body["description"], #use keyword arguments that match our model attribute, and access the request_body values to create the Task instance
+        new_task = Task(title=request_body["title"],
+                    description=request_body["description"], 
                     completed_at=request_body["completed_at"])
-        db.session.add(new_task) # adds the task model to the database
-        db.session.commit() # saves the task to the database
+        db.session.add(new_task)
+        db.session.commit()
         jsonable_new_task = new_task.to_dictionary()
-    # for each endpoint - we must return the HTTP response
 
         return jsonify(task=jsonable_new_task), 201
 
-# make_response() function instantiates a Response object. A Response object is generally what we want to return from Flask endpoint functions.
 
 ####################### GET ALL TASKS - CRUD - READ #######################################
 ############# GET ALL TASKS - ASCENDING or DESCENDING - CRUD - READ #######################
@@ -56,10 +51,6 @@ def get_all_tasks():
         each_task = t.to_dictionary()
         tasks_response.append(each_task)
     return jsonify(tasks_response), 200
-
-# tasks_response contains a list of book dictionaries. 
-# -- To turn it into a Response object, we pass it into jsonify(). This will be my practice when --
-# -- returning a list of something because the make_response function does not handle lists.
 
 ####################### GET ONE TASK by ID - CRUD - READ #############################
 @tasks_bp.route("/<task_id>", methods=["GET"])
@@ -90,7 +81,6 @@ def update_task(task_id):
         update_task.description = request_in_json["description"]
         update_task.completed_at = request_in_json["completed_at"]
 
-        # Save Action
         db.session.commit()
     
         jsonable_update_task = update_task.to_dictionary()
@@ -119,15 +109,24 @@ def mark_complete(task_id):
     if task_to_update is None:
         return jsonify(None), 404
     else:
-        request_in_json = request.get_json()
         task_to_update.completed_at = datetime.now()
 
         db.session.commit()
-            
-        jsonable_status_updated = task_to_update.to_dictionary()
 
+        slack_notification(task_to_update)
+
+        jsonable_status_updated = task_to_update.to_dictionary()
         return jsonify(task=jsonable_status_updated), 200
 
+####################### HELPER FUNCTON - PATCH MARK COMPLETED_AT - SLACK NOTIFICATION #############################
+def slack_notification(task_to_update):
+        headers = {'Authorization': os.environ.get('SLACK_TOKEN')}
+        params = { 
+            'channel': 'task-notifications', 
+            'text': f'Someone just completed the task {task_to_update.title}'
+            } 
+        response = requests.post('https://slack.com/api/chat.postMessage', headers=headers, params=params)
+        return response
 ####################### PATCH MARK INCOMPLETED - CRUD - UPDATE #############################
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"]) 
 def mark_incomplete(task_id):
@@ -135,7 +134,6 @@ def mark_incomplete(task_id):
     if task_to_update is None:
         return jsonify(None), 404
     else:
-        request_in_json = request.get_json()
         task_to_update.completed_at = None
 
         db.session.commit()
@@ -149,11 +147,9 @@ def mark_incomplete(task_id):
 @goals_bp.route("", methods=["POST"]) 
 def create_goal(): 
     request_body = request.get_json()
-###############
     if 'title' not in request_body.keys(): # this condition works withour the keys() function too
         response_bod = {"details": "Invalid data"}
         return jsonify(response_bod), 400
-###############
     else:
         new_goal = Goal(title=request_body["title"])
 
@@ -163,6 +159,7 @@ def create_goal():
         jsonable_new_goal = new_goal.to_dictionary()
 
         return jsonify(goal=jsonable_new_goal), 201
+
 
 ####################### DELETE GOAL - CRUD - DELETE #############################
 ######### MUST HAVE A GET GOAL WORKING BEFORE DELETE CAN WORK ########
@@ -176,7 +173,7 @@ def delete_goal(goal_id):
         db.session.commit() # Save Action
     
         response_body = f"Goal {goal_id} \"{delete_goal.title}\" successfully deleted"
-
+        
         return jsonify(details=response_body), 200
 
 
@@ -189,7 +186,10 @@ def get_all_goals():
     for g in goals: 
         each_goal = g.to_dictionary()
         goals_response.append(each_goal)
+    
     return jsonify(goals_response), 200
+    
+    # return render_template("index.html", goals_response=goals_response)
 
 ####################### GET ONE GOAL by ID - CRUD - READ #############################
 @goals_bp.route("/<goal_id>", methods=["GET"])
@@ -216,16 +216,13 @@ def update_goal(goal_id):
 
         update_goal.title = request_in_json["title"]
 
-        # Save Action
         db.session.commit()
     
         jsonable_update_goal = update_goal.to_dictionary()
 
         return jsonify(goal=jsonable_update_goal), 200
 
-
 ###################### RELATIONAL REQUESTS ###########################
-
 ####################### POST TASK_IDs to GOAL CRUD - CREATE #############################
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"]) 
 def post_task_ids_to_goal(goal_id): 
@@ -237,13 +234,14 @@ def post_task_ids_to_goal(goal_id):
         task_to_update = Task.query.get(t)
         # goal_to_update.tasks.append(task_to_update) -- what?
         task_to_update.goal_id = goal_id
+
     db.session.commit() # saves the goal to the database
         
     response_body = {
         "id": int(goal_id),
         "task_ids": new_task_ids
     }
-
+    
     return jsonify(response_body), 200
 
         ###########
