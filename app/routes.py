@@ -6,6 +6,7 @@ from datetime import datetime
 import requests
 from app import slack_key
 from app.models.goal import Goal
+import os
 
 task_list_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goal_list_bp = Blueprint("goals", __name__, url_prefix="/goals")
@@ -56,7 +57,10 @@ def task(task_id):
     if task is None:
         return make_response("", 404)
     elif request.method == "GET":
-        return make_response({"task": task.to_json()}), 200
+        if task.goal_offspring is None:
+            return make_response({"task": task.to_json()}), 200
+        else:
+            return make_response({"task": task.goal_json()}), 200
     
     elif request.method == "PUT":
         task_data = request.get_json()
@@ -64,7 +68,7 @@ def task(task_id):
         task.description = task_data["description"]
 
         db.session.commit()
-
+        
         return make_response({"task": task.to_json()}), 200
 
     elif request.method == "DELETE":
@@ -76,8 +80,6 @@ def task(task_id):
 @task_list_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
     task = Task.query.get(task_id)
-    print(task)
-    print(type(task))
     # Consider using the keyword arguments data, json, and/or headers
     if task is None:
         return make_response("", 404)
@@ -111,7 +113,8 @@ def mark_incomplete(task_id):
 
     return make_response({"task": task.to_json()})
 
-# WAVE 5 GOALS
+
+# WAVE 5 & 6 GOALS
 
 @goal_list_bp.route("", methods=["POST"])
 def create_goal():
@@ -161,3 +164,34 @@ def goal(goal_id):
         db.session.commit()
         
         return make_response({"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'})
+
+
+@goal_list_bp.route("<goal_id>/tasks", methods=["POST", "GET"])
+def tasks_in_goal(goal_id):
+
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return ("", 404)
+
+    elif request.method == "POST":
+        request_body = request.get_json()
+        for task_id in request_body["task_ids"]:
+            task = Task.query.get(task_id)
+            task.goal_offspring = goal.goal_id
+        
+        return make_response({
+            "id": goal.goal_id,
+            "task_ids": request_body["task_ids"]}, 200)
+
+    elif request.method == "GET":
+        tasks = Task.query.filter_by(goal_offspring=goal_id)
+        task_list = []
+        for task in tasks:
+            task_list.append(task.goal_json())
+
+        return make_response({
+            "id": goal.goal_id, 
+            "title": goal.title, 
+            "tasks": task_list
+            }, 200)
