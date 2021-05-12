@@ -59,14 +59,26 @@ def specific_task(task_id):
         return make_response(), 404
     
     elif request.method == "GET":
-        return jsonify({
-            "task": {
-                "id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": task.task_completed()
-            }
-        }), 200
+
+        if task.goal == None:
+            return jsonify({
+                "task": {
+                    "id": task.task_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": task.task_completed()
+                }
+            }), 200
+        else:
+            return jsonify({
+                "task": {
+                    "id": task.task_id,
+                    "goal_id": task.goal_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": task.task_completed()
+                }
+            }), 200
 
     elif request.method == "PUT":
         form_data = request.get_json()
@@ -90,7 +102,6 @@ def specific_task(task_id):
         db.session.commit()
         return jsonify({"details": f'Task {task.task_id} "{task.title}" successfully deleted'}), 200 
 
-# create helper function for slack message bot 
 def slack_message_bot(task):
 
     params = {
@@ -148,11 +159,9 @@ def mark_incomplete(task_id):
 goals_bp = Blueprint("goals", __name__, url_prefix= "/goals")
 @goals_bp.route("", methods=["POST", "GET"])
 def create_goal():
-    # create (post) a goal, valid goal and getting saved goals
     if request.method == "POST":
         request_body = request.get_json()
         if "title" not in request_body:
-        # if "title" not in request_body or "id" not in request_body:
             return jsonify({"details": "Invalid data"}), 400
         else:
             new_goal = Goal(title=request_body["title"])
@@ -212,7 +221,44 @@ def specific_goal(goal_id):
         db.session.commit()
         return jsonify({"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}), 200
 
-    
+@goals_bp.route("<goal_id>/tasks", methods=["GET", "POST"])
+def goal_to_task(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return make_response("", 404)
+
+    if request.method == "GET":
+        tasks = Task.query.filter_by(goal_id=goal.goal_id)
+
+        connected_tasks = []
+        for task in tasks:
+            connected_tasks.append({
+                "id": task.task_id,
+                "goal_id": task.goal_id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": task.task_completed(),
+        })
+
+        return jsonify({
+            "id": goal.goal_id,
+            "title": goal.title,
+            "tasks": connected_tasks
+        }), 200
+
+    elif request.method == "POST":
+        request_body = request.get_json()
+
+        for task_id in request_body["task_ids"]:
+            task = Task.query.get(task_id)
+            task.goal_id = goal.goal_id
+
+        return jsonify({
+            "id": goal.goal_id,
+            "task_ids": request_body["task_ids"]
+        }), 200
+
 
 
 
