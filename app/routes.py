@@ -5,10 +5,12 @@ from datetime import datetime
 import requests
 import flask_migrate
 import os
+from app.models.goal import Goal
 
 
 
 task_bp = Blueprint("task", __name__, url_prefix='/tasks')
+goal_bp = Blueprint("goal", __name__, url_prefix='/goals')
 
 @task_bp.route("", methods=["POST"])
 def post_task():
@@ -101,9 +103,58 @@ def mark_incomplete(task_id):
 
 
 
+@goal_bp.route("", methods=["POST"])
+def post_new_goal():
+    request_body = request.get_json()
 
+    if "title" in request_body:
+        new_goal = Goal(title=request_body["title"])
+        db.session.add(new_goal)
+        db.session.commit()
+        return jsonify({"goal": new_goal.now_json()}), 201
+    else: 
+        return make_response({"details": "Invalid data"}), 400
+
+@goal_bp.route("", methods=["GET"])
+def get_all_goals():
+    sort_method = request.args.get("sort")
+    if sort_method == "asc":
+        goals = Goal.query.order_by(Goal.title.asc())            
+    elif sort_method == "desc":
+        goals = Goal.query.order_by(Goal.title.desc())   
+    else:
+        goals = Goal.query.all()
+    goal_response_body = []  
+    for goal in goals:
+        goal_response_body.append(goal.now_json())
+    return jsonify(goal_response_body), 200
+
+
+
+@goal_bp.route('/<goal_id>', methods=['GET'])
+def get_single_goal(goal_id):  # same name as parameter route
+    goal = Goal.query.get(goal_id)
+    if not goal:
+        return "", 404
+    return make_response({"goal": goal.now_json()}), 200
     
-
+@goal_bp.route("/<goal_id>", methods=['DELETE', 'PUT'])
+def delete_or_put_goals(goal_id):
+    goal = Goal.query.get(goal_id)
+    if not goal:
+        return "", 404
+    elif request.method == 'DELETE':
+        db.session.delete(goal)
+        db.session.commit()
+        return jsonify({
+            "details": f'Goal {goal_id} "{goal.title}" successfully deleted'
+            }), 200
+        
+    elif request.method == 'PUT':
+        request_body = request.get_json()   
+        goal.title = request_body["title"]
+        db.session.commit()
+        return jsonify({"goal": goal.now_json()}), 200
 
 
 
