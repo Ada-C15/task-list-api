@@ -7,8 +7,9 @@ class Task(db.Model):
     title = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False)
     completed_at = db.Column(db.DateTime, nullable=True)
-    goal = db.Column(db.Integer, db.ForeignKey('goal.goal_id'),
-        nullable=True)
+
+    # goal = db.Column(db.Integer, db.ForeignKey('goal.goal_id'),
+    #     nullable=True)
 
     def to_json_format(self):
         task_to_json = {
@@ -17,8 +18,6 @@ class Task(db.Model):
             "description": self.description,
             "is_complete": True if self.completed_at is not None else False,
             }
-        if self.goal is not None:
-            task_to_json["goal_id"] = self.goal
+        # if self.goal is not None:
+        #     task_to_json["goal_id"] = self.goal
         return task_to_json
-
-
