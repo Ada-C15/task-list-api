@@ -14,3 +14,4 @@ class Task(db.Model):
             return False
         else:
             return True 
+    

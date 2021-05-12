@@ -69,6 +69,7 @@ def specific_task(task_id):
                     "is_complete": task.task_completed()
                 }
             }), 200
+
         else:
             return jsonify({
                 "task": {
@@ -215,20 +216,34 @@ def specific_goal(goal_id):
                 "title": goal.title
             }
         }), 200
+
     
     elif request.method == "DELETE":
         db.session.delete(goal)
         db.session.commit()
         return jsonify({"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}), 200
 
-@goals_bp.route("<goal_id>/tasks", methods=["GET", "POST"])
+@goals_bp.route("<goal_id>/tasks", methods=["POST", "GET"])
 def goal_to_task(goal_id):
     goal = Goal.query.get(goal_id)
 
     if goal is None:
         return make_response("", 404)
 
-    if request.method == "GET":
+    if request.method == "POST":
+        request_body = request.get_json()
+
+        for task_id in request_body["task_ids"]:
+            task = Task.query.get(task_id)
+            task.goal_id = goal.goal_id
+
+        return jsonify({
+            "id": goal.goal_id,
+            "task_ids": request_body["task_ids"]
+        }), 200
+
+
+    elif request.method == "GET":
         tasks = Task.query.filter_by(goal_id=goal.goal_id)
 
         connected_tasks = []
@@ -247,17 +262,6 @@ def goal_to_task(goal_id):
             "tasks": connected_tasks
         }), 200
 
-    elif request.method == "POST":
-        request_body = request.get_json()
-
-        for task_id in request_body["task_ids"]:
-            task = Task.query.get(task_id)
-            task.goal_id = goal.goal_id
-
-        return jsonify({
-            "id": goal.goal_id,
-            "task_ids": request_body["task_ids"]
-        }), 200
 
 
 

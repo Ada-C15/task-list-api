@@ -7,4 +7,4 @@ class Goal(db.Model):
     title = db.Column(db.String)
     tasks = db.relationship("Task", backref='goal', lazy=True)
 
-
+ 
