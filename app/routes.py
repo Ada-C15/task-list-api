@@ -35,10 +35,10 @@ def handle_task_request_body(func):
             return jsonify({"details":"Invalid data"}), 400
         completed_at = request_body["completed_at"]
         format = "%a, %d %B %Y %H:%M:%S %Z"
+        # since request_body["completed"] is string not datetime, this tests correct datetime format
         if completed_at:
             #converts input to string so it works with 'try' statement
             completed_at = str(completed_at)
-            #completed is a string so this tests whether the string is in the correct datetime format
             try:
                 datetime.strptime(completed_at, format)
             except ValueError:
@@ -56,6 +56,15 @@ def post_message(message):
                     }
     requests.post(path, params=query_params, headers=headers)
 
+#Decorator to handle invalid goal input for POST and PUT endpoints
+def handle_goal_request_body(func):
+    def inner(*args, **kwargs):
+        request_body = request.get_json()
+        if "title" not in request_body:
+            return jsonify({"details":"Invalid data"}), 400
+        return func(*args, **kwargs)
+    inner.__name__ = func.__name__
+    return inner
 
 #TASKS ENDPOINTS
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
@@ -105,10 +114,10 @@ def create_task():
 @handle_task_request_body
 def update_task(task_id):
     task = Task.query.get(task_id)
-    form_data = request.get_json()
-    task.title = form_data["title"]
-    task.description = form_data["description"]
-    task.completed_at = form_data["completed_at"]
+    response_body = request.get_json()
+    task.title = response_body["title"]
+    task.description = response_body["description"]
+    task.completed_at = response_body["completed_at"]
     db.session.commit()
     return jsonify(task.to_json()), 200
 
@@ -155,10 +164,9 @@ def single_goal(goal_id):
     return jsonify({"goal":goal.to_json()}), 200
 
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
+@handle_goal_request_body
 def create_goal():
     request_body = request.get_json()
-    if "title" not in request_body:
-        return jsonify({"details":"Invalid data"}), 400
     new_goal = Goal(title = request_body["title"])
     db.session.add(new_goal)
     db.session.commit()
@@ -166,6 +174,7 @@ def create_goal():
 
 @goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
 @goal_not_found
+@handle_goal_request_body
 def update_goal(goal_id):
     goal = Goal.query.get(goal_id)
     form_data = request.get_json()
@@ -202,8 +211,8 @@ def get_tasks_from_goal(goal_id):
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
 def post_tasks_to_goal(goal_id):
     request_body = request.get_json()
-    # if "task_ids" not in request_body:
-    #     return jsonify({"details":"Invalid data"}), 400
+    if "task_ids" not in request_body:
+        return jsonify({"details":"Invalid data"}), 400
     task_ids = request_body["task_ids"]
     for id in task_ids:
         task = Task.query.get(id)
