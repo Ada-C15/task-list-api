@@ -13,3 +13,11 @@ class Goal(db.Model):
                 'id' : self.id,
                 'title' : self.title
         }
+    
+    def from_json(request_dict):
+        # Converts JSON into a new instance of Task
+        new_goal = Goal(
+        title = request_dict["title"]
+        )
+
+        return new_goal

@@ -59,15 +59,19 @@ def get_all_tasks():
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_new_task():
 
+    #when creating a task, the value of completed_at is a string that is not a datetime?
+
     request_body = request.get_json()
     if not request_body or not request_body.get("title") or not request_body.get("description") or "completed_at" not in request_body:
         return make_response({"details": "Invalid data"}, 400)
+    
+    new_task = Task.from_json(request_body)
 
-    new_task = Task(
-        title = request_body["title"],
-        description = request_body["description"],
-        completed_at = request_body["completed_at"]
-    )
+    # new_task = Task(
+    #     title = request_body["title"],
+    #     description = request_body["description"],
+    #     completed_at = request_body["completed_at"]
+    # )
     db.session.add(new_task)
     db.session.commit()
 
@@ -175,9 +179,11 @@ def create_goals():
     if not request_body or not request_body.get("title"):
         return make_response({"details": "Invalid data"}, 400)
 
-    new_goal = Goal(
-        title = request_body["title"]
-    )
+    new_goal = Goal.from_json(request_body)
+
+    # new_goal = Goal(
+    #     title = request_body["title"]
+    # )
 
     db.session.add(new_goal)
     db.session.commit()

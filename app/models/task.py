@@ -37,3 +37,12 @@ class Task(db.Model):
                 'description' : self.description,
                 'is_complete' : completed
         }
+    
+    def from_json(request_dict):
+        new_task = Task(
+        title = request_dict["title"],
+        description = request_dict["description"],
+        completed_at = request_dict["completed_at"]
+        )
+
+        return new_task
