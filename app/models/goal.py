@@ -9,7 +9,7 @@ class Goal(db.Model):
     title = db.Column(db.String)
     tasks = db.relationship("Task", backref="goal", lazy=True)
 
-    #backref meaning: creates a column in the Task table called "goal"
+    #back_refernce meaning: creates a column in the Task table called "goal"
 
     def to_dict(self):
         return {

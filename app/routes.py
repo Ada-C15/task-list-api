@@ -20,7 +20,6 @@ def handle_tasks():
         query_param_value = request.args.get("sort")
         if query_param_value == "asc":
             tasks = Task.query.order_by(Task.title.asc())
-            # tasks = Task.query.filter_by(title=title_query)
         elif query_param_value == "desc":
             tasks = Task.query.order_by(Task.title.desc())
         else:
@@ -28,13 +27,13 @@ def handle_tasks():
 
         tasks_response = []
         for task in tasks:
-            tasks_response.append({
-                "id": task.id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": task.is_complete
-            })
-            # return tasks_response.append(task.to_dict())
+            tasks_response.append(task.to_dict())
+            # tasks_response.append({
+            #     "id": task.id,
+            #     "title": task.title,
+            #     "description": task.description,
+            #     "is_complete": task.is_complete
+            # })
         return jsonify(tasks_response), 200
 
     elif request.method == "POST":
@@ -42,11 +41,10 @@ def handle_tasks():
         
         # Invalid task if missing title, description, or completed_at     
         if "completed_at" not in request_body or "description" not in request_body or "title" not in request_body:
-            # return jsonify(details="Invalid data"), 400
             return jsonify({"details": "Invalid data"}), 400
-            
+            # return jsonify(details="Invalid data"), 400           
         else:
-            new_task =  Task(
+            new_task = Task(
                 title = request_body["title"],
                 description = request_body["description"],
                 completed_at = request_body["completed_at"])
@@ -110,7 +108,8 @@ def handle_single_task(task_id):
         db.session.delete(task)
         db.session.commit()
 
-        return make_response(jsonify(details=f"Task {task.id} \"{task.title}\" successfully deleted"), 200)
+        return make_response({"details": f"Task {task.id} \"{task.title}\" successfully deleted"}, 200)
+        # return make_response(jsonify(details=f"Task {task.id} \"{task.title}\" successfully deleted"), 200)
 
 '''
 Wave 03: Mark a task complete or incomplete
@@ -140,10 +139,10 @@ def mark_complete(task_id):
         #     "is_complete": bool(task.completed_at)
         # }), 200
     
-    return("PATCH methoud only. Do not accept other methods for this route.")
+    return("PATCH method only. Do not accept other methods for this route.")
 
 '''
-Wave 04: Notify user a task was complete with Slack messages, using the Slack web API.
+Wave 04: Notify user a task was completed with Slack messages, using the Slack web API.
 '''
 def send_slack(task):
 
@@ -179,7 +178,7 @@ def mark_incomplete(task_id):
         #     "is_complete": bool(task.completed_at)
         # }), 200
 
-    return("PATCH methoud only. Do not accept other methods for this route.")
+    return("PATCH method only. Do not accept other methods for this route.")
     
 '''
 Wave 05: CRUD for Goal
@@ -243,12 +242,11 @@ def handle_single_goal(goal_id):
         db.session.delete(goal)
         db.session.commit()
 
-        return make_response(jsonify(details=f"Goal {goal.id} \"{goal.title}\" successfully deleted"), 200)
+        return make_response({"details": f"Goal {goal.id} \"{goal.title}\" successfully deleted"}, 200)
 
 '''
-Wave 06: Goal with tasks
+Wave 06: Goal with tasks. POST tasks to a goal. GET tasks under a goal.
 '''
-
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
 def post_tasks_to_goal(goal_id):
 
@@ -257,23 +255,24 @@ def post_tasks_to_goal(goal_id):
     if goal is None:
         return make_response("", 404)
 
-    # get tasks from request body
-    request_data = request.get_json()
+    # json body in Postman, what to be posted
+    request_data = request.get_json() 
         
-    for task_id in request_data["task_ids"]:
-        task = Task.query.get(task_id)
-        task.goal_id = goal.id
+    for task_no in request_data["task_ids"]: # see line 26-27 in test. For task_no in task_ids": [1, 4], loop through task_no ([1,4])
+        task = Task.query.get(task_no) # find the task in the Task model that has that id
+        task.goal_id = goal.id # this line creates relationship in db. Assign goal.id from the Goal model to the foreign key in the Task model to the task belongs to that goal. Now that goal has that task. 
 
     db.session.commit()
 
     return {
         "id" : goal.id, 
         "task_ids" : request_data["task_ids"]
-        }
+    }
 
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 def get_tasks(goal_id):
 
+    # find the goal with the specific goal id
     goal = Goal.query.get(goal_id)
     
     if goal is None:
@@ -281,18 +280,15 @@ def get_tasks(goal_id):
     
     tasks = Task.query.filter_by(goal_id=goal.id)
 
-    tasks_response = []
-    for task in tasks: 
-        tasks_response.append({
-            "id": task.id,
-            "goal_id": task.goal_id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": task.is_complete
-        })
+    # For query-params, if route is /goal/tasks/?=goal_id
+    # goal_query = request.args.get("goal_id")
+    # tasks = Task.query.filter_by(goal_id=goal_query)
 
+    list_of_tasks = []
+    for task in tasks: 
+        list_of_tasks.append(task.to_dict())
     return {
         "id": goal.id,
         "title": goal.title,
-        "tasks": tasks_response
+        "tasks": list_of_tasks
     }
