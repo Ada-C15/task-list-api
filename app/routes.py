@@ -169,3 +169,53 @@ def one_goal_only(goal_id):
         db.session.delete(goal)
         db.session.commit()
         return make_response ({"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'})
+
+# wave 6 
+@goals_bp.route("/<goal_id>/tasks", methods=["GET", "POST"])
+def one_goal_many_tasks(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal == None:
+        return make_response("",404)
+    # the request body will include task_ids and link them to the goal_id
+    # listed on the path 
+    if request.method == "POST":
+        request_body = request.get_json()
+        for one_task_id in request_body["task_ids"]:
+            task=Task.query.get(one_task_id)
+            task.goal_id = goal.goal_id
+        return make_response({
+            "id":goal.goal_id,
+            "task_ids":request_body["task_ids"]}), 200
+    # elif request.method == "GET":
+    #     return {
+    #         "id": goal.goal_id,
+    #         "title": goal.title,
+    #         "tasks": [
+    #             {
+    #             "id": task.task_id,
+    #             "goal_id": task.goal_id,
+    #             "title": task.title,
+    #             "description": task.description,
+    #             "is_complete": task.completed_at
+    #             }
+    #         ]
+    #     }
+    #     this format needs to combine my two json helper methods
+    #     return make_response({"tasks" : Task.to_json()}), 200
+
+# goal.to_json(), 
+# add the goal id and title using goal.to_json()
+# example of output: 
+# {
+#   "id": 333,
+#   "title": "Build a habit of going outside daily",
+#   "tasks": [
+#     {
+#       "id": 999,
+#       "goal_id": 333,
+#       "title": "Go on my daily walk 🏞",
+#       "description": "Notice something new every day",
+#       "is_complete": false
+#     }
+#   ]
+# }
