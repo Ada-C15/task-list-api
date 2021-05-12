@@ -13,7 +13,7 @@ goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
 @task_bp.route("", methods=["POST"], strict_slashes=False)
 def add_task():
     request_body = request.get_json()
-    if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
+    if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body or request_body =="":
         return jsonify({
         "details": "Invalid data"
         }), 400
@@ -220,7 +220,7 @@ def assign_goal_to_tasks(goal_id):
 def get_tasks_for_one_goal(goal_id):
     goal = Goal.query.get(goal_id)
     if goal:
-        #task_found = Task.query.filter_by(goal.goal_id)
+        #task_found = Task.query.filter_by(goal_id = goal_id)
         tasks = Task.query.all()
         task_response = []
         for task in tasks:
