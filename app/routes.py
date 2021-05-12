@@ -90,9 +90,7 @@ def update_task_with_completion(task_id):
         token = os.environ.get("SLACK_BOT_TOKEN")
         message = {"channel": "task-notifications", "text": "Someone just completed the task " + str(task.title)}
         slackbot_request = requests.post("https://slack.com/api/chat.postMessage", json=message,  headers={"Authorization": token})
-
-
-
+        
     return{"task": updated_task}
 
 
