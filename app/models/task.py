@@ -31,3 +31,11 @@ class Task(db.Model):
         return {
             "task": self.tasks_to_json()
         }
+    
+    @classmethod
+    def make_a_task(cls, request_body): 
+        task = Task(title=request_body["title"],
+                    description=request_body["description"], 
+                    completed_at=request_body["completed_at"])
+        
+        return task
