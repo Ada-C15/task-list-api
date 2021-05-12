@@ -15,3 +15,8 @@ class Goal(db.Model):
     #__tablename__='goal'
     #child_tasks=db.relationship("Task", backref='goal', lazy=True)
 
+    def goal_to_json(self):
+        goal_dict={"id": self.goal_id,
+            "title": self.title}
+        return goal_dict
+

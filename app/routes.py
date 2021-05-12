@@ -78,14 +78,15 @@ def get_task(task_id):
     if task is None:
         return make_response ("",404)
     else:
-        return {
-            "task": {
-                "id": task.task_id,
-                "title": task.title,
-                "description":task.description,
-                "is_complete": task.is_complete()
-            }
-        }, 200
+        return {"task":task.to_json()},200
+        # return {
+        #     "task": {
+        #         "id": task.task_id,
+        #         "title": task.title,
+        #         "description":task.description,
+        #         "is_complete": task.is_complete()
+        #     }
+        # }, 200
 
 @task_bp.route("/<task_id>", methods=["PUT"])
 def put_task(task_id):    
@@ -298,20 +299,50 @@ def post_task_id_to_goal(goal_id):
     request_body=request.get_json() #information passed in given in json
     goal=Goal.query.get(goal_id) #grab my goal from db and bring it back
  
-
+    
     if not goal:
         return make_response("",404)
     else:
         for task_id in request_body["task_ids"]:
             task=Task.query.get(task_id)
-            task.goal_identity=goal_id
+            task.goal_id=goal_id
             db.session.commit()
 
     return {
         "id": goal.goal_id,
         "task_ids": request_body["task_ids"]
     },200
- 
+
+
+@goal_bp.route("/<goal_id>/tasks", methods=["GET"])
+def get_tasks_for_goal(goal_id):
+    #request_body=request.get_json() #information passed in given in json
+    goal=Goal.query.get(goal_id) #grab my goal from db and bring it back
+    task = Task.query.get(goal_id)
+    print(task)
+    
+    if not goal:
+        return make_response("",404)
+    else:
+
+        outer_dict=goal.goal_to_json()
+        if task==None:
+            outer_dict['tasks']=[]
+        else:
+            inner_dict=task.to_json()
+            
+            inner_dict["goal_id"]=goal.goal_id
+            outer_dict['tasks']=[inner_dict]
+        db.session.commit()
+        return outer_dict,200
+        
+# @goal_bp.route("/tasks/<goal_id>", methods=["GET"])
+# def get_task_includes_goal(goal_id):
+#     goal=Goal.query.get(goal_id)
+#     task = Task.query.get(goal_id)
+#     inner_dict=task.to_json()
+#     inner_dict["goal_id"]=goal.goal_id
+#     return {"task":inner_dict},200
     # new_task = Task(title=request_body["title"],
     #                         description=request_body["description"],
     #                         completed_at=request_body["completed_at"])

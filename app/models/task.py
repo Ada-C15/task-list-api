@@ -11,7 +11,7 @@ class Task(db.Model):
     completed_at=db.Column(db.DateTime, nullable=True, default=None)
     
 
-    __tablename__='task'
+   # __tablename__='task'
     goal_id=db.Column(db.Integer,db.ForeignKey('goal.goal_id'), nullable=True)
     goal=db.relationship("Goal",backref=db.backref('tasks'),lazy=True)
     #goal=db.relationship("Goal",back_populates='child_tasks')
@@ -22,3 +22,21 @@ class Task(db.Model):
             return False
         else:
             return True
+    def to_json(self):
+        if self.goal_id == None:
+            task_dict={
+                "id": self.task_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.is_complete()
+            }
+        else:
+           task_dict={
+                "id": self.task_id,
+                "goal_id": self.goal_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.is_complete()
+            } 
+        return task_dict
+    
