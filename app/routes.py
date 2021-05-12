@@ -1,22 +1,16 @@
-from flask import Blueprint 
-from flask import request
-from flask import jsonify 
-from flask import make_response
+from flask import Blueprint, request, jsonify, make_response
 from werkzeug.datastructures import Authorization
 from app.models.task import Task
 from app.models.goal import Goal
 from app import db 
 from datetime import datetime
-import os
-import time
-from slack import WebClient
-import requests, os 
+import requests, os, time 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 
-#wave_1
+#checks wave_1 tests
 @tasks_bp.route("", methods=["POST"])
 def create_tasks():
     request_body = request.get_json()
@@ -39,8 +33,8 @@ def create_tasks():
 @tasks_bp.route("", methods=["GET"])
 def get_all_tasks():
 
+#checks wave_2 tests 
 #sort title by asc and desc order
-#check wave_2 tests
     sort_by_title = request.args.get("sort")
     if sort_by_title == "asc":
         tasks = Task.query.order_by(Task.title.asc())
@@ -86,7 +80,7 @@ def handle_task(task_id):
             })
 
 #wave_3 
-#creating custom endpoints with is_complete: True or False
+#creating custom endpoints with mark_complete: True or False
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"]) #update
 def mark_complete(task_id):
     task = Task.query.get(task_id)
@@ -98,14 +92,15 @@ def mark_complete(task_id):
 
     db.session.commit()
 
-# Slack API - send messages to slack channel from here 
+#wave_4
+#Slack API - sends messages to slack channel / uses message_to_slack helper function
     message_to_slack("#task-notifications", f"Someone just completed the task {task.title}")
 
     return {
         "task": task.to_json()
     }, 200
 
-
+#creating custom endpoints with mark_incomplete: True or False
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"]) #update
 def mark_incomplete(task_id):
     task = Task.query.get(task_id)
@@ -117,21 +112,12 @@ def mark_incomplete(task_id):
     
     db.session.commit()
 
-    # message_to_slack("#task-notifications", f"Someone just completed the task {task.title}")
     return {
         "task": task.to_json()
         }, 200
 
-#wave 4 
-# client = WebClient(token=os.environ["SLACK_API_TOKEN"])
-
-# # wrapper for sending a Slack message
-# def message_to_slack(channel, message):
-#     return client.chat_postMessage(
-#         channel=channel,
-#         text=message
-#     )
-
+#checks wave_4 
+#created a function to send API message to slack 
 def message_to_slack(channel, message):
     token = os.environ["SLACK_API_TOKEN"]
 
@@ -145,8 +131,8 @@ def message_to_slack(channel, message):
 
 
 
-# #wave_5
-# # created second models for goals
+#checks wave_5 tests
+#created second models for goals
 @goals_bp.route("", methods=["POST"])
 def create_goal():
     request_body = request.get_json()
@@ -206,8 +192,8 @@ def handle_goals(goal_id):
             })
 
 
-# Wave 6
-# Establishing a One-to-Many Relationship
+#Wave 6
+#Establishing a One-to-Many Relationship between goals and tasks
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"])
 def create_goals_tasks(goal_id):
     request_body = request.get_json()
@@ -247,15 +233,6 @@ def get_goals_tasks(goal_id):
             "title": goal.title,
             "tasks": list_of_tasks
         }, 200
-
-
-#optional- deployment
-
-
-
-
-#enhancements
-
 
 
 
