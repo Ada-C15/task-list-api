@@ -40,11 +40,6 @@ def handle_goal():
             db.session.add(new_goal)
             db.session.commit()
 
-            # goal_response = {
-            #         "id": new_goal.goal_id,
-            #         "title": new_goal.title
-            #         }
-            # dict_copy = goal_response.copy()
             response = {"goal": new_goal.json_response()}
 
             return jsonify(response), 201
@@ -260,9 +255,7 @@ def mark_complete(task_id):
         #the slack way: this worked!
 
         # client=WebClient(token=os.environ.get("SLACK_AUTHORIZATION_TOKEN"))
-
         # channel_id="C020VA8FNSK"
-
         # result = client.chat_postMessage(channel=channel_id, text=f"Someone just completed the task {task.title}")
 
         SLACK_BOT_TOKEN = os.environ.get("SLACK_AUTHORIZATION_TOKEN")
