@@ -8,7 +8,7 @@ from flask import request, Blueprint, make_response, jsonify
 from dotenv import load_dotenv
 import os
 
-# Loads the SLACKBOT_TOKEN from our .env file so that the os module is able to see it: 
+# Loads the SLACKBOT_TOKEN and TASK_NOTIFICATIONS_CHANNEL_ID from our .env file so that the os module is able to see it: 
 load_dotenv()
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -23,9 +23,8 @@ def slack_post_to_task_notifications_channel(text):
     # Reads the value of the environment variable SLACKBOT_TOKEN and assigns it to "Authorization" key in headers 
     post_headers = {"Authorization": os.environ.get("SLACKBOT_TOKEN")}
     
-    # Note that "channel" value is ID for task-notifications channel
     post_data = {
-        "channel": "C021H4GFNSW",
+        "channel": os.environ.get("TASK_NOTIFICATIONS_CHANNEL_ID"),
         "text": text
     }
 
