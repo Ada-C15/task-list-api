@@ -4,12 +4,11 @@ from .models.task import Task
 from .models.goal import Goal
 from flask import request
 from flask import jsonify, make_response
-from sqlalchemy import asc, desc
+from sqlalchemy import asc, desc 
 # for wave_04 slack bot, import requests
 import requests
 import os
 # for wave_04 slack bot, import this to get slack api connection
-# import os ## don't think I need it here since slack token variable is on init.py
 
 # creating instance of the model, first arg is name of app's module
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -20,19 +19,15 @@ goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
 def create_task():
     try:
         request_body = request.get_json()
-        # using static method from
+        # using static method from Task
         new_task = Task.from_json_to_task(request_body)
-        # new_task = Task(title=request_body["title"],
-        #         description=request_body["description"],
-        #         completed_at = request_body["completed_at"])
-        
         db.session.add(new_task) # "adds model to the db"
         db.session.commit() # commits the action above
         return new_task.to_json_response(), 201
     except KeyError:
         return {"details": "Invalid data"}, 400
 
-#Retrieve all /tasks  asc or desc
+# #Retrieve all /tasks  asc, desc, or id asc
 @task_bp.route("", methods = ["GET"], strict_slashes = False)
 def retrieve_tasks_data():
     tasks = Task.query.all() 
@@ -40,29 +35,30 @@ def retrieve_tasks_data():
     tasks_response = []
 
     if tasks != None: 
-        if sort_by != None and sort_by == "asc":  
-            # this is a list in asc order, .all() comes at the end
+        if sort_by == "asc":  
+            # this is a list (queried by title) in asc order
             tasks_asc = Task.query.order_by(Task.title.asc()).all() 
             # this puts it in the right order for the response body:
-            tasks_response_asc = [task_asc.task_to_json_response() \
+            tasks_response = [task_asc.task_to_json_response() \
                 for task_asc in tasks_asc]
-            return jsonify(tasks_response_asc), 200
 
-        elif sort_by != None and sort_by == "desc":
-            # this is a list in desc order
-            tasks_asc = Task.query.order_by(Task.title.desc()).all() 
-            # this puts it in the right order for the response body:
-            tasks_response_desc = [task_asc.task_to_json_response() \
-                for task_asc in tasks_asc]
-            return jsonify(tasks_response_desc), 200
+        elif sort_by == "desc":
+            # this is a list (queried by title) in desc order
+            tasks_desc = Task.query.order_by(Task.title.desc()).all() 
+            tasks_response = [task_desc.task_to_json_response() \
+                for task_desc in tasks_desc]
+        elif sort_by == "id":
+            # list, queried by id in asc order:
+            tasks_id_asc = Task.query.order_by(Task.id.asc()).all()  
+            tasks_response = [task_id_asc.task_to_json_response() \
+                for task_id_asc in tasks_id_asc]
+        else:
+            tasks_response = [task.task_to_json_response() for task in tasks]
 
-        for task in tasks:
-            tasks_response.append(task.task_to_json_response())
-        return jsonify(tasks_response), 200  # list of all tasks
     return jsonify(tasks_response), 200 ## OR #return tasks_response, 200
 
 # Retrieve one /task/1     
-@task_bp.route("/<task_id>", methods=["GET"])
+@task_bp.route("/<task_id>", methods=["GET"], strict_slashes = False)
 def retrieve_single_task(task_id):
     task = Task.query.get(task_id)
     if task != None:
@@ -73,25 +69,37 @@ def retrieve_single_task(task_id):
         return response, 200
     return make_response('', 404)
 
+# #Update a task
+# @task_bp.route("/<task_id>", methods=["PUT"], strict_slashes = False)  
+# def update_task(task_id):
+#     task = Task.query.get(task_id)
+#     if task: # if successful quering task with given task_id
+#         form_data = request.get_json()  # save user input form_data as json format
+#         task.title = form_data["title"]  # updating instance of model with task_id, first the title 
+#         task.description = form_data["description"] # updating model description field for task = task_id
+#         task.completed_at = form_data["completed_at"]  # and completed at
+#         db.session.commit() # commiting changes to db
+#         return task.to_json_response(), 200
+#     return make_response(""), 404
+
 #Update a task
-@task_bp.route("/<task_id>", methods=["PUT"])  
+@task_bp.route("/<task_id>", methods=["PUT"], strict_slashes = False)  
 def update_task(task_id):
     task = Task.query.get(task_id)
     if task: # if successful quering task with given task_id
-        # save user input form_data as json format
-        form_data = request.get_json()  
-        # updating instance of model with task_id, first the title 
-        task.title = form_data["title"]  
-        # updating model description field for task = task_id
-        task.description = form_data["description"] 
-        # and completed at
-        task.completed_at = form_data["completed_at"] 
+        form_data = request.get_json()  # save user input form_data as json format
+        if "title" in form_data:
+            task.title = form_data["title"]  # updating instance of model with task_id, first the title 
+        if "description" in form_data:
+            task.description = form_data["description"] # updating model description field for task = task_id
+        if "completed_at" in form_data:
+            task.completed_at = form_data["completed_at"]  # and completed at
         db.session.commit() # commiting changes to db
         return task.to_json_response(), 200
     return make_response(""), 404
 
 # Delete a task
-@task_bp.route("/<task_id>", methods=["DELETE"])
+@task_bp.route("/<task_id>", methods=["DELETE"], strict_slashes = False)
 def delete_task(task_id):  
     task = Task.query.get(task_id) 
     if task != None:
@@ -103,7 +111,7 @@ def delete_task(task_id):
 
 # Wave 3 routes
 # Modify part of a task to mark complete
-@task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])  
+@task_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes = False)  
 def patch_task_mark_complete(task_id):
     task = Task.query.get(task_id) ## getting the task by id (its whole body)
     # PATCHing if: arg mark_complete specified # in URL and task id 
@@ -120,15 +128,15 @@ def patch_task_mark_complete(task_id):
     #helper function that posts message to slack
 def call_slack(task):
     # calling slack bot token from .env
-    API_KEY = os.environ.get("SLACK_BOT_TOKEN")
     # API_KEY = os.environ.get("SLACK_BOT_TOKEN") # os.environ.get("SLACK_BOT_TOKEN") from .env with 
+    API_KEY = os.environ.get("SLACK_BOT_TOKEN")
     url = "https://slack.com/api/chat.postMessage"
     slack_str = f"Someone just completed the task {task.title}"
     channel_id = "C0211KC1QSK" # comes from postman body # ID of the channel you want to send the message to
     requests.post(url, data={"token": API_KEY, "channel": channel_id, "text": slack_str})
 
 # Modify part of a task to mark incomplete
-@task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])  
+@task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes = False)  
 def patch_task_mark_incomplete(task_id):
     task = Task.query.get(task_id)
     if task:
@@ -163,7 +171,7 @@ def retrieve_goals_data():
     return jsonify(goals_response), 200 ## OR #return goals_response, 200 
 
 # Retrieve one /goal/1     
-@goal_bp.route("/<goal_id>", methods=["GET"])
+@goal_bp.route("/<goal_id>", methods=["GET"], strict_slashes = False)
 def retrieve_single_goal(goal_id):
     goal = Goal.query.get(goal_id)
     if goal != None:
@@ -182,7 +190,7 @@ def delete_goal(goal_id):
     return make_response(""), 404
 
 # Update a goal
-@goal_bp.route("/<goal_id>", methods=["PUT"])  
+@goal_bp.route("/<goal_id>", methods=["PUT"], strict_slashes = False)  
 def update_goal(goal_id):
     goal = Goal.query.get(goal_id)
     if goal: # successful updating goal
@@ -194,7 +202,7 @@ def update_goal(goal_id):
 
 
 # ONE TO MANY RELATIONSHIP - /goals/<goal_id>/tasks - routes
-@goal_bp.route("/<goal_id>/tasks", methods = ["POST"])
+@goal_bp.route("/<goal_id>/tasks", methods = ["POST"], strict_slashes = False)
 def post_task_ids_to_goal(goal_id):
     try: 
         request_body = request.get_json()  
@@ -212,7 +220,7 @@ def post_task_ids_to_goal(goal_id):
     except:
         return make_response(""), 404 ## not found
 
-@goal_bp.route("/<goal_id>/tasks", methods = ["GET"])
+@goal_bp.route("/<goal_id>/tasks", methods = ["GET"], strict_slashes = False)
 def getting_tasks_of_one_goal(goal_id):
     goal = Goal.query.get(goal_id) 
     if goal: 
