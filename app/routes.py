@@ -148,10 +148,7 @@ def post_new_goal():
     db.session.commit()
 
     response = {
-        "goal": {
-            "id": new_goal.goal_id,
-            "title": new_goal.title
-        }
+        "goal": new_goal.to_json()
     }
 
     return make_response(jsonify(response), 201)
