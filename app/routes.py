@@ -69,7 +69,7 @@ def update_task(task_id):
     else:
         form_data = request.get_json()
         task.title = form_data["title"]
-        task.description = form_data['description']
+        task.description = form_data["description"]
         task.completed_at = form_data["completed_at"]
         db.session.commit()
     return jsonify({"task": task.to_json()}), 200
