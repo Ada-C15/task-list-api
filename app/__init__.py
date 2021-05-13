@@ -25,7 +25,7 @@ def create_app(test_config=None):
 
     db.init_app(app)
     migrate.init_app(app, db)
-    # Import models here for Alembic setup
+    # Import models here for Alembic setup.  why exactly are they necessary?
     from app.models.task import Task
     from app.models.goal import Goal
     from .routes import tasks_bp, goals_bp
