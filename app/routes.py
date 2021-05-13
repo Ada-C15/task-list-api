@@ -19,9 +19,7 @@ def get_tasks():
         tasks = Task.query.order_by(desc(Task.title))
     else:
         tasks = Task.query.all()
-    tasks_response = []
-    for task in tasks:
-        tasks_response.append(task.to_dict())
+    tasks_response = [task.to_dict() for task in tasks]
     return make_response(jsonify(tasks_response), 200)
 
 @tasks_bp.route("", methods=["POST"])
@@ -100,9 +98,7 @@ def send_slack_message(task_title):
 @goals_bp.route("", methods=["GET"])
 def get_goals():
     goals = Goal.query.all()
-    goals_response = []
-    for goal in goals:
-        goals_response.append(goal.to_dict())
+    goals_response = [goal.to_dict() for goal in goals]
     return make_response(jsonify(goals_response), 200)
 
 @goals_bp.route("", methods=["POST"])
@@ -158,11 +154,9 @@ def assign_tasks_to_goal(goal_id):
 def get_tasks_of_one_goal(goal_id):
     goal = Goal.query.get(goal_id)
     if goal:
-        tasks_response = []
         tasks_of_goal = Task.query.filter_by(goal_id=goal_id)
         if tasks_of_goal:
-            for task in tasks_of_goal:
-                tasks_response.append(task.to_dict())
+            tasks_response = [task.to_dict() for task in tasks_of_goal]
         return make_response({
             "id": int(goal_id),
             "title": goal.title,
