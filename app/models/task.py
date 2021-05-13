@@ -8,7 +8,7 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
-    goaltask_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'))
+    goaltask_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True)
 
     # creates a dictionary of key-value pairs describing the given task
     def to_json(self):

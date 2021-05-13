@@ -261,3 +261,29 @@ def delete_goal(goal_id):
         return {
             "details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'
         }
+# wave 6
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def post_goal_tasks(goal_id):
+    # gets the passed in information and gives it in json format
+    request_body = request.get_json()
+    # gets the goal that is associated with the given goal_id
+    goal = Goal.query.get(goal_id)
+
+    # if no goal with the provided goal_id, returns a 404 error
+    if not goal:
+        return make_response("", 404)
+    else:
+        # iterates through the values for the "task_id" keys in request_body
+        for task_id in request_body["task_ids"]:
+            # in each iteration, gets the task that corresponds to the current task_id
+            task = Task.query.get(task_id)
+            # sets the value in the goaltask_id foreignkey column (in task table) to the corresponding goal_id
+            task.goaltask_id = goal_id
+            # commits the addition to the table to the database
+            db.session.commit()
+    # when a POST request is sent, return this in the response body
+    return {
+        "id": goal.goal_id,
+        "task_ids": request_body["task_ids"]
+    }
+
