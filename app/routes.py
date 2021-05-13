@@ -8,6 +8,17 @@ import os, requests
 tasks_bp = Blueprint("task", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goal", __name__, url_prefix="/goals")
 
+#################### SLACK NOTIFICATIONS #################### 
+
+SLACK_TOKEN = os.environ.get('SLACK_TOKEN')
+CHANNEL_ID = os.environ.get('CHANNEL_ID')
+URL = 'https://slack.com/api/chat.postMessage'
+
+def send_notification_to_slack(msg):
+    headers = {"Authorization": f'Bearer {SLACK_TOKEN}'}
+    data = {"channel": CHANNEL_ID,"text": msg}
+    return requests.post(URL, headers=headers, data=data)
+
 ######################## TASK ROUTES ######################## 
 
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
@@ -20,7 +31,7 @@ def create_task():
                     completed_at=request_body["completed_at"])  
     db.session.add(new_task)
     db.session.commit()
-    send_new_task_notification()
+    send_notification_to_slack(f"New task created!")
     return jsonify(task=new_task.to_json()), 201
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
@@ -45,7 +56,7 @@ def update_task(task_id):
     task.description = updated_task["description"]
     task.completed_at = updated_task["completed_at"]
     db.session.commit()
-    send_updated_notification(task_id)
+    send_notification_to_slack(f"Task {task_id} updated.")
     return jsonify(task=task.to_json())
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
@@ -53,17 +64,17 @@ def delete_task(task_id):
     task = Task.query.get_or_404(task_id)
     db.session.delete(task)
     db.session.commit()
-    send_deleted_notification(task_id)
+    send_notification_to_slack(f"Task {task_id} deleted.")
     return jsonify(details = f'Task {task.task_id} "{task.title}" successfully deleted')
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def mark_incomplete(task_id):
-    send_undone_notification(task_id)
+    send_notification_to_slack(f"Task {task_id} undone.")
     return mark_task(task_id, False) 
 
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
 def mark_complete(task_id):
-    send_completed_notification(task_id)
+    send_notification_to_slack(f"Task {task_id} completed!")
     return mark_task(task_id, True)
 
 def mark_task(task_id, completed):
@@ -134,31 +145,3 @@ def get_task_for_specific_goal(goal_id):
     tasks_in_goal = [task.to_json() for task in tasks if tasks]
     return jsonify(id=int(goal_id), title=goal.title, tasks=tasks_in_goal)
 
-#################### SLACK NOTIFICATIONS #################### 
-
-SLACK_TOKEN = os.environ.get('SLACK_TOKEN')
-CHANNEL_ID = os.environ.get('CHANNEL_ID')
-URL = 'https://slack.com/api/chat.postMessage'
-
-headers = {"Authorization": f'Bearer {SLACK_TOKEN}'}
-data = {"channel": CHANNEL_ID,"text": None}
-
-def send_new_task_notification():
-    data["text"] = f"New task created!"
-    return requests.post(URL, headers=headers, data=data)
-
-def send_updated_notification(task_id):
-    data["text"] = f"Task {task_id} updated."
-    return requests.post(URL, headers=headers, data=data)
-    
-def send_completed_notification(task_id):
-    data["text"] = f"Task {task_id} completed!"
-    return requests.post(URL, headers=headers, data=data)
-
-def send_undone_notification(task_id):
-    data["text"] = f"Task {task_id} undone."
-    return requests.post(URL, headers=headers, data=data)
-
-def send_deleted_notification(task_id):
-    data["text"] = f"Task {task_id} deleted."
-    return requests.post(URL, headers=headers, data=data)
