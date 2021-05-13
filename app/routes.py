@@ -198,7 +198,7 @@ def glados(ongoing_task):
 
     channel = "task-notifications"
 
-    text = f"A human has just completed the task {ongoing_task.title}.\n Fantastic! You remained resolute and resourceful in an atmosphere of extreme pessimism."
+    text = f"A human has just completed the task '{ongoing_task.title}'.\n Fantastic! You remained resolute and resourceful in an atmosphere of extreme pessimism."
 
     body = {
         "token": glados_first_msgs,
