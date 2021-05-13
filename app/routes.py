@@ -11,38 +11,38 @@ import requests
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
+@tasks_bp.route("", methods=["GET"])
+def get_tasks():
+    sort_query = request.args.get("sort")
+    if sort_query == "desc":
+        tasks = Task.query.order_by((Task.title.desc()))
+    elif sort_query == "asc":
+        tasks = Task.query.order_by(Task.title)
+    else:
+        tasks = Task.query.all()
 
-@tasks_bp.route("", methods=["GET", "POST"])
-def handle_tasks():
-    if request.method == "GET":
-        sort_query = request.args.get("sort")
-        if sort_query == "desc":
-            tasks = Task.query.order_by((Task.title.desc()))
-        elif sort_query == "asc":
-            tasks = Task.query.order_by(Task.title)
-        else:
-            tasks = Task.query.all()
+    tasks_response = []
+    for task in tasks:
+        tasks_response.append(task.task_dict())
+    return jsonify(tasks_response)
 
-        tasks_response = []
-        for task in tasks:
-            tasks_response.append(task.task_dict())
-        return jsonify(tasks_response)
-
-    elif request.method == "POST":
-        form_data = request.get_json()
-
-        if "title" not in form_data\
+@tasks_bp.route("", methods=["POST"])
+def post_task():
+    form_data = request.get_json()
+    if "title" not in form_data\
             or "description" not in form_data\
                 or "completed_at" not in form_data:
-            return({"details":"Invalid data"}, 400)
+        return({"details":"Invalid data"}, 400)
 
-        new_task = Task(title=form_data["title"],
+    new_task = Task(title=form_data["title"],
                     description=form_data["description"],
                     completed_at=form_data["completed_at"])
 
-        db.session.add(new_task)
-        db.session.commit()
-        return {"task":new_task.task_dict()}, 201
+    db.session.add(new_task)
+    db.session.commit()
+    return {"task":new_task.task_dict()}, 201
+
+
 
 
 @tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
