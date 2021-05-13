@@ -119,16 +119,15 @@ def mark_incomplete(task_id):
 #checks wave_4 
 #created a function to send API message to slack 
 def message_to_slack(channel, message):
-    token = os.environ["SLACK_API_TOKEN"]
+    token = os.environ["SLACK_API_TOKEN"] #SLACK_API_TOKEN from .env file 
 
     return requests.post('https://slack.com/api/chat.postMessage', headers = {
-        "Authorization": f"Bearer {token}"
+        "Authorization": f"Bearer #{token}"
     },
     data = { 
         "channel": channel,
         "text": message
     })
-
 
 
 #checks wave_5 tests
