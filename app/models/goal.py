@@ -5,6 +5,7 @@ from app import db
 class Goal(db.Model):
     goal_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
+    tasks = db.relationship('Task', backref='goal', lazy=True)
 
     # should this have a different name than the similar function in the Task class?
     def to_dict(self):

@@ -82,6 +82,7 @@ def handle_task_completion(task_id, mark_status):
 
 
 #WAVE 4 -- for organization sake should this go somewhere else?
+# consider moving to a "utilities" folder 
 PATH = "https://slack.com/api/chat.postMessage"
 
 #define a function that sends a slack message 
@@ -94,9 +95,7 @@ def send_slack_message(task_title):
     header = {
         "Authorization": f"Bearer {slackbot_token}"
     }
-    # why use .POST and not .PATCH
     requests.post(PATH, params=query_params, headers=header)
-
 
 #WAVE 5 
 @goals_bp.route("", methods=["GET", "POST"])
@@ -135,3 +134,34 @@ def handle_goal(goal_id):
             return make_response({"details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"}, 200)
     else:
         return make_response("", 404)
+
+
+# WAVE 06
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"])
+def assign_tasks_to_goal(goal_id):
+    request_body = request.get_json()
+    tasks_for_goal = request_body["task_ids"]
+    for task_id in tasks_for_goal:
+        task = Task.query.get(task_id)
+        task.goal_id = int(goal_id)
+    return make_response({
+        "id": int(goal_id),
+        "task_ids": tasks_for_goal
+    }, 200)
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
+def get_tasks_of_one_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if not Goal.query.get(goal_id):
+        return make_response("404"), 404
+    else:
+        tasks_response = []
+        tasks_of_goal = Task.query.filter_by(goal_id=goal_id)
+        if tasks_of_goal:
+            for task in tasks_of_goal:
+                tasks_response.append(task.to_dict())
+        return make_response({
+            "id": int(goal_id),
+            "title": goal.title,
+            "tasks": tasks_response
+            }, 200)
