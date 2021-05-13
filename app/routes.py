@@ -4,7 +4,7 @@ from app.models.goal import Goal
 from flask import Blueprint, jsonify, request, make_response
 from datetime import datetime
 import os
-import slack
+import requests
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
@@ -66,9 +66,6 @@ def create_goal():
 @goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
 def get_one_goal(goal_id):
     goal = Goal.query.get_or_404(goal_id)
-    
-    if goal == None:
-        return make_response("", 404)
 
     return {
         "goal": goal.to_json()}, 200
@@ -132,11 +129,10 @@ def get_one_task(task_id):
     return {
         "task": task.to_json()}, 200
         
-
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_task():
     request_body = request.get_json()
-    
+
     try:
         new_task = Task(title=request_body["title"],
                         description=request_body["description"],
@@ -158,7 +154,7 @@ def create_task():
 def update_task(task_id):
     task = Task.query.get_or_404(task_id)
     form_data = request.get_json()
-    
+
     task.title = form_data["title"]
     task.description = form_data["description"]
     task.is_complete = form_data["completed_at"]
@@ -189,10 +185,11 @@ def task_mark_complete(task_id):
     
     db.session.commit()
 
-    client = slack.WebClient(os.environ["SLACK_TOKEN"])
-    client.chat_postMessage(
-            channel="task-notifications",
-            text=f"Someone just completed the task {task.title}")
+    response = requests.get('https://slack.com/api/chat.postMessage',\
+            params={
+            "channel": "task-notifications",
+            "text": f"Someone just completed the task {task.title}"},
+            headers={'Authorization': os.environ["SLACK_TOKEN"]})
             
     return {
         "task": task.to_json()
