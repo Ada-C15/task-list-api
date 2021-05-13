@@ -188,25 +188,51 @@ def create_goals():
         "goal": goal.json_response()
     }, 201
 
-@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
-def read_by_id(goal_id):
-    goal = Task.query.get(goal_id)
+@goals_bp.route("/<goal_id>/tasks", methods=["GET", "POST"])
+def handle_goal_tasks(goal_id):
+
+    goal = Goal.query.get(goal_id)
 
     if goal == None:
-        return("", 404)
+        return ("", 404)
     
     else:
-        tasks = Task.query.filter_by(goal_id=goal.id)
-        response_body = []
-        for task in tasks:
-            response_body.append(task.to_json())
-            return jsonify(response_body), 200
         
+        request_body = request.get_json()
+        if request.method == "GET":
+            task_list = []
+            tasks = Task.query.join(Goal).filter('goal_id')
+            task_list.append(tasks)
 
+            for task in task_list:
+                return {
+                    "task": {
+                    "id": task.task_id,
+                    "goal_id": goal.goal_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": False if task.completed_at is None else True
+            }
+        }
+            # loop through list to turn each result into dictionary
+        
+        elif request.method == "POST":
+            task_list = request_body["task_ids"]
 
+            for id in task_list:
+        
+                task = Task.query.get(id)
+                goal.tasks.append(task)
+
+            db.session.commit()
+
+            return {
+                "id": goal.goal_id,
+                "task_ids": task_list
+            }   
+
+            
 
     
-
-
 
 
