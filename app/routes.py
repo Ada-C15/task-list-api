@@ -60,7 +60,10 @@ def handle_task(task_id):
         return make_response("", 404)
 
     if request.method == "GET":
-        return jsonify({"task": task.to_dict()}), 200
+        if task.goal_id is None:
+            return jsonify({"task": task.to_dict()}), 200
+        else:
+            return jsonify({"task": task.with_goal()}), 200
 
     elif request.method == "PUT":
         form_data = request.get_json()
@@ -171,3 +174,38 @@ def handle_goal(goal_id):
         goal_response = {
             "details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}
         return make_response(goal_response), 200
+
+
+# WAVE 6
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def sending_list_tasks_to_goal(goal_id):
+    # from request
+    request_body = request.get_json()
+    # task ids from the request body
+    # for each task id, attach it to the same goal id (in url)
+    # <goal_id>
+    # query based on task id
+    tasks = request_body["task_ids"]
+    # database
+    goal = Goal.query.get(goal_id)
+    for task_id in tasks:
+        task_db_object = Task.query.get(task_id)
+        goal.tasks.append(task_db_object)
+        # task_db_object.goal_id = int(goal_id)
+        db.session.commit()
+    return {"id": goal.goal_id,
+            "task_ids": tasks}, 200
+
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def getting_tasks_of_one_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
+    tasks = Task.query.join(Goal).filter(Task.goal_id == goal_id).all()
+
+    tasks_response = []
+    for task in tasks:
+        tasks_response.append(task.with_goal())
+
+    return{"id": goal.goal_id, "title": goal.title, "tasks": tasks_response}, 200
