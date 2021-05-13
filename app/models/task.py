@@ -13,10 +13,7 @@ class Task(db.Model):
         nullable=True)
 
     def is_complete(self):
-        if self.completed_at is None:
-            return False
-        else:
-            return True
+        return bool(self.completed_at)
 
     def to_json(self):
         """Converts a Task instance into JSON"""
