@@ -100,9 +100,9 @@ def view_goal(goal_id):
 
 @goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
 def update_goal(goal_id):
-    goal = Goal.query.get(goal_id)
+    goal = Goal.query.get_or_404(goal_id)
     updated_goal = request.get_json()
-    if not goal or not updated_goal:
+    if not updated_goal:
         return jsonify(None), 404
     goal.title = updated_goal["title"]
     db.session.commit()
