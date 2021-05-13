@@ -97,13 +97,13 @@ def handle_single_task(task_id):
 
     task = Task.query.get_or_404(task_id)
     
-    # if task.goal_id:
-    #     reutrn jsonify({"task": {
-    #     "id": task.task_id,
-    #     "goal_id": task.goal_id
-    #     "title": task.title,
-    #     "description": task.description,
-    #     "is_complete": is_complete_function(task.completed_at)}}), 200
+    if task.goal_id:
+        return jsonify({"task": {
+        "id": task.task_id,
+        "goal_id": task.goal_id,
+        "title": task.title,
+        "description": task.description,
+        "is_complete": is_complete_function(task.completed_at)}}), 200
 
     return jsonify({"task": {
         "id": task.task_id,
@@ -245,18 +245,18 @@ def delete_single_goal(goal_id):
 def handle_goals_tasks(goal_id):
     request_body = request.get_json()
     
-    goal = Goal.query.get(goal_id)
+    goal = Goal.query.get_or_404(goal_id)
 
     tasks = request_body["task_ids"]
 
     for task in tasks:
         task_to_update = Task.query.get(task) 
-        goal.tasks.append(task_to_update)
+        task_to_update.goal_id = goal_id
 
     db.session.commit()
 
-    return make_response({"id": goal.goal_id,
-        "task_ids": tasks}, 200)
+    return jsonify({"id": goal.goal_id,
+        "task_ids": tasks}), 200
 
 
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
