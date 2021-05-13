@@ -30,9 +30,7 @@ def handle_tasks():
         else:
             tasks = Task.query.all()
 
-        tasks_response = []
-        for task in tasks:
-            tasks_response.append(task.to_dict())
+        tasks_response = [task.to_dict() for task in tasks]
 
         return jsonify(tasks_response)
 
@@ -121,12 +119,7 @@ def handle_goals():
         else:
             goals = Goal.query.all()
 
-        goals_response = []
-        for goal in goals:
-            goals_response.append({
-                "id" : goal.goal_id,
-                "title" : goal.title,
-            })
+        goals_response = [goal.to_dict() for goal in goals]
 
         return jsonify(goals_response)
 
@@ -174,9 +167,7 @@ def handle_tasks_under_goal(active_id):
         dict_response = goal.to_dict()
 
         matching_tasks = Task.query.filter_by(goal_id=active_id)
-        task_list = []
-        for task in matching_tasks:
-            task_list.append(task.to_dict())
+        task_list = [task.to_dict() for task in matching_tasks]
         dict_response["tasks"] = task_list
 
         return dict_response
