@@ -117,6 +117,6 @@ def get_tasks(goal_id):
 
     tasks = []
     for task in goal.tasks:
-        tasks.append(task.to_json_with_goal_id())
+        tasks.append(task.to_json())
 
     return goal.to_json_with_tasks(tasks), 200
