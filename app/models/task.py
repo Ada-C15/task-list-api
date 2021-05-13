@@ -39,7 +39,7 @@ class Task(db.Model):
                     description=json["description"], 
                     completed_at=json["completed_at"])
     
-    def db_to_json(self): 
+    def to_json_for_db(self): 
         to_json = {
                 "task_id": self.task_id,
                 "title": self.title,
