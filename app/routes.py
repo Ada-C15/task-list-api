@@ -71,11 +71,8 @@ def handle_tasks_post():
 
     new_task = Task()
     new_task = new_task.from_json(request_body)
-
     db.session.add(new_task)
     db.session.commit()
-
-    # todo: retrieve committed task to the db, not the one with id 1
     retrieve_task = Task.query.get(new_task.task_id)
 
     return {"task": retrieve_task.to_json()}, 201
@@ -104,24 +101,19 @@ def handle_one_task_update(task_id):
     """
     task = Task.query.get(task_id)
 
-    if task is None:  # task not found
+    if task is None:
         return jsonify(None), 404
 
     data_to_update_with = request.get_json()
     task = task.from_json(data_to_update_with)
-
     db.session.commit()
-
     retrieve_task = Task.query.get(task.task_id)
-
     return ({"task": retrieve_task.to_json()}, 200)
 
 
 def slack_send_message():
     path = "https://slack.com/api/chat.postMessage"
     auth = f'Bearer {os.environ.get("SLACK_BOT_TOKEN")}'
-
-    print(auth)
 
     query_params = {
         "channel": "task-notifications",
@@ -135,8 +127,6 @@ def slack_send_message():
     slask_request = requests.post(path,
                                   params=query_params,
                                   headers=headers)
-    print(slask_request)
-    # print(slask_request.json())
     return slask_request
 
 
@@ -145,8 +135,6 @@ def handle_one_task_complete_patch(task_id):
     """
     Mark Complete on an Incompleted Task
     """
-    # if True:
-    #     slack_message()
 
     task = Task.query.get(task_id)
 
@@ -155,12 +143,9 @@ def handle_one_task_complete_patch(task_id):
 
     task.completed_at = datetime.utcnow()
     db.session.commit()
-
     retrieve_task = Task.query.get(task.task_id)
-
     message = f"Someone just completed the task '{retrieve_task.title}'."
     slack_message(message)
-
     return ({"task": retrieve_task.to_json()}, 200)
 
 
@@ -239,7 +224,6 @@ def handle_one_goal_delete(goal_id):
 
     db.session.delete(goal)
     db.session.commit()
-
     return ({"details": f'Goal {goal_id} \"{goal.title}\" successfully deleted'}, 200)
 
 
@@ -256,11 +240,8 @@ def handle_one_goal_update(goal_id):
 
     data_to_update_with = request.get_json()
     goal.title = data_to_update_with["title"]
-
     db.session.commit()
-
     retrieve_goal = Goal.query.get(goal.goal_id)
-
     return ({"goal": retrieve_goal.to_json()}, 200)
 
 
@@ -283,11 +264,10 @@ def handle_one_goal_many_tasks_get(goal_id):
 
     for task_id in tasks_ids_to_belong:
         task = Task.query.get(task_id)
-        task.goal_id = int(goal_id)
+        task.goal_id = goal.goal_id
         db.session.commit()
 
     response_body = goal.to_json()
-
     return (response_body, 200)
 
 
@@ -305,7 +285,7 @@ def handle_tasks_of_goal_get(goal_id):
     tasks_list = [task.to_json() for task in tasks]
 
     response_body = {
-        "id": int(goal_id),
+        "id": goal.goal_id,
         "title": goal.title,
         "tasks": tasks_list
     }
