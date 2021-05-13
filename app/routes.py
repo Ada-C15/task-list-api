@@ -51,32 +51,43 @@ def task_index():
 
 
 # WAVE 1
-@tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
-def handle_task(task_id):
+@tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
+def get_one_task(task_id):
     task = Task.query.get(task_id)
     if task is None:
         return make_response("", 404)
 # thank you audrey!
-    if request.method == "GET":
-        if task.goal_id is None:
-            return jsonify({"task": task.to_dict()}), 200
-        else:
-            return jsonify({"task": task.with_goal()}), 200
+    elif task.goal_id is None:
+        return jsonify({"task": task.to_dict()}), 200
+    else:
+        return jsonify({"task": task.with_goal()}), 200
 
-    elif request.method == "PUT":
+
+@tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
+def update_task(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return make_response("", 404)
+    else:
         form_data = request.get_json()
         task.title = form_data["title"]
         task.description = form_data['description']
         task.completed_at = form_data["completed_at"]
         db.session.commit()
-        return jsonify({"task": task.to_dict()}), 200
+    return jsonify({"task": task.to_dict()}), 200
 
-    elif request.method == "DELETE":
+
+@tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
+def delete_task(task_id):
+    task = Task.query.get(task_id)
+    if task is None:
+        return make_response("", 404)
+    else:
         db.session.delete(task)
         db.session.commit()
         task_response = {
             "details": f'Task {task.task_id} "{task.title}" successfully deleted'}
-        return make_response(task_response), 200
+    return make_response(task_response), 200
 
 
 # WAVE 3
@@ -150,27 +161,37 @@ def goal_index():
     return make_response(jsonify(goals_response), 200)
 
 
-@goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
-def handle_goal(goal_id):
+@goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
+def get_one_goal(goal_id):
     goal = Goal.query.get(goal_id)
     if goal is None:
         return make_response("", 404)
+    return jsonify({"goal": goal.to_dict()}), 200
 
-    if request.method == "GET":
-        return jsonify({"goal": goal.to_dict()}), 200
 
-    elif request.method == "PUT":
+@goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
+def update_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
+    else:
         form_data = request.get_json()
         goal.title = form_data["title"]
         db.session.commit()
-        return jsonify({"goal": goal.to_dict()}), 200
+    return jsonify({"goal": goal.to_dict()}), 200
 
-    elif request.method == "DELETE":
+
+@goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)
+def delete_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
+    else:
         db.session.delete(goal)
         db.session.commit()
         goal_response = {
             "details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}
-        return make_response(goal_response), 200
+    return make_response(goal_response), 200
 
 
 # WAVE 6
