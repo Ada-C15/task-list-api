@@ -10,14 +10,41 @@ import slack
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-@goals_bp.route("/goals/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
-def assign_tasks_to_one_goal(goal_id, task_ids):
-    pass
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def assign_tasks_to_one_goal(goal_id):
+    request_body = request.get_json()
 
-@goals_bp.route("/goals/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+    goal = Goal.query.get(goal_id)
+
+    task_ids = request_body["task_ids"]
+
+    for task_id in task_ids:
+        task = Task.query.get(task_id)
+        goal.tasks.append(task)
+        
+    db.session.commit()
+
+    return make_response({
+        "id": goal.goal_id,   
+        "task_ids": task_ids     
+    }, 200)
+
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 def get_tasks_from_goal_id(goal_id):
-    pass
+    goal = Goal.query.get_or_404(goal_id)
+    tasks = goal.tasks
 
+    tasks_response = []
+
+    for task in tasks:
+        tasks_response.append(task.to_json())
+    
+    goal_response = goal.to_json()
+    goal_response["tasks"] = tasks_response
+
+    return goal_response, 200
+0
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
 def create_goal():
     request_body = request.get_json()
@@ -39,6 +66,7 @@ def create_goal():
 
 @goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
 def get_one_goal(goal_id):
+    # get or 404 method???
     goal = Goal.query.get(goal_id)
     
     if goal == None:
@@ -194,11 +222,9 @@ def task_mark_complete(task_id):
         
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def task_mark_incomplete(task_id):
-    task = Task.query.get(task_id)
+    task = Task.query.get_or_404(task_id)
 
-    if not task:
-        return make_response("", 404)
-    elif task.completed_at != None:
+    if task.completed_at != None:
         task.completed_at = None
 
     db.session.commit()

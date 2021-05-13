@@ -6,8 +6,8 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
-    __tablename__ = "tasks"
     goal_id = db.Column(db.Integer, db.ForeignKey("goals.goal_id"), nullable=True)
+    __tablename__ = "tasks"
 
     def to_json(self):
         is_complete = self.completed_at
@@ -15,10 +15,17 @@ class Task(db.Model):
             is_complete = False
         else:
             is_complete = True
-            
+        if self.goal_id != None:    
+            return {
+                    "id": self.task_id,
+                    "title": self.title,
+                    "description": self.description,
+                    "is_complete": is_complete,
+                    "goal_id": self.goal_id
+                }
         return {
-                "id": self.task_id,
-                "title": self.title,
-                "description": self.description,
-                "is_complete": is_complete
-            }
+                    "id": self.task_id,
+                    "title": self.title,
+                    "description": self.description,
+                    "is_complete": is_complete
+        }

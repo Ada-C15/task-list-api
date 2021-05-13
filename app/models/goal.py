@@ -4,12 +4,19 @@ from app import db
 
 class Goal(db.Model):
     goal_id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String)
+    title = db.Column(db.Text)
+    tasks = db.relationship("Task", backref="goals", lazy=True)
     __tablename__ = "goals"
-    child = db.relationship("Task", lazy=True)
-
+    
     def to_json(self):
-        return {
+        if self.tasks != []:
+            return {
                 "id": self.goal_id,
                 "title": self.title,
+                "tasks": self.tasks
             }
+        else:
+            return {
+                    "id": self.goal_id,
+                    "title": self.title,
+                }
