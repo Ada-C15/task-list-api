@@ -69,6 +69,18 @@ def completed_task(app):
 # references "one_goal"
 # This fixture creates a goal and saves it in the database
 @pytest.fixture
+def three_goals(app):
+    db.session.add_all([
+        Goal(
+            title="Water the garden 🌷"),
+        Goal(
+            title="Answer forgotten email 📧"),
+        Goal(
+            title="Pay my outstanding tickets 😭")
+    ])
+    db.session.commit()
+
+@pytest.fixture
 def one_goal(app):
     new_goal = Goal(title="Build a habit of going outside daily")
     db.session.add(new_goal)
