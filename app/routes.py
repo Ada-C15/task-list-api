@@ -8,6 +8,7 @@ import os
 import requests
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 # come back and refactor into task_index & independent POST function
 @tasks_bp.route("", methods=["GET","POST"], strict_slashes=False)
