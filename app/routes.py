@@ -66,7 +66,6 @@ def create_task():
         request_body["completed_at"] == None
     except KeyError:
         return jsonify({"details": "Invalid data"}), 400 
- 
 
     new_task = Task(title = request_body["title"], \
         description = request_body["description"], \
