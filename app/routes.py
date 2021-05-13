@@ -160,7 +160,7 @@ def goals_and_tasks(goal_id):
 
 
     db.session.commit()
-    return make_response({"id": int(goal_id), "task_ids": request_body["task_ids"]}), 200
+    return make_response({"id": goal.goal_id, "task_ids": request_body["task_ids"]}), 200
 
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"])
 def get_goals(goal_id):
@@ -168,17 +168,18 @@ def get_goals(goal_id):
     #if no goal, 404
     if goal is None:
         return make_response("", 404)
-    #else, goal_id is assign to a variable
-    #get by filter, goal_id, - tasks and save to varible
+
     tasks = Task.query.filter_by(goal_id=goal_id)
-    #for no matching tasks, make a varible w empty list
     task_list = []
-    #use for loop to go over tasks, apend those tasks to list
     for task in tasks:
         task_list.append(task.return_task_json())
+
+    return make_response({"id": goal.goal_id, "title": goal.title, "tasks": task_list }, 200)
+
+    #else, goal_id is assign to a variable
+    #get by filter, goal_id, - tasks and save to varible
+    #for no matching tasks, make a varible w empty list
+    #use for loop to go over tasks, apend those tasks to list
     #make use of task helper function to append to empty list
-    return make_response({"id": int(goal_id), "title": goal.title, "tasks": task_list }, 200)
-
-
 
 
