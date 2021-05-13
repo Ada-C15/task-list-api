@@ -159,7 +159,22 @@ def post_new_goal():
 
 @goals_bp.route("", methods=['GET'])
 def get_goals():
-    goals = Goal.query.all()
+    sort_query = request.args.get("sort")
+    sort_by_id_query = request.args.get("sort_by_id")
+    filter_by_title_query = request.args.get("filter_by_title")
+
+    if sort_query == "asc":
+        goals = Goal.query.order_by("title")
+    elif sort_query == "desc":
+        goals = Goal.query.order_by(desc("title"))
+    elif sort_by_id_query == "asc":
+        goals = Goal.query.order_by("goal_id")
+    elif sort_by_id_query == "desc":
+        goals = Goal.query.order_by(desc("goal_id"))
+    elif filter_by_title_query:
+        goals = Goal.query.filter_by(title=filter_by_title_query)
+    else:
+        goals = Goal.query.all()
 
     return jsonify([goal.to_json() for goal in goals])
 
