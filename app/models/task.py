@@ -1,6 +1,4 @@
-from flask import current_app
 from app import db
-from flask import jsonify
 
 class Task(db.Model):
     task_id = db.Column(db.Integer, primary_key=True)
