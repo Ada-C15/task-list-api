@@ -7,7 +7,6 @@ class Goal(db.Model):
     title = db.Column(db.String)
     tasks = db.relationship('Task', backref='goal', lazy=True)
 
-    # should this have a different name than the similar function in the Task class?
     def to_dict(self):
         return {
             "id": self.goal_id, 

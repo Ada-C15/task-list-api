@@ -4,8 +4,6 @@ from app.models.task import Task
 from app.models.goal import Goal
 from sqlalchemy import desc, asc 
 from datetime import datetime
-
-#why don't I need to say from ... import ... here???
 import requests
 import os
 
@@ -14,7 +12,6 @@ goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 @tasks_bp.route("", methods=["GET", "POST"])
 def handle_tasks():
-
     if request.method == "GET":
         order_query = request.args.get("sort")
         if order_query == "asc":
@@ -27,7 +24,6 @@ def handle_tasks():
         for task in tasks:
             tasks_response.append(task.to_dict())
         return make_response(jsonify(tasks_response), 200)
-
     else: 
         request_body = request.get_json()
         if "title" in request_body and "description" in request_body and "completed_at" in request_body:
@@ -40,14 +36,12 @@ def handle_tasks():
         else:
             return make_response({"details": "Invalid data"}, 400)
 
-
 @tasks_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"])
 def handle_task(task_id):
     task = Task.query.get(task_id)
     if task:
         if request.method == "GET":
             return {"task": task.to_dict()}, 200
-
         elif request.method == "PUT":
             form_data = request.get_json()
             task.title = form_data["title"]
@@ -55,7 +49,6 @@ def handle_task(task_id):
             task.completed_at = form_data["completed_at"]
             db.session.commit()
             return make_response({"task": task.to_dict()}, 200)
-        
         elif request.method == "DELETE":
             db.session.delete(task)
             db.session.commit()
@@ -74,18 +67,16 @@ def handle_task_completion(task_id, mark_status):
         elif mark_status == "mark_complete":
             task.completed_at = datetime.utcnow()
             db.session.commit()
-            #call to function that sends slack message
             send_slack_message(task.title)
             return make_response({"task": task.to_dict()}, 200)
     else:
         return make_response("", 404)
 
 
-#WAVE 4 -- for organization sake should this go somewhere else?
-# consider moving to a "utilities" folder 
+#WAVE 4
+# consider moving to a "utilities" folder in refactoring
 PATH = "https://slack.com/api/chat.postMessage"
 
-#define a function that sends a slack message 
 def send_slack_message(task_title):
     query_params = {
         "channel": "task-notifications",
@@ -97,6 +88,7 @@ def send_slack_message(task_title):
     }
     requests.post(PATH, params=query_params, headers=header)
 
+
 #WAVE 5 
 @goals_bp.route("", methods=["GET", "POST"])
 def handle_goals():
@@ -106,7 +98,6 @@ def handle_goals():
         for goal in goals:
             goals_response.append(goal.to_dict())
         return make_response(jsonify(goals_response), 200)
-
     else: 
         request_body = request.get_json()
         if "title" in request_body:
