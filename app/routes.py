@@ -35,7 +35,6 @@ def get_goal_task(goal_id):
     tasks = Task.query.filter_by(goal_id = goal_id)
     task_list = []
 
-
     for task in tasks:
         #call to_json stored in a local variable here 
         #insert the goal id key
@@ -43,16 +42,13 @@ def get_goal_task(goal_id):
     
     return make_response({"id": int(goal_id), "title": goal.title, "tasks": task_list }, 200)
 
-
-
-
-
 #wave 5
 @goals_bp.route("", methods=["POST"], strict_slashes= False)
 def create_goals():
     request_body = request.get_json()
-    new_goal = Goal(title = request_body["title"])
+    
     if "title" in request_body:
+        new_goal = Goal(title = request_body["title"])
         db.session.add(new_goal)
         db.session.commit()
         return jsonify({"goal": new_goal.now_json()}), 201
