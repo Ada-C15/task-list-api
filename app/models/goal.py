@@ -12,13 +12,3 @@ class Goal(db.Model):
             "id": self.goal_id,
             "title": self.title
         }
-
-        # goal = {
-        #     "id": self.goal_id,
-        #     "title": self.title
-        # }
-
-        # if self.tasks:
-        #     goal["tasks"] = []
-
-        # return goal
