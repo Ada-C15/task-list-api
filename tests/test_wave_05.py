@@ -19,7 +19,6 @@ def test_get_goals_one_saved_goal(client, one_goal):
     assert response_body == [
         {
             "id": 1,
-            "tasks" : [],
             "title": "Build a habit of going outside daily"
         }
     ]
@@ -36,7 +35,6 @@ def test_get_goal(client, one_goal):
     assert response_body == {
         "goal": {
             "id": 1,
-            "tasks" : [],
             "title": "Build a habit of going outside daily"
         }
     }
@@ -64,9 +62,7 @@ def test_create_goal(client):
     assert "goal" in response_body
     assert response_body == {
         "goal": {
-            
             "id": 1,
-            "tasks": [],
             "title": "My New Goal"
         }
     }
@@ -84,9 +80,7 @@ def test_update_goal(client, one_goal):
     assert "goal" in response_body
     assert response_body == {
         "goal": {
-            
             "id": 1,
-            "tasks": [],
             "title": "Updated Goal Title"
         }
     }
