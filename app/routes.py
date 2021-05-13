@@ -1,7 +1,7 @@
 from werkzeug.datastructures import Authorization
 from app import db
 from app.models.task import Task
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response
 from datetime import datetime
 import os
 import requests
@@ -178,11 +178,29 @@ def get_single_goal(goal_id):
 
 # # ===============Establishing One to Many Realtionship=================================
 
-# @goals_bp.route("goals/<goal_id>/tasks", method=["POST"])
-# def send_task_ids():
-#     request_body = request.get_json()
-#     add_tasks = Goal(tasks=request_body["task_ids"])
 
-#     db.session.add(add_tasks)
-#     db.session.commit()
-#     return { "id": "goal_id", "task_ids": add_tasks}, 201
+@goals_bp.route("<goal_id>/tasks", methods=["POST"])
+def post_tasks_ids_to_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    request_body = request.get_json()
+    # Post
+
+    for task_id in request_body["task_ids"]:
+        task = Task.query.get(task_id)
+        goal.tasks.append(task)
+    db.session.commit()
+    return make_response({"id": goal.goal_id, "task_ids": request_body["task_ids"]}, 200)
+
+@goals_bp.route("<goal_id>/tasks", methods=["GET"])
+def getting_tasks_of_one_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal == None:
+        return jsonify(None), 404
+    else:
+        tasks_from_goal = goal.tasks
+
+        tasks_response = []
+        for task in tasks_from_goal:
+            tasks_response.append(task.to_json())
+
+        return {"id":goal.goal_id,"title": goal.title, "tasks": tasks_response}, 200
