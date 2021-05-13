@@ -5,6 +5,10 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import asc, desc
 import datetime
 from datetime import datetime, date, time, timezone
+from dotenv import load_dotenv
+import os
+import requests
+import json
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -13,6 +17,11 @@ def is_complete_function(completed_at):
             return True
         else:
             return False
+
+def post_message_to_slack(text, blocks=None):
+    requests.post('https://slack.com/api/chat.postMessage', 
+    headers={'Authorization': f"Bearer {os.environ.get('SLACK_BOT_TOKEN')}"},
+    data={'channel': f"{os.environ.get('SLACK_CHANNEL')}", 'text': text})
 
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def handle_tasks():
@@ -141,6 +150,9 @@ def mark_single_task_complete(task_id):
 
     db.session.commit()
 
+    post_message = f"Someone just completed the task {task.title}."
+    post_message_to_slack(post_message)
+
     return jsonify({"task": {
         "id": task.task_id,
         "title": task.title,
@@ -154,7 +166,7 @@ def mark_single_task_incomplete(task_id):
     
     if not task:
         return jsonify(None), 404
-        
+
     task.completed_at = None
 
     db.session.commit()
