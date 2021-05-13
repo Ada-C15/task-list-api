@@ -40,11 +40,16 @@ def post_new_task():
 @tasks_bp.route("", methods=["GET"])
 def get_tasks():
     sort_query = request.args.get("sort")
+    sort_by_id_query = request.args.get("sort_by_id")
 
     if sort_query == "asc":
         tasks = Task.query.order_by("title")
     elif sort_query == "desc":
         tasks = Task.query.order_by(desc("title"))
+    elif sort_by_id_query == "asc":
+        tasks = Task.query.order_by("task_id")
+    elif sort_by_id_query == "desc":
+        tasks = Task.query.order_by(desc("task_id"))
     else:
         tasks = Task.query.all()
 
