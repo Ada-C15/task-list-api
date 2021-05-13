@@ -12,3 +12,14 @@ class Goal(db.Model):
             "id": self.goal_id,
             "title": self.title
         }
+
+    def sort(query_param_value):
+        if query_param_value == "desc":
+            return Goal.query.order_by(Goal.title.desc()).all()
+        elif query_param_value == "asc":
+            return Goal.query.order_by(Goal.title).all()
+        elif query_param_value == "desc_id":
+            return Goal.query.order_by(Goal.goal_id.desc()).all()
+        elif query_param_value == "asc_id":
+            return Goal.query.order_by(Goal.goal_id).all()
+        return Goal.query.all()

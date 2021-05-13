@@ -16,6 +16,16 @@ class Task(db.Model):
             "is_complete": bool(self.completed_at)
         }      
         if self.goal_id:
-            task["goal_id"] = self.goal_id
-
+            task["goal_id"] = self.goal_id 
         return task
+
+    def sort(query_param_value):
+        if query_param_value == "desc":
+            return Task.query.order_by(Task.title.desc()).all()
+        elif query_param_value == "asc":
+            return Task.query.order_by(Task.title).all()
+        elif query_param_value == "desc_id":
+            return Task.query.order_by(Task.task_id.desc()).all()
+        elif query_param_value == "asc_id":
+            return Task.query.order_by(Task.task_id).all()
+        return Task.query.all()
