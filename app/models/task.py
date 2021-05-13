@@ -11,10 +11,14 @@ class Task(db.Model):
     goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True)
 
     def to_json(self):
-        return {
+        task = {
             "id": self.task_id,
             "title": self.title,
-            "goal_id": self.goal_id,
             "description": self.description,
             "is_complete": False if self.completed_at is None else True
         }
+
+        if self.goal_id:
+            task["goal_id"] = self.goal_id
+
+        return task

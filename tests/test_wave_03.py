@@ -33,7 +33,6 @@ def test_mark_complete_on_incomplete_task(client, one_task):
         "task": {
             "id": 1,
             "title": "Go on my daily walk 🏞",
-            "goal_id": None,
             "description": "Notice something new every day",
             "is_complete": True
         }
@@ -53,7 +52,6 @@ def test_mark_incomplete_on_complete_task(client, completed_task):
         "task": {
             "id": 1,
             "title": "Go on my daily walk 🏞",
-            "goal_id": None,
             "description": "Notice something new every day",
             "is_complete": False
         }
@@ -90,7 +88,6 @@ def test_mark_complete_on_completed_task(client, completed_task):
         "task": {
             "id": 1,
             "title": "Go on my daily walk 🏞",
-            "goal_id": None,
             "description": "Notice something new every day",
             "is_complete": True
         }
@@ -110,7 +107,6 @@ def test_mark_incomplete_on_incomplete_task(client, one_task):
         "task": {
             "id": 1,
             "title": "Go on my daily walk 🏞",
-            "goal_id": None,
             "description": "Notice something new every day",
             "is_complete": False
         }
@@ -156,7 +152,6 @@ def test_create_task_with_valid_completed_at(client):
         "task": {
             "id": 1,
             "title": "A Brand New Task",
-            "goal_id": None,
             "description": "Test Description",
             "is_complete": True
         }
@@ -186,7 +181,6 @@ def test_update_task_with_completed_at_date(client, completed_task):
         "task": {
             "id": 1,
             "title": "Updated Task Title",
-            "goal_id": None,
             "description": "Updated Test Description",
             "is_complete": True
         }
