@@ -22,6 +22,7 @@ class Task(db.Model):
             return False
         else:
             return True
+#runs to determine which body to return
     def to_json(self):
         if self.goal_id == None:
             task_dict={
