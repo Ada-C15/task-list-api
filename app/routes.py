@@ -97,6 +97,14 @@ def handle_single_task(task_id):
 
     task = Task.query.get_or_404(task_id)
     
+    # if task.goal_id:
+    #     reutrn jsonify({"task": {
+    #     "id": task.task_id,
+    #     "goal_id": task.goal_id
+    #     "title": task.title,
+    #     "description": task.description,
+    #     "is_complete": is_complete_function(task.completed_at)}}), 200
+
     return jsonify({"task": {
         "id": task.task_id,
         "title": task.title,
