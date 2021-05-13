@@ -17,7 +17,7 @@ class Goal(db.Model):
             "title": self.title,
             "tasks": task_list
         }
-        # This is the cause of the last failing test in wave 6, but without it tests in wave 5 fail
+        # Only need this to keep wave 5 tests passing
         if not self.tasks:
             del json_data["tasks"]
         return json_data

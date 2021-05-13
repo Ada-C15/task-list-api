@@ -22,7 +22,7 @@ class Task(db.Model):
             "is_complete": complete,
             "goal_id": self.goal_id}
         }
-        # Lets beginning wave tests still pass
+        # Only need this keep early tests passing
         if self.goal_id is None:
             del json_data["task"]["goal_id"]
         return json_data

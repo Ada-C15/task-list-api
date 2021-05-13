@@ -9,10 +9,20 @@ import os
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-############### DECORATORS AND HELPER FUNCTIONS ###############
+#---------------------# HELPER FUNCTIONS #---------------------#
 
 def invalid_input():
     return jsonify({"details":"Invalid data"}), 400
+
+def post_to_slack(message):
+    path = "https://slack.com/api/chat.postMessage"
+    headers = {"Authorization": f"Bearer {os.environ.get('SLACK_TOKEN')}"}
+    query_params = {"channel": "task-notifications",
+                    "text": message
+                    }
+    requests.post(path, params=query_params, headers=headers)
+
+#---------------------# DECORATORS #---------------------#
 
 def task_not_found(func):
     def inner(task_id):
@@ -56,14 +66,6 @@ def handle_invalid_datetime(func):
     inner.__name__ = func.__name__
     return inner
 
-def post_to_slack(message):
-    path = "https://slack.com/api/chat.postMessage"
-    headers = {"Authorization": f"Bearer {os.environ.get('SLACK_TOKEN')}"}
-    query_params = {"channel": "task-notifications",
-                    "text": message
-                    }
-    requests.post(path, params=query_params, headers=headers)
-
 def handle_missing_goal_inputs(func):
     def inner(*args, **kwargs):
         request_body = request.get_json()
@@ -74,7 +76,7 @@ def handle_missing_goal_inputs(func):
     return inner
 
 
-############### TASKS ENDPOINTS ###############
+#---------------------# TASK ENDPOINTS #---------------------#
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def tasks_index():
@@ -89,9 +91,7 @@ def tasks_index():
         return invalid_input()
     else:
         tasks = Task.query.all()
-    tasks_response = []
-    for task in tasks:
-        tasks_response.append(task.to_json()["task"])
+    tasks_response = [task.to_json()["task"] for task in tasks]
     return jsonify(tasks_response), 200
 
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
@@ -152,7 +152,7 @@ def incomplete_task(task_id):
     return jsonify(task.to_json()), 200
 
 
-############### GOALS ENDPOINTS ###############
+#---------------------# GOAL ENDPOINTS #---------------------#
 
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def goals_index():
@@ -197,7 +197,8 @@ def delete_goal(goal_id):
     return jsonify({"details":f'Goal {goal.id} "{goal.title}" successfully deleted'}), 200
 
 
-############### GOALS WITH TASKS ###############
+#---------------------# GOALS WITH TASK ENDPOINTS #---------------------#
+
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 @goal_not_found
 def get_tasks_from_goal(goal_id):
