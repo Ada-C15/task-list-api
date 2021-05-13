@@ -5,6 +5,7 @@ from app import db
 from datetime import datetime
 import requests
 import os
+from app.slackbot import GLaDOS
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -171,8 +172,9 @@ def mark_task_is_complete(task_id):
     ongoing_task.completed_at = datetime.utcnow()
     db.session.commit()
 
-    glados(ongoing_task) # call GLAdOS bot
-    print()
+    glados = GLaDOS()
+
+    glados.send_request(ongoing_task) # call GLAdOS bot
     return jsonify({"task": ongoing_task.to_json_format()})
 
 
@@ -187,34 +189,6 @@ def mark_task_incomplete(task_id):
     db.session.commit()
 
     return jsonify({"task": ongoing_task.to_json_format()})
-
-
-def glados(ongoing_task):
-    """Implements GLAdOS as a bot in Slack"""
-
-    glados_first_msgs = os.environ.get('GLA_DOS')
-
-    path = "https://slack.com/api/chat.postMessage"
-
-    channel = "task-notifications"
-
-    text = f"A human has just completed the task '{ongoing_task.title}'.\n Fantastic! You remained resolute and resourceful in an atmosphere of extreme pessimism."
-
-    body = {
-        "token": glados_first_msgs,
-        "channel": channel,
-        "text": text
-    }
-
-    sarcasm = requests.post(path, data=body)
-
-    return sarcasm
-        #: TODO: import GLaDOS quotes from the csv
-        #: Give GLaDOS her own class because she deserves it 
-        #: (will try not violate naming conventions here)
-        #: Aplly different quotes to different contexts (like 3 or 4)
-        #: replace human with *username* maybe but 'human' 
-        #: already sounds like GLaDOS herself
 
 
 #===============================GOALS===============================#
