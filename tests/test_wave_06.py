@@ -40,6 +40,7 @@ def test_post_task_ids_to_goal_already_with_goals(client, one_task_belongs_to_on
 
 
 def test_get_tasks_for_specific_goal_no_goal(client):
+
     # Act
     response = client.get("/goals/1/tasks")
     response_body = response.get_json()
