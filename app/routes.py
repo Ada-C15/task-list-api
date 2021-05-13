@@ -9,7 +9,8 @@ import os
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-#DECORATORS AND HELPER FUNCTIONS:
+############### DECORATORS AND HELPER FUNCTIONS ###############
+
 def invalid_input():
     return jsonify({"details":"Invalid data"}), 400
 
@@ -73,7 +74,8 @@ def handle_missing_goal_inputs(func):
     return inner
 
 
-#TASKS ENDPOINTS
+############### TASKS ENDPOINTS ###############
+
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def tasks_index():
     sort_by = request.args.get('sort')
@@ -150,7 +152,8 @@ def incomplete_task(task_id):
     return jsonify(task.to_json()), 200
 
 
-# GOALS ENDPOINTS:
+############### GOALS ENDPOINTS ###############
+
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def goals_index():
     sort_by = request.args.get('sort')
@@ -194,18 +197,16 @@ def delete_goal(goal_id):
     return jsonify({"details":f'Goal {goal.id} "{goal.title}" successfully deleted'}), 200
 
 
-# GOALS WITH TASKS:
+############### GOALS WITH TASKS ###############
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 @goal_not_found
 def get_tasks_from_goal(goal_id):
     goal = Goal.query.get(goal_id)
-    #Only need this b/c I reconfigured .to_json() to pass previous tests 
+    #Only need this b/c I reconfigured .to_json() to drop "tasks" if empty (to pass previous tests) 
     if "tasks" not in goal.to_json():
-        return jsonify({
-                    "id": goal.id,
-                    "title": goal.title,
-                    "tasks": []
-                    }), 200
+        goal_return = goal.to_json()
+        goal_return.update({"tasks": []})
+        return jsonify(goal_return), 200
     return jsonify(goal.to_json()), 200
 
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
