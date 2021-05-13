@@ -2,7 +2,6 @@ from app import db
 from app.models.task import Task
 from app.models.goal import Goal
 from flask import Blueprint, jsonify, request, make_response
-from sqlalchemy import desc, asc
 from datetime import datetime
 import os
 import slack
@@ -66,8 +65,7 @@ def create_goal():
 
 @goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
 def get_one_goal(goal_id):
-    # get or 404 method???
-    goal = Goal.query.get(goal_id)
+    goal = Goal.query.get_or_404(goal_id)
     
     if goal == None:
         return make_response("", 404)
@@ -86,11 +84,8 @@ def goals_index():
 
 @goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
 def update_goal(goal_id):
-    goal = Goal.query.get(goal_id)
+    goal = Goal.query.get_or_404(goal_id)
     form_data = request.get_json()
-
-    if goal == None:
-        return make_response("", 404)
     
     goal.title = form_data["title"]
 
@@ -102,10 +97,7 @@ def update_goal(goal_id):
 
 @goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)
 def delete_goal(goal_id):
-    goal = Goal.query.get(goal_id)
-    
-    if not goal:
-        return make_response("", 404)
+    goal = Goal.query.get_or_404(goal_id)
     
     db.session.delete(goal)
     db.session.commit()
@@ -115,7 +107,7 @@ def delete_goal(goal_id):
     })
 
 
-@tasks_bp.route("", methods=["GET"], strict_slashes=False)
+@tasks_bp.route("", methods=["GET"], strict_slashes=False) 
 def tasks_index():
     sort_type = request.args.get("sort")
 
@@ -135,10 +127,7 @@ def tasks_index():
     
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def get_one_task(task_id):
-    task = Task.query.get(task_id)
-    
-    if task == None:
-        return make_response("", 404)
+    task = Task.query.get_or_404(task_id)
 
     return {
         "task": task.to_json()}, 200
@@ -167,11 +156,8 @@ def create_task():
 
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
-    task = Task.query.get(task_id)
+    task = Task.query.get_or_404(task_id)
     form_data = request.get_json()
-
-    if task == None:
-        return make_response("", 404)
     
     task.title = form_data["title"]
     task.description = form_data["description"]
@@ -185,10 +171,7 @@ def update_task(task_id):
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
 def delete_task(task_id):
-    task = Task.query.get(task_id)
-    
-    if not task:
-        return make_response("", 404)
+    task = Task.query.get_or_404(task_id)
     
     db.session.delete(task)
     db.session.commit()
@@ -199,16 +182,13 @@ def delete_task(task_id):
 
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
 def task_mark_complete(task_id):
-    task = Task.query.get(task_id)
+    task = Task.query.get_or_404(task_id)
     current_datetime = datetime.utcnow()
     
-    if not task:
-        return make_response("", 404)
-    else:
-        task.completed_at = current_datetime
+    task.completed_at = current_datetime
     
     db.session.commit()
-    
+
     client = slack.WebClient(os.environ["SLACK_TOKEN"])
     client.chat_postMessage(
             channel="task-notifications",
@@ -219,7 +199,6 @@ def task_mark_complete(task_id):
     }, 200
 
     
-        
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def task_mark_incomplete(task_id):
     task = Task.query.get_or_404(task_id)
