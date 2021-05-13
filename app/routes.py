@@ -9,11 +9,12 @@ from sqlalchemy import asc, desc
 import requests
 import json
 import os
-
+goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
+
+#This is is a new endpoint.
 @task_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
 def get_single_task(task_id):
-
     task = Task.query.get(task_id)
 
     if task is None:
@@ -38,7 +39,6 @@ def get_single_task(task_id):
         db.session.delete(task)
         db.session.commit()
         return jsonify({"details": f'Task {task.id} "{task.title}" successfully deleted'}), 200
-
 
 @task_bp.route("", methods=["GET", "POST"])
 def handle_tasks():
@@ -129,7 +129,7 @@ def mark_incomplete(task_id):
         
         return jsonify({"task":task.json_object()}),200
     
-goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
+
 @goal_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
 def get_goal(goal_id):
 
@@ -143,7 +143,7 @@ def get_goal(goal_id):
 
     elif request.method == "PUT":
         form_data = request.get_json()
-
+        #Go and get the data from the request 
         goal.title = form_data["title"]
         
         db.session.commit()
@@ -179,4 +179,27 @@ def one_goal():
         db.session.commit()
         
         return jsonify({"goal":new_goal.goal_json_object()}),201
-    
+
+#New endpoint to look up goals and task
+@goal_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def goals_task(goal_id):
+
+    form_data = request.get_json()
+
+    for task_id in form_data["task_ids"]:
+
+        task = Task.query.get(task_id)
+
+        task.goal_id = goal_id
+
+    db.session.commit()
+        
+    return make_response({"id": int(goal_id),"task_ids":form_data["task_ids"]}), 200
+
+@goal_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def goals_task_get(goal_id):
+    if request.method == "GET":
+        goal = Goal.query.get(goal_id)
+        if goal is None:
+            return make_response("", 404)
+        return jsonify(goal.goal_json_object_with_tasks())
