@@ -11,3 +11,15 @@ class Goal(db.Model):
             "id": self.goal_id,
             "title": self.title
         }
+    
+    @classmethod
+    def sort(cls, query_param_value):
+        if query_param_value == "desc":
+            return cls.query.order_by(cls.title.desc()).all()
+        elif query_param_value == "asc":
+            return cls.query.order_by(cls.title).all()
+        elif query_param_value == "desc_id":
+            return cls.query.order_by(cls.task_id.desc()).all()
+        elif query_param_value == "asc_id":
+            return cls.query.order_by(cls.task_id).all()
+        return cls.query.all()

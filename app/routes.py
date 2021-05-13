@@ -37,7 +37,7 @@ def create_task():
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def view_all_tasks():
     query_param_value = request.args.get("sort")
-    tasks = Task.sort(Task, query_param_value) 
+    tasks = Task.sort(query_param_value) # sort method called on the class
     view_tasks = [task.to_json() for task in tasks if tasks]
     return jsonify(view_tasks)
 
@@ -101,7 +101,7 @@ def create_new_goal():
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def get_all_goals():
     query_param_value = request.args.get("sort")
-    goals = Task.sort(Goal, query_param_value)
+    goals = Goal.sort(query_param_value)
     view_goals= [goal.to_json() for goal in goals if goals]
     return jsonify(view_goals)
 
