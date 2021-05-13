@@ -1,6 +1,6 @@
 from flask.wrappers import Response
 from app import db
-from app.models.task import Task, to_dict
+from app.models.task import Task, to_dict, to_dict_goal
 from app.models.goal import Goal, to_json
 from flask import Blueprint, request, make_response, jsonify
 from datetime import datetime
@@ -144,8 +144,9 @@ def mark_incomplete(task_id):
 
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
 def create_goal():
-    request_body = request.get_json()
 
+    request_body = request.get_json()
+    
     response = {"details": "Invalid data"}
 
     if "title" not in request_body.keys():
@@ -183,7 +184,7 @@ def handle_goal(goal_id):
 
     if request.method == "GET":
         if goal is None:
-            return make_response(f"", 404) 
+            return make_response("", 404) 
     
         else:
             valid_goal = {"goal": to_json(goal)}
@@ -202,7 +203,7 @@ def handle_goal(goal_id):
             }
             
         else: 
-            return make_response(f"", 404) 
+            return make_response("", 404) 
            
         return {'goal': updated_goal}
 
@@ -224,31 +225,39 @@ def goal_task_relationship(goal_id):
     
     goal = Goal.query.get(goal_id)
 
-    if goal is None:
-        return make_response("", 404)
+    request_body = request.get_json()
 
     if request.method == "POST":
-        
-        response_body = request.get_json()
-        task_ids_list = []
 
+        task_ids = request_body["task_ids"]
 
-        for task_id in response_body["task_ids"]:
+        for task_id in task_ids:
             task = Task.query.get(task_id)
+            task.goal_id = goal_id # or goal.tasks.append(task)
 
-            task_ids_list.append(task)
+            db.session.commit()
 
-            task.goal_id = goal_id
+        return {"id": int(goal_id), "task_ids": task_ids}, 200
 
-        db.session.commit()
+    elif request.method == "GET":
 
-        return ({"id": int(goal_id), "task_ids": task_ids_list})
+        # tasks_list = []
 
-    # elif request.method == "GET":
+        if goal:
+            tasks = goal.tasks
+            
+            # for task in tasks:
+            #     tasks_list.append(to_dict_goal(task))
 
-    #     task_goal = []
+            task_list = [to_dict_goal(task) for task in tasks]
 
-    #     for task in goal.tasks:
-    #         task_goal.append(to_dict(task))
+            return {
+                "id": goal.goal_id,
+                "title": goal.title,
+                "tasks": task_list
+            }, 200
+        
+        else:
+            return make_response("", 404)
+    
 
-    #     return make_response(jsonify(id=int(goal_id)))
