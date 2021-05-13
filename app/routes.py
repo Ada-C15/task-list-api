@@ -63,6 +63,8 @@ def get_single_task(task_id):
 
     task = Task.query.get(task_id)
     if task:
+        if task.goal_id is not None:
+            return {"task": task.goal_id_to_json()}, 200
         return {"task": task.task_to_json()}, 200
     else:
         return Response("",status=404)
@@ -206,3 +208,44 @@ def delete_single_goal(goal_id):
         return {
             "details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"}, 200
 
+#WAVE 6
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def post_task_into_goal(goal_id):
+
+    if not is_int(goal_id):
+        return {
+            "message": f"ID {goal_id} must be an integer",
+            "success": False
+        }, 400
+
+    goal = Goal.query.get(goal_id)
+    request_body = request.get_json()
+
+    if goal == None:
+        return Response("", status=404)
+
+    for task_id in request_body["task_ids"]:
+        task = Task.query.get(int(task_id))
+        task.goal_id = goal_id
+        db.session.add(task)
+
+    db.session.commit() 
+    return jsonify({"id": int(goal_id), "task_ids": request_body["task_ids"]}), 200
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def task_in_goals(goal_id):
+    goal = Goal.query.get(goal_id) 
+    
+    if not is_int(goal_id):
+        return {
+            "message": f"ID {goal_id} must be an integer",
+            "success": False
+        }, 404
+    
+    if goal == None:
+        return Response("", status=404)
+        
+    task_list = []
+    for task in goal.tasks:
+        task_list.append(task.goal_id_to_json())
+    return jsonify(id=int(goal_id), title=goal.title, tasks=task_list), 200

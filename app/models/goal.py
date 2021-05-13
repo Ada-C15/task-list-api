@@ -5,6 +5,9 @@ from app import db
 class Goal(db.Model):
     goal_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)
+    
+    #WAVE 6
+    tasks = db.relationship("Task", backref="goal", lazy=True)
 
     def goal_to_json(self):
         return {
