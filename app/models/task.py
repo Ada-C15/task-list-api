@@ -24,6 +24,6 @@ class Task(db.Model):
 
         if self.goal_id: 
             serialized["goal_id"] = self.goal_id
-        
+
         return serialized
 
