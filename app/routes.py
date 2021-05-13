@@ -36,11 +36,18 @@ def get_goal_task(goal_id):
     task_list = []
 
     for task in tasks:
-        #call to_json stored in a local variable here 
-        #insert the goal id key
-         task_list.append(task)
+        task_list.append(helper_fun(task))
     
     return make_response({"id": int(goal_id), "title": goal.title, "tasks": task_list }, 200)
+
+def helper_fun(task_goal):
+    return {
+            "id": task_goal.task_id,
+            "goal_id": task_goal.goal_id,
+            "title": task_goal.title,
+            "description": task_goal.description,
+            "is_complete": task_goal.completed_at != None
+        }
 
 #wave 5
 @goals_bp.route("", methods=["POST"], strict_slashes= False)
@@ -123,12 +130,15 @@ def deal_tasks():
         else:
             return jsonify({"details": "Invalid data"}), 400
 
-
+#also handles wave 6 last test
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes= False)
 def get_task_by_id(task_id):
     task = Task.query.get(task_id)
+    goal_attached = task.goal_id
     if task is None:
         return jsonify(None), 404
+    elif goal_attached:
+        return make_response({"task": helper_fun(task)}, 200)
     else:
         return make_response({"task": task.to_json()}, 200)
 
