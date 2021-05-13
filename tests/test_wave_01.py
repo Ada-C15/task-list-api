@@ -57,6 +57,19 @@ def test_get_task_not_found(client):
     assert response_body == None
 
 
+def test_get_task_invalid_entry(client):
+    # Act
+    response = client.get("/tasks/a")
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 400
+    assert "message" in response_body
+    assert response_body == {
+        "message": "Task ID a must be an integer"
+        }
+
+
 def test_create_task_with_none_completed_at(client):
     # Act
     response = client.post("/tasks", json={
@@ -124,6 +137,23 @@ def test_update_task_not_found(client):
     assert response_body == None
 
 
+def test_update_task_ivalid_entry(client):
+    # Act
+    response = client.put("/tasks/z", json={
+        "title": "Updated Task Title",
+        "description": "Updated Test Description",
+        "completed_at": None
+    })
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 400
+    assert "message" in response_body
+    assert response_body == {
+        "message": "Task ID z must be an integer"
+        }
+
+
 def test_delete_task(client, one_task):
     # Act
     response = client.delete("/tasks/1")
@@ -147,6 +177,19 @@ def test_delete_task_not_found(client):
     assert response.status_code == 404
     assert response_body == None
     assert Task.query.all() == []
+
+
+def test_delete_task_ivalid_entry(client):
+    # Act
+    response = client.delete("/tasks/v")
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 400
+    assert "message" in response_body
+    assert response_body == {
+        "message": "Task ID v must be an integer"
+        }
 
 
 def test_create_task_must_contain_title(client):
