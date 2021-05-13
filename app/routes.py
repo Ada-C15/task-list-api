@@ -5,12 +5,10 @@ from flask import request, Blueprint, make_response, jsonify
 from sqlalchemy import desc, asc
 import datetime
 import os
-# from slack_sdk import WebClient
-# from slack_sdk.errors import SlackApiError
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
+import requests
 
-# client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
-
+load_dotenv()
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
@@ -51,7 +49,10 @@ def get_task(task_id):
         return make_response(), 404
     
     elif request.method == "GET":
-        return jsonify({"task":task.to_dict()}), 200
+        if task.assoc_goal == None:
+            return jsonify({"task":task.to_dict()}), 200
+        else:
+            return jsonify({"task":task.to_dict_goal()}), 200
 
     elif request.method == "DELETE":
         db.session.delete(task)
@@ -71,7 +72,6 @@ def get_task(task_id):
 @task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
     task = Task.query.get(task_id)
-    # channel_id = "task-notifications"
 
     if task == None:
         return make_response(), 404
@@ -79,11 +79,12 @@ def mark_complete(task_id):
     task.completed_at = datetime.datetime.now()
     db.session.commit()
 
-    # result = client.chat_postMessage(
-    #     channel=channel_id, 
-    #     text="Hello world")
-
-    # logger.info(result)
+    url = "https://slack.com/api/chat.postMessage"
+    slack_headers = {'Authorization': "SLACK_BOT_TOKEN"}
+    slack_params = {'channel':'task-notifications',
+            'text': f'Someone just completed the task {task.description}',
+            'format': "json"}
+    requests.post(url, headers=slack_headers, params=slack_params)
 
     return jsonify({"task":task.to_dict()}), 200
 
@@ -143,9 +144,36 @@ def get_goal(goal_id):
 
         return jsonify({"goal":goal.to_dict()}), 200
 
-# url = 'https://www.w3schools.com/python/demopage.php'
-# myobj = {'somekey': 'somevalue'}
 
-# x = requests.post(url, data = myobj)
+@goal_bp.route("/<goal_id>/tasks", methods=["GET", "POST"])
+def tasks_to_goals(goal_id):
+    goal = Goal.query.get(goal_id)
+
+    if goal == None:
+        return make_response(), 404
+    
+    elif request.method == "POST":
+        form_data = request.get_json() 
+        task_list = form_data["task_ids"]
+
+        for task in task_list:
+            task = Task.query.get(task)
+            task.assoc_goal = goal.goal_id
+            
+        db.session.commit()
+        return jsonify({"id": goal.goal_id,
+                        "task_ids": task_list}), 200
+
+    elif request.method == "GET":
+        tasks = Task.query.filter_by(assoc_goal=goal_id).all()
+
+        assoc_task_list = []
+        for task in tasks:
+            assoc_task_list.append(task.to_dict_goal())
+
+        return jsonify({"id": goal.goal_id,
+                        "title": goal.title,
+                        "tasks": assoc_task_list}), 200
+
 
 
