@@ -163,6 +163,7 @@ def goal_tasks(goal_id):
         task = Task.query.filter_by(task_id = elm).first()
         if task not in goal.tasks:
             goal.tasks.append(task)
+            db.session.commit()
     return {
             "id": goal.goal_id,
             "task_ids": [task.task_id for task in goal.tasks]
