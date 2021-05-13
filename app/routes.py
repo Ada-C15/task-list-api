@@ -3,6 +3,7 @@ from werkzeug.wrappers import PlainRequest
 from app import db
 from flask.helpers import make_response
 from app.models.task import Task
+from app.models.goal import Goal
 from datetime import date
 import os
 import requests
@@ -159,3 +160,72 @@ def call_slack_bot(task):
         "Authorization": f"Bearer {SLACK_API_TOKEN}",
     }
     return requests.request("POST", url, data=payload, headers=headers)
+    # 
+    # 
+    # 
+@goals_bp.route("", methods=["GET","POST"], strict_slashes=False)
+def handle_goals():
+    if request.method == "GET":
+        goal_title_from_url = request.args.get("title")
+        # search for task by title
+        if goal_title_from_url:
+            goals = Goal.query.filter_by(title=goal_title_from_url)
+        # all goals
+        else:
+            goals = Goal.query.all()
+    
+        goals_response = []
+
+        for goal in goals:
+            goals_response.append(goal.goal_json())
+        
+        if "asc" in request.full_path:
+            sorted_ascending = sorted(goals_response, key=lambda x: x.get("title"))
+            return jsonify(sorted_ascending)
+        
+        elif "desc" in request.full_path:
+            sorted_descending = sorted(goals_response, key=lambda x: x.get("title"), reverse=True)
+            return jsonify(sorted_descending)
+
+        return jsonify(goals_response), 200
+
+    elif request.method == "POST":
+        # try and except block for KeyError
+        try:
+            request_body = request.get_json()
+
+            new_goal = Goal(title=request_body["title"])
+
+            db.session.add(new_goal)
+            db.session.commit()
+
+            return {
+                "goal": new_goal.goal_json()
+            }, 201
+        
+        except KeyError:
+            return{"details": "Invalid data"}, 400
+
+def is_int(value):
+    try:
+        return int(value)
+    except ValueError:
+        return False
+
+# Handles GET requests for 1 method with the provided task id. 
+@goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
+def get_one_goal(goal_id):
+    if not is_int(goal_id):
+        return{
+            "message": f"ID {goal_id} must be an integer",
+            "success": False
+        }, 400
+    
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return make_response("", 404)
+    else:
+        return {
+            "goal": goal.goal_json()
+        }, 200
