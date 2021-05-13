@@ -16,9 +16,18 @@ class Task(db.Model):
             is_complete = False
         else:
             is_complete = True 
+        if self.goal_id:
+            return {
+                "id": self.task_id,
+                "goal_id": self.goal_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": is_complete
+            }
         return {
             "id": self.task_id,
             "title": self.title,
             "description": self.description,
             "is_complete": is_complete
-       }
+        }
+

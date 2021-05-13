@@ -157,17 +157,31 @@ def delete_or_put_goals(goal_id):
         return jsonify({"goal": goal.now_json()}), 200
 
 
-@goal_bp.route("<goal_id>/tasks", methods=["POST"], strict_slashes = False)
-def post_new_task():
+@goal_bp.route("/<int:goal_id>/tasks", methods=["POST"], strict_slashes = False)
+def post_new_task(goal_id):
     request_body = request.get_json()
+    task_ids = request_body["task_ids"]
+    goal = Goal.query.get(goal_id)
+    for task_id in task_ids:
+        task = Task.query.get(task_id)
+        if task.goal_id != goal_id:
+            goal.tasks.append(task)
+    response_body = {
+        "id": goal_id,
+        "task_ids": task_ids
+    }
+    return jsonify(response_body), 200
 
-    if "title" in request_body:
-        new_goal = Goal(title=request_body["title"])
-        db.session.add(new_goal)
-        db.session.commit()
-        return jsonify({"goal": new_goal.now_json()}), 201
-    else: 
-        return make_response({"details": "Invalid data"}), 400
+
+@goal_bp.route('/<int:goal_id>/tasks', methods=['GET'])
+def get_tasks_goals(goal_id):
+    goal = Goal.query.get(goal_id)
+    if not goal:
+        return '', 404
+    return jsonify(goal.full_json()), 200
+
+    
+   
 
 
 
