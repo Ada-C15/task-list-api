@@ -12,9 +12,19 @@ class Task(db.Model):
 
     # creates a dictionary of key-value pairs describing the given task
     def to_json(self):
-        return {
-            "id": self.task_id,
-            "title": self.title,
-            "description": self.description,
-            "is_complete": False if self.completed_at is None else True
-        }
+        # Wave 6: need to create a conditional for "goal_id"
+        if self.goaltask_id == None:
+            return {
+                "id": self.task_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": False if self.completed_at is None else True
+            }
+        else:
+            return{
+                "id": self.task_id,
+                "goal_id": self.goaltask_id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": False if self.completed_at is None else True
+            }

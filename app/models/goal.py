@@ -5,7 +5,7 @@ from app import db
 class Goal(db.Model):
     goal_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)
-    tasks = db.relationship('Task', backref='goaltask', lazy=True)
+    tasks = db.relationship('Tasks', backref='goaltask', lazy=True)
 
     def goal_json(self):
         return {

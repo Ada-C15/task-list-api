@@ -302,7 +302,6 @@ def post_goal_tasks(goal_id):
 # GET function: one(goal)-to-many(tasks)
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 def get_goal_tasks(goal_id):
-    request_body = request.get_json()
     goal = Goal.query.get(goal_id)
     # sets task variable equal to the task with the corresponding goal (in foreignkey column)
     task = Task.query.get(goal_id)
@@ -321,9 +320,9 @@ def get_goal_tasks(goal_id):
             # data pulled from Task function
             task_data_dict = task.to_json()
             # sets response_dict "tasks"  & task_data_dict "goal_id" values
-            response_dict["tasks"] = [response_dict]
+            
             task_data_dict["goal_id"] = goal.goal_id
-        
+            response_dict["tasks"] = [task_data_dict]
         # commit changes to tables
         db.session.commit()
         return make_response(response_dict, 200)
