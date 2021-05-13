@@ -12,12 +12,12 @@ goals_bp = Blueprint("goal", __name__, url_prefix="/goals")
 
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_task():
-    response_body = request.get_json()
-    if len(response_body) < 3:
+    request_body = request.get_json()
+    if len(request_body) < 3:
         return jsonify(details = f'Invalid data'), 400
-    new_task = Task(title=response_body["title"],
-                    description=response_body["description"],
-                    completed_at=response_body["completed_at"])  
+    new_task = Task(title=request_body["title"],
+                    description=request_body["description"],
+                    completed_at=request_body["completed_at"])  
     db.session.add(new_task)
     db.session.commit()
     send_new_task_notification()
@@ -79,10 +79,10 @@ def mark_task(task_id, completed):
 
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
 def create_new_goal():
-    response_body = request.get_json()
-    if len(response_body) < 1:
+    request_body = request.get_json()
+    if len(request_body) < 1:
         return jsonify(details= f'Invalid data'), 400
-    new_goal = Goal(title = response_body["title"])
+    new_goal = Goal(title = request_body["title"])
     db.session.add(new_goal)
     db.session.commit()
     return jsonify(goal=new_goal.to_json()), 201
@@ -118,14 +118,14 @@ def delete_goal(goal_id):
 
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
 def create_new_task_in_goal(goal_id):
-    response_body = request.get_json()
-    if not response_body:
+    request_body = request.get_json()
+    if not request_body:
         return jsonify(None), 404
-    for task_id in response_body["task_ids"]:
+    for task_id in request_body["task_ids"]:
         task = Task.query.get(task_id) 
         task.goal_id = goal_id 
         db.session.commit()
-    return jsonify(id=task.goal_id, task_ids=response_body["task_ids"]), 200
+    return jsonify(id=task.goal_id, task_ids=request_body["task_ids"]), 200
 
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 def get_task_for_specific_goal(goal_id):
