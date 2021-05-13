@@ -22,7 +22,7 @@ def get_all_tasks():
     ordered_query = []
 
     
-    if sort_query is None and title_query is None:
+    if sort_query is None and sort_query is None:
         tasks = Task.query.all()
 
         for task in tasks:           
