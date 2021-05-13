@@ -92,9 +92,6 @@ def update_to_complete(active_id):
     slack_header = {"Authorization" : os.environ.get("SLACKBOT_API_AUTH")}
     slack_response = requests.post(slack_path, headers=slack_header, params=slack_payload)
 
-    print(slack_response.url)
-    print(slack_response.status_code)
-
     return {"task" : task.to_dict()}
 
 @tasks_bp.route("/<active_id>/mark_incomplete", methods=["PATCH"])
