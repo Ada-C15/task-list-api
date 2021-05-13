@@ -24,3 +24,9 @@ class Task(db.Model):
         if self.goal_id:
             task_info['goal_id'] = self.goal_id
         return task_info
+
+    def from_json(self, request_body):
+        self.title = request_body['title']
+        self.description = request_body['description']
+        self.completed_at = request_body['completed_at']
+        return self
