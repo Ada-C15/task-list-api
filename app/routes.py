@@ -47,7 +47,7 @@ def handle_tasks():
 def handle_task(task_id):
     task = Task.query.get(task_id)
     if task is None:
-        return make_response("",404)
+        return make_response("", 404)
 
     elif request.method == "GET":
         return jsonify(task.task_response()),200
@@ -72,7 +72,7 @@ def mark_complete(task_id):
     task = Task.query.get(task_id)
 
     if task is None:
-        return make_response("",404)
+        return make_response("", 404)
     
     task.completed_at = datetime.datetime.now()
     db.session.commit()
@@ -97,7 +97,7 @@ def mark_incomplete(task_id):
     task = Task.query.get(task_id)
 
     if task is None:
-        return make_response("",404)
+        return make_response("", 404)
     
     task.completed_at = None
     db.session.commit()
@@ -143,7 +143,7 @@ def handle_goal(goal_id):
     goal = Goal.query.get(goal_id)
    
     if goal is None:
-        return make_response("",404)
+        return make_response("", 404)
 
     elif request.method == "GET":
         return jsonify(goal.goal_response()), 200
@@ -162,3 +162,51 @@ def handle_goal(goal_id):
         delete_text = f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"
         response = {"details":delete_text}
         return jsonify(response), 200
+
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET", "POST"])
+def handle_goal_tasks(goal_id):
+        goal = Goal.query.get(goal_id)
+
+        if goal is None:
+            return make_response("", 404)
+
+        elif request.method =="POST":
+            request_body = request.get_json()
+
+            for task_id in request_body["task_ids"]:
+                tasks = []
+                tasks.append(Task.query.get(task_id))
+
+                for task in tasks:
+                    task.goal_id = goal_id
+                    db.session.commit()
+
+            response = {}
+            response["id"] = int(goal_id)
+            response["task_ids"] = request_body["task_ids"]
+
+            return jsonify(response), 200
+
+        elif request.method == "GET":
+            goal = Goal.query.get(goal_id)
+            
+            task_dict = []
+
+            for task in goal.tasks:
+                task_dict.append({
+                    "id": task.task_id,
+                    "goal_id": task.goal_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": bool(task.completed_at)
+
+                })
+
+            response = {
+                "id": goal.goal_id,
+                "title": goal.title,
+                "tasks": task_dict
+            }
+
+            return jsonify(response), 200
