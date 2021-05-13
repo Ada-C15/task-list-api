@@ -1,9 +1,28 @@
 from app import db
 from flask import Blueprint, request, jsonify
 from app.models.goal import Goal
-
+from app.models.task import Task
 
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
+
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def add_tasks(goal_id):
+    request_body = request.get_json()
+
+    tasks = []
+    for task_id in request_body["task_ids"]:
+        tasks.append(Task.query.get(task_id))
+
+    goal = Goal.query.get(goal_id)
+
+    goal.tasks.extend(tasks)
+
+    db.session.commit()
+
+    return {
+        "id": goal.goal_id,
+        "task_ids": request_body["task_ids"]
+    }, 200
 
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
 def create_goal():
