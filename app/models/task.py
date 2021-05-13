@@ -15,11 +15,6 @@ class Task(db.Model):
     __tablename__= "tasks"
 
     def to_dict(self):
-        # if self.completed_at != None:
-        #     # adds key to temp dict before we can return new_task
-        #     is_complete = True
-        # else:
-        #     is_complete = False
 
         make_dict = {
             "id": self.id,
@@ -29,5 +24,5 @@ class Task(db.Model):
         }
         if self.goals_id:
             make_dict["goal_id"] = self.goals_id
-
+            
         return make_dict

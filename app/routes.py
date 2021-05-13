@@ -26,14 +26,13 @@ def get_tasks():
     if sort_query == "asc":
         tasks = Task.query.order_by("title")
     elif sort_query == "desc":
-        tasks = Task.query.order_by("title desc")        # using string allows us to be more specific in our queries
-        tasks = Task.query.order_by(Task.title.desc())  # same as above
+        tasks = Task.query.order_by(Task.title.desc())  
     else:
         tasks = Task.query.all()
 
     tasks_response = []
+
     for task in tasks:
-        # tasks_response.append(task.to_json()) # same as below
         if task.completed_at == None:
             tasks_response.append({
             "id": task.id,
@@ -58,7 +57,6 @@ def create_task():
 
     request_body = request.get_json()
 
-    # if not request_body["title"] or not request_body["description"]:  # triggers key error
     if not request_body.get("title") or not request_body.get("description"):
         return jsonify({"details": "Invalid data"}), 400 
 
@@ -139,6 +137,7 @@ def delete_single_task(task_id):
     return jsonify({"details": f'Task {task.id} "{task.title}" successfully deleted'}), 200
 
 
+
 ### WAVE 3 - PATCH ROUTES for TASKS
 
 # define a new route to update (PATCH) one task by its id (route parameter between <>, treated as a variable):
@@ -153,9 +152,6 @@ def mark_complete(task_id):
     if task is None:
         return jsonify(None), 404
 
-    # if task.completed_at != None:
-    #     return 
-
     task.completed_at=datetime.datetime.now()
     post_message(task.title)
     db.session.commit()
@@ -165,6 +161,7 @@ def mark_complete(task_id):
     
     return jsonify({"task": task_dict}), 200
 
+# Wave 4 - Post message to Slack:
 def post_message(task_title):
     requests.post("https://slack.com/api/chat.postMessage", \
             headers={"Authorization": f"Bearer {os.environ.get('SLACK_TOKEN')}"}, \
@@ -176,7 +173,6 @@ def post_message(task_title):
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def mark_incomplete(task_id):
 
-    # check whether task_id is an int:
     if not is_int(task_id):        
         return {"message": f"ID {task_id} must be an integer"}, 400
     
@@ -294,10 +290,10 @@ def delete_single_goal(goal_id):
     return jsonify({"details": f'Goal {goal.id} "{goal.title}" successfully deleted'}), 200
 
 
+
 ### WAVE 6 - ONE TO MANY RELATIONSHIP BETWEEN TASKS AND GOALS
 
-# All of our tasks are going to be nested inside of each GOAL, all routes will start with :
-# /goals/<goal_id>/tasks
+# All of our tasks are going to be nested inside of each GOAL, all routes will start with : /goals/<goal_id>/tasks
 
 # GET all the tasks within a specific goal/no matching tasks?/no matching goal?
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
@@ -322,8 +318,6 @@ def get_single_goal_tasks(goal_id):
         "tasks": goal_tasks_response
     }
 
-    # goal_tasks_dict = goal_tasks_response.to_dict()
-
     return jsonify(goal_tasks_dict), 200
 
 
@@ -340,7 +334,6 @@ def add_task_ids_to_goal(goal_id):
         task = Task.query.get(task_id)
         task.goals_id = goal.id
     
-    # db.session.add(???)   
     db.session.commit()  
     
     return jsonify({
@@ -349,8 +342,4 @@ def add_task_ids_to_goal(goal_id):
         }), 200
 
 
-# Send a list of task id's to a goal (task_ids)
-
-
-# Delete a task within a specific goal???
 

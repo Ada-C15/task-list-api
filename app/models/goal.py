@@ -6,28 +6,17 @@ class Goal(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)
     # creating a relationship to the Task Model a virtual column named goals in the tasks table (will not affect the db) 
-    tasks = db.relationship("Task", backref="goals", lazy=True)
-
-    # This helps us find a goal's related tasks with goal.tasks
-    # and a task's related goal with task.goals (as in goals table, not many goals)
+    tasks = db.relationship("Task", backref="goals", lazy=True)       # This helps us find a goal's related tasks with goal.tasks and a task's related goal with task.goals (as in the "goals" table, not "many goals")
 
     __tablename__= "goals"
 
     def to_dict(self):
-        
+
         return {
             "id": self.id,
-            "title": self.title,
+            "title": self.title
         }
-        
-        
-        #  make_dict = {
-        #     "id": self.id,
-        #     "title": self.title,
-        #     "description": self.description,
-        #     "is_complete": self.completed_at != None
-        # }
-        # if self.goals_id:
-        #     make_dict["goal_id"] = self.goals_id
+   
 
-        # return make_dict
+       
+      
