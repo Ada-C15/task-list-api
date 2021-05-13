@@ -1,5 +1,6 @@
 from flask import request, current_app
 from app import db
+# from app.models.goal import Goal
 
 
 class Task(db.Model):
@@ -7,7 +8,7 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
-
+    owner_id = db.Column(db.Integer, db.ForeignKey("goal.goal_id"))
 
 def to_dict(self):
     return {
