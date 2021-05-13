@@ -44,9 +44,7 @@ def task_index():
         tasks = Task.query.order_by(Task.title.desc())
     else:
         tasks = Task.query.all()
-    tasks_response = []
-    for task in tasks:
-        tasks_response.append(task.to_dict())
+    tasks_response = [(task.to_dict()) for task in tasks]
     return make_response(jsonify(tasks_response), 200)
 
 
@@ -155,9 +153,7 @@ def create_goal():
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def goal_index():
     goals = Goal.query.all()
-    goals_response = []
-    for goal in goals:
-        goals_response.append(goal.to_dict())
+    goals_response = [(goal.to_dict()) for goal in goals]
     return make_response(jsonify(goals_response), 200)
 
 
@@ -216,9 +212,6 @@ def getting_tasks_of_one_goal(goal_id):
     if goal is None:
         return make_response("", 404)
     tasks = Task.query.join(Goal).filter(Task.goal_id == goal_id).all()
-
-    tasks_response = []
-    for task in tasks:
-        tasks_response.append(task.with_goal())
-
+    # tasks_response = []
+    tasks_response = [(task.with_goal()) for task in tasks]
     return{"id": goal.goal_id, "title": goal.title, "tasks": tasks_response}, 200
