@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 from datetime import datetime
 from app.models.task import Task
 
-
+#####################################
 def test_mark_complete_on_incomplete_task(client, one_task):
     # Arrange
     """
@@ -38,7 +38,7 @@ def test_mark_complete_on_incomplete_task(client, one_task):
         }
     }
     assert Task.query.get(1).completed_at
-
+#####################################################
 
 def test_mark_incomplete_on_complete_task(client, completed_task):
     # Act

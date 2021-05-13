@@ -1,12 +1,14 @@
-import pytest
+import pytest # Imports the pytest module
 from app import create_app
 from app.models.task import Task
 from app.models.goal import Goal
 from app import db
 from datetime import datetime
 
+# Fixture: Shared code used to perform setup and cleanup for tests.
 
-@pytest.fixture
+@pytest.fixture 
+#  	Applies the fixture decorator to the empty_list function. pytest will be able to use empty_list as a fixture in subsequent tests.
 def app():
     # create the app with a test config dictionary
     app = create_app({"TESTING": True})
@@ -18,12 +20,12 @@ def app():
     # close and remove the temporary database
     with app.app_context():
         db.drop_all()
-
+# cleans up and drops things
 
 @pytest.fixture
 def client(app):
     return app.test_client()
-
+# this fixture makes makes a test client which is an object able to simulate a client making HTTP requests
 
 # This fixture gets called in every test that
 # references "one_task"
@@ -67,12 +69,13 @@ def completed_task(app):
 
 # This fixture gets called in every test that
 # references "one_goal"
-# This fixture creates a goal and saves it in the database
+# This fixture creates a goal and saves it in the database -- ???test database???
 @pytest.fixture
 def one_goal(app):
     new_goal = Goal(title="Build a habit of going outside daily")
     db.session.add(new_goal)
     db.session.commit()
+# ^ Declares the one_goal function.
 
 
 # This fixture gets called in every test that

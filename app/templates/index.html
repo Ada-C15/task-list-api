@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/styles.css">
+</head>
+<body>
+<div class="wrapper">
+    <div class="top">
+        <div class="title"><h1>My Goal</h1></div>
+    </div>
+
+    {% for goal in goals_response: %}
+    <div class="content">
+        <div class="card ">
+            <h1>Look at this Plain Text!</h1>
+            <h1>3 * 7</h1>
+            <h2>how will these lines look different?</h2>
+            <h1>{{ 3 * 7 }}</h1>
+            
+            <h2>What will goal.id evaluate to?</h2>
+            <h1>{{ goal.id }}</h1>
+
+            <h2>What will goal.title evaluate to?</h2>
+            <h1>{{ goal.title }}</h1>
+        </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+</body>
+<footer>
+    <p>I ♥️ Ada</p>
+</footer>
+</html>
