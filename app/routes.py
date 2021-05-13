@@ -2,12 +2,11 @@ from flask.wrappers import Response
 import requests
 import os
 from app import db
-from app.models.task import Task
+from .models.task import Task
 from flask import Blueprint, make_response, request, jsonify
 from datetime import datetime
 from dotenv import load_dotenv
 from .models.goal import Goal
-from app.models import goal
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -205,4 +204,44 @@ def handle_goal_id(goal_id):
         return {
             "details": f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"
         }, 200
+#   ******* wave 6 *******
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"])
+def handle_tasks_and_goal(goal_id):
+    goal_id = int(goal_id)
+    if goal_id is None:
+        return make_response("", 404)
+
+    request_body = request.get_json()
+    new_task_ids = request_body["task_ids"]
+    list_new_ids = []
+
+    for task_id in new_task_ids:
+        some_task = Task.query.get(task_id)
+        some_task.goal_id = goal_id
+        list_new_ids.append(task_id)
+        db.session.commit()
+
+    return make_response({
+        "id": goal_id ,
+        "task_ids": new_task_ids
+        }, 200)
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def handle_all_things(goal_id):
+    tasks_info = []
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return make_response("", 404)
+
+
+    all_tasks = Task.query.all()
+
+    for task in all_tasks:
+        tasks_info.append(task.resp_json())
+
+    return make_response({
+        "id": int(goal_id),
+        "title": goal.title,
+        "tasks": tasks_info
+    }, 200)
 
