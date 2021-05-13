@@ -82,7 +82,7 @@ def task(task_id):
     if not task:
         return '',404
     
-
+    #checking to see if task has goal_id
     if request.method == "GET":
         if task.goal_id:
             return {"task": task.to_json_goal_id()}
@@ -91,7 +91,7 @@ def task(task_id):
     
     if request.method =='PUT':
         request_body = request.get_json()
-        #assigning updated values to task
+        #assigning updated values to a task instance
         task.title = request_body['title']
         task.description = request_body['description']
         task.completed_at = request_body['completed_at']
