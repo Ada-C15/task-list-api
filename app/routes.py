@@ -8,9 +8,12 @@ from datetime import date
 import os
 import requests
 
+# sets up blueprints - with details
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
+# 
+# Wave 1: GET & POST functions - gets data for all tasks in table, and creates new tasks
 # come back and refactor into task_index & independent POST function
 @tasks_bp.route("", methods=["GET","POST"], strict_slashes=False)
 def handle_tasks():
@@ -27,7 +30,8 @@ def handle_tasks():
 
         for task in tasks:
             tasks_response.append(task.to_json())
-        
+
+        # Wave 2 ascending/descending logic for GET method
         if "asc" in request.full_path:
             sorted_ascending = sorted(tasks_response, key=lambda x: x.get("title"))
             return jsonify(sorted_ascending)
@@ -58,13 +62,14 @@ def handle_tasks():
         except KeyError:
             return{"details": "Invalid data"}, 400
 
+# helper function that will eventually check for task_ids being integers
 def is_int(value):
     try:
         return int(value)
     except ValueError:
         return False
 
-# Handles GET requests for 1 method with the provided task id. 
+# GET function - gets the data for the task with the specified task_id
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def get_one_task(task_id):
     if not is_int(task_id):
@@ -81,7 +86,8 @@ def get_one_task(task_id):
         return {
             "task": task.to_json()
         }, 200
-
+# PUT function - Updates either/or both title & description data 
+# for specified task (via task_id)
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
 
@@ -101,6 +107,7 @@ def update_task(task_id):
     else:
         return make_response("", 404)
 
+# DELETE function - deletes specified task (via task_id)
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
 def delete_task(task_id):
 
@@ -116,6 +123,7 @@ def delete_task(task_id):
             "details": f'Task {task.task_id} "{task.title}" successfully deleted'
         }
 
+# PATCH function - mark complete (includes call_slack_bot helper funciton)
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
 def mark_complete(task_id):
 
@@ -133,6 +141,7 @@ def mark_complete(task_id):
             "task": task.to_json()
         }, 200
 
+# PATCH function - mark_incomplete
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def mark_incomplete(task_id):
 
@@ -148,7 +157,7 @@ def mark_incomplete(task_id):
             "task": task.to_json()
         }, 200
 
-# separate function that sends a POST request to the slack bot
+# Wave 4: separate function that sends a POST request to the slack bot
 def call_slack_bot(task):
     SLACK_API_TOKEN = os.environ.get('BOT_API_TOKEN')
     url = "https://slack.com/api/chat.postMessage"
@@ -162,6 +171,7 @@ def call_slack_bot(task):
     return requests.request("POST", url, data=payload, headers=headers)
 
 # wave 5 goal routes
+# refactor into separate GET & POST functions
 @goals_bp.route("", methods=["GET","POST"], strict_slashes=False)
 def handle_goals():
     if request.method == "GET":
@@ -178,6 +188,7 @@ def handle_goals():
         for goal in goals:
             goals_response.append(goal.goal_json())
         
+        # implements Wave 2 ascending/descending sort logic
         if "asc" in request.full_path:
             sorted_ascending = sorted(goals_response, key=lambda x: x.get("title"))
             return jsonify(sorted_ascending)
@@ -262,6 +273,7 @@ def delete_goal(goal_id):
             "details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'
         }
 # wave 6
+# POST function: one(goal)-to-many(tasks) relationship
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
 def post_goal_tasks(goal_id):
     # gets the passed in information and gives it in json format
@@ -287,3 +299,31 @@ def post_goal_tasks(goal_id):
         "task_ids": request_body["task_ids"]
     }
 
+# GET function: one(goal)-to-many(tasks)
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_goal_tasks(goal_id):
+    request_body = request.get_json()
+    goal = Goal.query.get(goal_id)
+    # sets task variable equal to the task with the corresponding goal (in foreignkey column)
+    task = Task.query.get(goal_id)
+
+    # if goal doesn't exist, return a 404 error
+    if not goal:
+        return make_response("", 404)
+    else:
+        # sets outer dictionary (named response_dict) to dictionary created in Goal
+        response_dict = goal.goal_json()
+        # if there are no tasks associated with the goal, sets "tasks" equal to empty list
+        if task == None:
+            response_dict["tasks"] = []
+        else:
+            # if task(s) associated with goal, return the task.json() 
+            # data pulled from Task function
+            task_data_dict = task.to_json()
+            # sets response_dict "tasks"  & task_data_dict "goal_id" values
+            response_dict["tasks"] = [response_dict]
+            task_data_dict["goal_id"] = goal.goal_id
+        
+        # commit changes to tables
+        db.session.commit()
+        return make_response(response_dict, 200)
