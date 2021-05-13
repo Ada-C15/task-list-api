@@ -37,10 +37,6 @@ def create_app(test_config=None):
     from .routes import goals_bp
     app.register_blueprint(goals_bp)
 
-    #index
-    from .routes import index_bp
-    app.register_blueprint(index_bp)
-
     from app.models.task import Task
     from app.models.goal import Goal
 

@@ -10,37 +10,25 @@ import requests
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
-index_bp = Blueprint("index", __name__, url_prefix="/")
-
-@index_bp.route("", methods=["GET"])
-def index():
-    return make_response("Hello, this is Ruthie's task list", 200)
-
-@index_bp.route("smile/<count>", methods=["GET"])
-def smiley(count):
-    count_list = []
-    for i in range(int(count)):
-        count_list.append(";)")
-    return make_response(jsonify(count_list), 200)
 
 
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_all_tasks():
 
     sort_query = request.args.get("sort")
+
     tasks_response = []
     sorted_response = []
     ordered_query = []
 
     
-    if sort_query is None:
+    if sort_query is None and title_query is None:
         tasks = Task.query.all()
-    
+
         for task in tasks:           
             tasks_response.append(task.create_json())
             
         return make_response(jsonify(tasks_response), 200)  
-
     
     if sort_query == "asc":
 
@@ -50,16 +38,19 @@ def get_all_tasks():
 
         ordered_query = Task.query.order_by(Task.title.desc())
     
+    elif sort_query == "id":
+
+        ordered_query = Task.query.order_by(Task.id)
+
     for task in ordered_query:
         sorted_response.append(task.create_json())
     
     return jsonify(sorted_response), 200
-        
+
+
         
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_new_task():
-
-    #when creating a task, the value of completed_at is a string that is not a datetime?
 
     request_body = request.get_json()
     if not request_body or not request_body.get("title") or not request_body.get("description") or "completed_at" not in request_body:
@@ -67,11 +58,6 @@ def create_new_task():
     
     new_task = Task.from_json(request_body)
 
-    # new_task = Task(
-    #     title = request_body["title"],
-    #     description = request_body["description"],
-    #     completed_at = request_body["completed_at"]
-    # )
     db.session.add(new_task)
     db.session.commit()
 
@@ -93,6 +79,7 @@ def get_task_by_id(task_id):
     
         return make_response({"task": task.create_json_with_goal_id()}, 200)      
 
+
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
     task = Task.query.get(task_id)
@@ -110,6 +97,7 @@ def update_task(task_id):
         db.session.commit()
         return make_response({"task": task.create_json()}, 200)
 
+
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
 def delete_task(task_id):   
     task = Task.query.get(task_id)
@@ -122,6 +110,7 @@ def delete_task(task_id):
         db.session.commit()
 
     return make_response({"details":f"Task {task.id} \"{task.title}\" successfully deleted"}, 200)
+
 
 @tasks_bp.route("<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
 def mark_complete(task_id):
@@ -164,13 +153,33 @@ def mark_incomplete(task_id):
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def get_all_goals():
 
-    goals_response = []
-    goals = Goal.query.all()
-    
-    for goal in goals:           
-        goals_response.append(goal.create_goal_json())
+    ordered_query = []
+    sorted_response = []
+
+    sort_query = request.args.get("sort")
+
+    if not sort_query:
+
+        goals_response = []
+        goals = Goal.query.all()
         
-    return make_response(jsonify(goals_response), 200) 
+        for goal in goals:           
+            goals_response.append(goal.create_goal_json())
+            
+        return make_response(jsonify(goals_response), 200) 
+    
+    if sort_query == "asc":
+
+        ordered_query = Goal.query.order_by(Goal.title.asc())
+    
+    elif sort_query == "desc":
+
+        ordered_query = Goal.query.order_by(Goal.title.desc())
+    
+    for goal in ordered_query: 
+        sorted_response.append(goal.create_goal_json())
+
+    return make_response(jsonify(sorted_response), 200) 
 
 
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
@@ -180,10 +189,6 @@ def create_goals():
         return make_response({"details": "Invalid data"}, 400)
 
     new_goal = Goal.from_json(request_body)
-
-    # new_goal = Goal(
-    #     title = request_body["title"]
-    # )
 
     db.session.add(new_goal)
     db.session.commit()
@@ -259,6 +264,7 @@ def add_tasks_to_goals(goal_id):
 
 
     return make_response({"id": goal_id, "task_ids": task_id_list}, 200)
+    
 
 @goals_bp.route("<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 def get_tasks_of_one_goal(goal_id):
