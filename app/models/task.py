@@ -10,7 +10,6 @@ class Task(db.Model):
     completed_at = db.Column(db.DateTime, nullable = True)
     goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True)
 
-#write code to adjust completed at to true or false
     def task_completed(self):
         if self.completed_at:
             return True

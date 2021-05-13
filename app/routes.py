@@ -11,7 +11,7 @@ import requests
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-#make a post request
+
 @tasks_bp.route("", methods=["POST"])
 def create_task():
     
@@ -22,15 +22,13 @@ def create_task():
                     description=request_body["description"],
                     completed_at=request_body["completed_at"])
     
-    
-
 
     db.session.add(task)
     db.session.commit()
 
     return make_response({"task": task.return_task_json()}, 201)
 
-#get requests
+
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def get_tasks():
     tasks = Task.query.all()
@@ -79,7 +77,6 @@ def mark_task_complete(task_id):
     task.completed_at = datetime.now()
 
     path = 'https://slack.com/api/chat.postMessage'
-    # slack_token = os.environ.get("SLACK_BOT_TOKEN")
 
     query_dictionary= {
         "token" : os.environ.get("SLACK_BOT_TOKEN"),
@@ -108,9 +105,6 @@ def create_goal():
 
     goal = Goal(title=request_body["title"])
     
-    
-
-
     db.session.add(goal)
     db.session.commit()
 
@@ -150,14 +144,9 @@ def goals_and_tasks(goal_id):
     goal = Goal.query.get(goal_id)
     
     request_body = request.get_json()
-    #for all these tasks, I want to get their task id
     for task_id in request_body["task_ids"]:
-        #tasks = assign tasks_ids
         task = Task.query.get(task_id)
-        #make relationship to goal_id 
         task.goal_id = goal.goal_id
-
-
 
     db.session.commit()
     return make_response({"id": goal.goal_id, "task_ids": request_body["task_ids"]}), 200
@@ -165,7 +154,7 @@ def goals_and_tasks(goal_id):
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"])
 def get_goals(goal_id):
     goal = Goal.query.get(goal_id)
-    #if no goal, 404
+
     if goal is None:
         return make_response("", 404)
 
@@ -176,10 +165,6 @@ def get_goals(goal_id):
 
     return make_response({"id": goal.goal_id, "title": goal.title, "tasks": task_list }, 200)
 
-    #else, goal_id is assign to a variable
-    #get by filter, goal_id, - tasks and save to varible
-    #for no matching tasks, make a varible w empty list
-    #use for loop to go over tasks, apend those tasks to list
-    #make use of task helper function to append to empty list
+
 
 
