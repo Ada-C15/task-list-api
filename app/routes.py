@@ -240,11 +240,8 @@ def get_tasks_for_goal(goal_id):
     for task in associated_tasks:
         associated_tasks_info.append(task.get_task_info())
 
-    response = {
-        "id": int(goal_id),
-        "title": goal.title,
-        "tasks": associated_tasks_info
-    }
+    response = goal.to_json()
+    response['tasks'] = associated_tasks_info
 
     return response
 
