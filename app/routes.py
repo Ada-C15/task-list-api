@@ -8,7 +8,7 @@ import os, requests
 tasks_bp = Blueprint("task", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goal", __name__, url_prefix="/goals")
 
-######################## TASK CRUD OPERATIONS ######################## 
+######################## TASK ROUTES ######################## 
 
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_task():
@@ -26,28 +26,20 @@ def create_task():
 @tasks_bp.route("", methods=["GET"], strict_slashes=False)
 def view_all_tasks():
     query_param_value = request.args.get("sort")
-    if query_param_value == "desc":
-        tasks = Task.query.order_by(Task.title.desc()).all()
-    elif query_param_value == "asc":
-        tasks = Task.query.order_by(Task.title).all()
-    else:
-        tasks = Task.query.all()
+    tasks = Task.sort(Task, query_param_value) 
     view_tasks = [task.to_json() for task in tasks if tasks]
     return jsonify(view_tasks)
 
-
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def view_task(task_id):
-    task = Task.query.get(task_id)
-    if not task:
-        return jsonify(None), 404
+    task = Task.query.get_or_404(task_id)
     return jsonify(task = task.to_json())
 
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_task(task_id):
-    task = Task.query.get(task_id)
+    task = Task.query.get_or_404(task_id)
     updated_task = request.get_json()
-    if not task or not updated_task:
+    if not updated_task:
         return jsonify(None), 404
     task.title = updated_task['title']
     task.description = updated_task["description"]
@@ -57,9 +49,7 @@ def update_task(task_id):
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
 def delete_task(task_id):
-    task = Task.query.get(task_id)
-    if not task:
-        return jsonify(None), 404
+    task = Task.query.get_or_404(task_id)
     db.session.delete(task)
     db.session.commit()
     send_deleted_notification(task_id)
@@ -84,7 +74,7 @@ def mark_task(task_id, completed):
         return jsonify(task=task.to_json())
     return jsonify(None), 404
 
-######################## GOAL CRUD OPERATIONS ######################## 
+######################## GOAL ROUTES ######################## 
 
 @goals_bp.route("", methods=["POST"], strict_slashes=False)
 def create_new_goal():
@@ -98,15 +88,14 @@ def create_new_goal():
 
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def get_all_goals():
-    goals = Goal.query.all()
+    query_param_value = request.args.get("sort")
+    goals = Goal.sort(Goal, query_param_value)
     view_goals= [goal.to_json() for goal in goals if goals]
     return jsonify(view_goals)
 
 @goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
 def view_goal(goal_id):
-    goal = Goal.query.get(goal_id)
-    if not goal:
-        return jsonify(None), 404
+    goal = Goal.query.get_or_404(goal_id)
     return jsonify(goal=goal.to_json())
 
 @goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
@@ -121,9 +110,7 @@ def update_goal(goal_id):
 
 @goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)
 def delete_goal(goal_id):
-    goal = Goal.query.get(goal_id)
-    if not goal:
-        return jsonify(None), 404
+    goal = Goal.query.get_or_404(goal_id)
     db.session.delete(goal)
     db.session.commit()
     return jsonify(details=f'Goal {goal.goal_id} "{goal.title}" successfully deleted')
@@ -141,14 +128,12 @@ def create_new_task_in_goal(goal_id):
 
 @goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 def get_task_for_specific_goal(goal_id):
-    goal = Goal.query.get(goal_id)
+    goal = Goal.query.get_or_404(goal_id)
     tasks = Task.query.filter_by(goal_id=int(goal_id))
-    if not goal:
-        return jsonify(None), 404
     tasks_in_goal = [task.to_json() for task in tasks if tasks]
     return jsonify(id=int(goal_id), title=goal.title, tasks=tasks_in_goal)
 
-#################### SLACK NOTIFICATIONS METHODS #################### 
+#################### SLACK NOTIFICATIONS #################### 
 
 SLACK_TOKEN = os.environ.get('SLACK_TOKEN')
 CHANNEL_ID = os.environ.get('CHANNEL_ID')
