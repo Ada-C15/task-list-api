@@ -29,7 +29,7 @@ def handle_tasks():  # NameError
 
         if "title" not in request_body:
             return {
-                "goal": f"Invalid title"
+                "details": "Invalid data"
             }, 400
 
         goal = Goal(
@@ -67,6 +67,13 @@ def handle_goal(goal_id):
         goal.title = form_data["title"]
 
         db.session.commit()
+        #past last test
+        return {
+            "goal": {
+                "id": goal.goal_id,
+                "title": "Updated Goal Title"
+        }
+    }
 
     elif request.method == "DELETE":
         db.session.delete(goal)
@@ -111,3 +118,9 @@ def mark_incomplete(goal_id):
             "title": goal.title
         }
     }
+
+@goal_bp.route("/<int:id>/tasks", methods=["GET", "POST"])
+def tasks_and_goal(id):
+    goal = Goal.query.get(id)
+    if not goal:
+        return make_response("Goal does\'t exist", 404)

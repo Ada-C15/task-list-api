@@ -5,6 +5,7 @@ from flask import request, Blueprint, make_response, Response, jsonify
 from datetime import date
 import requests
 from secrets import slack_token
+# slack_token = os.environ.get("slack_token")
 
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -42,7 +43,6 @@ def handle_tasks():  # NameError
     elif request.method == "POST":  # CRUD CREATE
         # check for request body title and description, plus ensure both are strings
         request_body = request.get_json()
-
         if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
             return {
                 "details": f"Invalid data"
