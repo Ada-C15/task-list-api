@@ -23,3 +23,27 @@ class Task(db.Model):
             if not self.completed_at: 
                 return False
             return True
+
+    def as_json(self):
+
+        result_dict = {
+                "id": self.id,
+                "title": self.title,
+                "description": self.description,
+                "is_complete": self.is_complete()
+            }
+
+        if self.goal_id: 
+            result_dict["goal_id"] = self.goal_id
+        
+        return result_dict
+
+    @classmethod
+    def from_json(cls,task_dict):
+
+        return Task(title = task_dict["title"],
+                description = task_dict["description"],
+                completed_at = task_dict["completed_at"])
+        
+
+        

@@ -24,9 +24,10 @@ def create_a_task():
         }), 400)
         
 
-    new_task = Task(title=request_body["title"],
-                description=request_body["description"],
-                completed_at=request_body["completed_at"])
+    new_task = Task.from_json(request_body)
+    # new_task = Task(title=request_body["title"],
+    #             description=request_body["description"],
+    #             completed_at=request_body["completed_at"])
 
     db.session.add(new_task)
     db.session.commit()
@@ -34,36 +35,45 @@ def create_a_task():
   
 
     response = {
-            "task": {
-                "id": new_task.id,
-                "title": new_task.title,
-                "description": new_task.description,
-                "is_complete": new_task.is_complete() 
-            }
-        }
+            "task": new_task.as_json()
+            
+               }
     return make_response(jsonify(response), 201)
+
+
+
 
 @task_list_bp.route("/tasks", methods=["GET"])
 def retrieve_all_tasks(): 
-
-    if "sort" in request.args:
+    if "filter" in request.args: 
+        # tasks = Task.query.all()
+        # [task for task in tasks]
+        # tasks = [task for task in tasks if task.title == request.args["filter"]]
+        tasks = Task.query.filter_by(title = request.args["filter"]).all() 
+    elif "sort" in request.args:
         if request.args["sort"] == "desc":
             tasks = Task.query.order_by(Task.title.desc()).all()
+        elif request.args["sort"] == "id": 
+            tasks = Task.query.order_by(Task.id.asc()).all()
         else:
             tasks = Task.query.order_by(Task.title.asc()).all()
     else:
         tasks = Task.query.all()
     
 
+    # return jsonify([
+    #     {
+    #         "id": q.id,
+    #         "title": q.title,
+    #         "description": q.description,
+    #         "is_complete": q.is_complete()
+    #     } for q in tasks
+    # ])
 
     return jsonify([
-        {
-            "id": task.id,
-            "title": task.title,
-            "description": task.description,
-            "is_complete": task.is_complete() 
-        } for task in tasks
+        task.as_json() for task in tasks
     ])
+
 
 @task_list_bp.route("/tasks/<task_id>", methods=["GET", "PUT", "DELETE"])
 def retrieve_one_task(task_id): 
@@ -72,19 +82,13 @@ def retrieve_one_task(task_id):
     if task is None: 
         return make_response("", 404)
 
-    if request.method == "GET":
-        task_json = {
-                "task": {
-                    "id": task.id,
-                    "title": task.title,
-                    "description": task.description,
-                    "is_complete": task.is_complete()
-            }
-        }
-        if task.goal_id: 
-            task_json["task"]["goal_id"] = task.goal_id
-            
-        return jsonify(task_json)
+    if request.method == "GET":   
+        return jsonify({
+                "task": task.as_json()
+        }) 
+
+
+
        
     elif request.method == "PUT": 
         form_data = request.get_json()
@@ -97,12 +101,7 @@ def retrieve_one_task(task_id):
         db.session.commit()
         
         return jsonify({
-            "task": {
-                "id": task.id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": task.is_complete()
-            }
+            "task": task.as_json()
         })
 
     elif request.method == "DELETE":
@@ -134,23 +133,13 @@ def mark_complete(task_id):
         task.completed_at = datetime.now() 
         db.session.commit()
         return jsonify({
-            "task": {
-                "id": task.id, 
-                "title": task.title,
-                "description": task.description,
-                "is_complete": task.is_complete() 
-            }
+            "task": task.as_json()
         })
     else: 
         task.completed_at = datetime.now()
         db.session.commit() 
         return jsonify({
-            "task": {
-                "id": task.id, 
-                "title": task.title,
-                "description": task.description,
-                "is_complete": task.is_complete() 
-            }
+            "task": task.as_json()
         })
         
 
@@ -167,12 +156,7 @@ def mark_incomplete(task_id):
         db.session.commit()
 
     return jsonify({
-        "task": {
-            "id": task.id, 
-            "title": task.title,
-            "description": task.description,
-            "is_complete": task.is_complete()
-        }
+        "task": task.as_json()
     })
     
 
@@ -198,24 +182,21 @@ def create_a_goal():
 
 
     response = {
-            "goal": {
-                "id": new_goal.goal_id,
-                "title": new_goal.title
-        
-            }
+            "goal": new_goal.to_json()
         }
     return make_response(jsonify(response), 201)
 
 @goals_bp.route("", methods=["GET"])
 def retrieve_all_goals():
-    goals = Goal.query.all()
+  
+    if "sort" in request.args and request.args["sort"] == "title": 
+    # if "sort" in request.args == "title": # always false, because it reduces to `if True == "title"`
+        goals = Goal.query.order_by(Goal.title.asc()).all()
+    
+    else: 
+        goals = Goal.query.all()
 
-    return jsonify([
-        {
-           "id": goal.goal_id,
-           "title": goal.title,
-        } for goal in goals
-    ])
+    return jsonify([goal.to_json() for goal in goals])
 
 
 
@@ -229,10 +210,7 @@ def retrieve_one_goals_tasks(goal_id):
     
     if request.method == "GET":
        return jsonify(
-            {"goal": {
-            "id": goal.goal_id,
-            "title": goal.title,
-            } }
+            {"goal":goal.to_json() }
         )
 
     elif request.method == "PUT": 
@@ -242,12 +220,7 @@ def retrieve_one_goals_tasks(goal_id):
     
         db.session.commit()
         
-        return jsonify({
-            "goal": {
-                "id": goal.goal_id,
-                "title": goal.title,
-            }
-        })
+        return jsonify({ "goal": goal.to_json() })
 
     elif request.method == "DELETE":
         db.session.delete(goal)
@@ -284,19 +257,10 @@ def retrieve_one_task(goal_id):
         return make_response("", 404)
 
 
-    response = {
-            "id": goal.goal_id,
-            "title": goal.title,
-            "tasks": [
-                {
-                "id": task.id,
-                "goal_id": task.goal_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": task.is_complete()
-                } 
-                for task in tasks 
-            ]
-        }
+    response = goal.to_json() # creates a dictionary with id and title entries
+    response["tasks"] = [task.as_json() for task in tasks] # adds a third entry to that dictionary
+
+
 
     return make_response(jsonify(response), 200)
+    
