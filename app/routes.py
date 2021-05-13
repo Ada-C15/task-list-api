@@ -128,7 +128,7 @@ def mark_complete(task_id):
     text = f"Someone just completed the task {task.title}"
 
     response = requests.post('https://slack.com/api/chat.postMessage', {
-        'token': slack_token,
+        'key': slack_token,
         'channel': slack_channel,
         'text': text,
         'icon_url': slack_icon_url
