@@ -9,10 +9,11 @@ class Task(db.Model):
     completed_at = db.Column(db.DateTime, nullable=True)
     goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'))
 
-    # consider making separate function to determine if complete or not**
+    def is_complete(self):
+        if self.completed_at:
+            return True
+        return False
     
-    # helper method to return dictionary and simultaneously 
-    # report if task has been completed or not
     def to_dict(self):
         if self.goal_id:
             return {
@@ -20,12 +21,12 @@ class Task(db.Model):
             "goal_id": self.goal_id,
             "title": self.title,
             "description": self.description,
-            "is_complete": self.completed_at != None
+            "is_complete": self.is_complete()
             }
         return {
             "id": self.task_id, 
             "title": self.title,
             "description": self.description,
-            "is_complete": self.completed_at != None
+            "is_complete": self.is_complete()
         }
 
