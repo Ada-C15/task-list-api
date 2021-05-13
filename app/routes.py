@@ -160,14 +160,13 @@ def call_slack_bot(task):
         "Authorization": f"Bearer {SLACK_API_TOKEN}",
     }
     return requests.request("POST", url, data=payload, headers=headers)
-    # 
-    # 
-    # 
+
+# wave 5 goal routes
 @goals_bp.route("", methods=["GET","POST"], strict_slashes=False)
 def handle_goals():
     if request.method == "GET":
         goal_title_from_url = request.args.get("title")
-        # search for task by title
+        # search for goal by title
         if goal_title_from_url:
             goals = Goal.query.filter_by(title=goal_title_from_url)
         # all goals
@@ -212,7 +211,7 @@ def is_int(value):
     except ValueError:
         return False
 
-# Handles GET requests for 1 method with the provided task id. 
+# Handles GET requests for 1 method with the provided goal id. 
 @goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
 def get_one_goal(goal_id):
     if not is_int(goal_id):
@@ -229,3 +228,36 @@ def get_one_goal(goal_id):
         return {
             "goal": goal.goal_json()
         }, 200
+
+@goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
+def update_goal(goal_id):
+
+    goal = Goal.query.get(goal_id)
+
+    if goal:
+        goal_data = request.get_json()
+
+        goal.title = goal_data["title"]
+
+        db.session.commit()
+
+        return{
+            "goal": goal.goal_json()
+        }, 200
+    else:
+        return make_response("", 404)
+
+@goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)
+def delete_goal(goal_id):
+
+    goal = Goal.query.get(goal_id)
+
+    if goal is None:
+        return make_response("", 404)
+    else:
+        db.session.delete(goal)
+        db.session.commit()
+
+        return {
+            "details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'
+        }
