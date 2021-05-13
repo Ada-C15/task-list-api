@@ -32,11 +32,9 @@ def view_all_tasks():
         tasks = Task.query.order_by(Task.title).all()
     else:
         tasks = Task.query.all()
-    tasks_view = []
-    if tasks:
-        for task in tasks:
-            tasks_view.append(task.to_json())
-    return jsonify(tasks_view)
+    view_tasks = [task.to_json() for task in tasks if tasks]
+    return jsonify(view_tasks)
+
 
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def view_task(task_id):
@@ -101,10 +99,8 @@ def create_new_goal():
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def get_all_goals():
     goals = Goal.query.all()
-    response_body = [] 
-    for goal in goals:
-        response_body.append(goal.to_json())
-    return jsonify(response_body)
+    view_goals= [goal.to_json() for goal in goals if goals]
+    return jsonify(view_goals)
 
 @goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
 def view_goal(goal_id):
@@ -149,10 +145,8 @@ def get_task_for_specific_goal(goal_id):
     tasks = Task.query.filter_by(goal_id=int(goal_id))
     if not goal:
         return jsonify(None), 404
-    task_list = []
-    for task in tasks:
-        task_list.append(task.to_json())
-    return jsonify(id=int(goal_id), title=goal.title, tasks=task_list)
+    tasks_in_goal = [task.to_json() for task in tasks if tasks]
+    return jsonify(id=int(goal_id), title=goal.title, tasks=tasks_in_goal)
 
 #################### SLACK NOTIFICATIONS METHODS #################### 
 
