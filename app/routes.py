@@ -5,10 +5,18 @@ from app.models.goal import Goal
 from datetime import datetime
 import datetime
 from sqlalchemy import DateTime, desc
+import requests
 import os
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
+
+#wave4
+def hi_slack_api(task):
+    key = os.environ.get("API_KEY")
+    url = "https://slack.com/api/chat.postMessage"
+    slack_str = f"Someone just completed the task {task.title}"
+    requests.post(url, data={"token": key, "channel": "task-list-api", "test": slack_str})
 
 #wave6
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes= False)
@@ -183,6 +191,8 @@ def mark_complete(task_id):
 
     db.session.add(task)
     db.session.commit()
+    
+    hi_slack_api(task) #wave 4
 
     if task.completed_at:
         return jsonify({
