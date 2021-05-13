@@ -134,10 +134,9 @@ def deal_tasks():
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes= False)
 def get_task_by_id(task_id):
     task = Task.query.get(task_id)
-    goal_attached = task.goal_id
     if task is None:
         return jsonify(None), 404
-    elif goal_attached:
+    elif task.goal_id:
         return make_response({"task": helper_fun(task)}, 200)
     else:
         return make_response({"task": task.to_json()}, 200)
