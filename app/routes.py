@@ -267,12 +267,12 @@ def get_tasks_for_goal(goal_id):
     for task in tasks:
         saved_goal_tasks.append(task.convert_to_json())
 
-    return make_response({
-        "id": saved_goal.goal_id,
-        "title": saved_goal.title,
-        "tasks": saved_goal_tasks
-    }, 200)
+    response_body = saved_goal.convert_to_json(saved_goal_tasks)
 
+    return make_response(response_body, 200)
+
+    
+    
 
 
 

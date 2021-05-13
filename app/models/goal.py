@@ -7,10 +7,16 @@ class Goal(db.Model):
     title = db.Column(db.String)
     tasks = db.relationship('Task', backref='goal', lazy=True)
 
-    # Returns a JSON dictionary of attribute values 
-    def convert_to_json(self):
-        return {  
+    # This instance method returns a JSON dictionary of attribute values 
+    # with an optional argument if the goal has tasks assigned to it
+    def convert_to_json(self, tasks_list=None):
+
+        response_body = {  
             "id": self.goal_id,
             "title": self.title
         }
 
+        if tasks_list != None:
+            response_body["tasks"] = tasks_list
+
+        return response_body

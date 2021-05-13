@@ -9,24 +9,19 @@ class Task(db.Model):
     completed_at = db.Column(db.DateTime, nullable=True)
     match_goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'),nullable=True)
 
-
-    # Note - Wondering if it would have been better to split this method up?
     
-    # Checks if a task has been completed, and whether it has a matching 
-    # goal id, then returns a JSON dictionary of attribute values 
+    # This instance method checks if a task has been completed, and whether it 
+    # has a matching goal id, then returns a JSON dictionary of attribute values 
     def convert_to_json(self):
 
+        response_body = { 
+            "id": self.task_id,
+            "title": self.title,
+            "description": self.description,
+            "is_complete": bool(self.completed_at)
+            }
+
         if self.match_goal_id:
-            return {  
-            "id": self.task_id,
-            "goal_id": self.match_goal_id,
-            "title": self.title,
-            "description": self.description,
-            "is_complete": bool(self.completed_at),
-        }
-        return {  
-            "id": self.task_id,
-            "title": self.title,
-            "description": self.description,
-            "is_complete": bool(self.completed_at),
-        }
+            response_body["goal_id"] = self.match_goal_id
+
+        return response_body
