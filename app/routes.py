@@ -95,10 +95,7 @@ def tasks_index():
 @tasks_bp.route("/<task_id>", methods=["GET"], strict_slashes=False)
 def handle_single_task(task_id):
 
-    task = Task.query.get(task_id)
-
-    if task is None:
-            return jsonify(None), 404
+    task = Task.query.get_or_404(task_id)
     
     return jsonify({"task": {
         "id": task.task_id,
@@ -109,12 +106,9 @@ def handle_single_task(task_id):
 
 @tasks_bp.route("/<task_id>", methods=["PUT"], strict_slashes=False)
 def update_single_task(task_id):
-    task = Task.query.get(task_id)
+    task = Task.query.get_or_404(task_id)
 
     request_body = request.get_json()
-
-    if task is None:
-            return jsonify(None), 404
     
     task.title = request_body["title"]
     task.description = request_body["description"]
@@ -131,10 +125,7 @@ def update_single_task(task_id):
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
 def delete_single_task(task_id):
-    task = Task.query.get(task_id)
-
-    if task is None:
-            return jsonify(None), 404
+    task = Task.query.get_or_404(task_id)
     
     db.session.delete(task)
     db.session.commit()
@@ -143,10 +134,7 @@ def delete_single_task(task_id):
 
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
 def mark_single_task_complete(task_id):
-    task = Task.query.get(task_id)
-    
-    if not task:
-        return jsonify(None), 404
+    task = Task.query.get_or_404(task_id)
 
     task.completed_at = datetime.now()
 
@@ -164,10 +152,7 @@ def mark_single_task_complete(task_id):
     
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def mark_single_task_incomplete(task_id):
-    task = Task.query.get(task_id)
-    
-    if not task:
-        return jsonify(None), 404
+    task = Task.query.get_or_404(task_id)
 
     task.completed_at = None
 
@@ -216,10 +201,7 @@ def goals_index():
 @goals_bp.route("/<goal_id>", methods=["GET"], strict_slashes=False)
 def handle_single_goal(goal_id):
 
-    goal = Goal.query.get(goal_id)
-
-    if goal is None:
-            return jsonify(None), 404
+    goal = Goal.query.get_or_404(goal_id)
     
     return jsonify({"goal": {
         "id": goal.goal_id,
@@ -228,12 +210,9 @@ def handle_single_goal(goal_id):
 
 @goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
 def update_single_goal(goal_id):
-    goal = Goal.query.get(goal_id)
+    goal = Goal.query.get_or_404(goal_id)
 
     request_body = request.get_json()
-
-    if goal is None:
-            return jsonify(None), 404
     
     goal.title = request_body["title"]
 
@@ -246,12 +225,48 @@ def update_single_goal(goal_id):
 
 @goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)
 def delete_single_goal(goal_id):
-    goal = Goal.query.get(goal_id)
-
-    if goal is None:
-            return jsonify(None), 404
+    goal = Goal.query.get_or_404(goal_id)
     
     db.session.delete(goal)
     db.session.commit()
 
     return jsonify({"details" : f"Goal {goal.goal_id} \"{goal.title}\" successfully deleted"}), 200
+
+
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def handle_goals_tasks(goal_id):
+    request_body = request.get_json()
+    
+    goal = Goal.query.get(goal_id)
+
+    tasks = request_body["task_ids"]
+
+    for task in tasks:
+        task_to_update = Task.query.get(task) 
+        goal.tasks.append(task_to_update)
+
+    db.session.commit()
+
+    return make_response({"id": goal.goal_id,
+        "task_ids": tasks}, 200)
+
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def index_goals_tasks(goal_id):
+    
+    goal = Goal.query.get_or_404(goal_id)
+
+    goal_tasks = goal.tasks
+
+    return_list_of_tasks = []
+    for task in goal_tasks:
+        return_list_of_tasks.append({"id": task.task_id,
+                    "goal_id": task.goal_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": is_complete_function(task.completed_at)
+                })
+
+    return jsonify({"id": goal.goal_id,
+        "title": f"{goal.title}",
+        "tasks": return_list_of_tasks}), 200
