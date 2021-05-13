@@ -9,7 +9,7 @@ class Task(db.Model):
     title = db.Column(db.String)
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
-    matching_goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'),nullable=True)
+    match_goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'),nullable=True)
 
     # this method returns a dictionary of attribute values for a Task model instance, as well as a True or False value depending on whether the task has a completed_at time stamp
     def convert_to_json(self):
@@ -17,6 +17,5 @@ class Task(db.Model):
             "id": self.task_id,
             "title": self.title,
             "description": self.description,
-            "is_complete": bool(self.completed_at)
-            
+            "is_complete": bool(self.completed_at),
         }

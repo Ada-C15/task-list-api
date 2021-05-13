@@ -14,7 +14,6 @@ load_dotenv()
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
-# relation_bp = Blueprint("est_relation", __name__, url_prefix="/goals")
 
 #=============================================================================
 
@@ -61,7 +60,20 @@ def get_single_task(task_id):
 
     saved_task = Task.query.get_or_404(task_id)
 
+    if saved_task.match_goal_id:
+        return make_response({"task":{  
+            "id": saved_task.task_id,
+            "goal_id": saved_task.match_goal_id,
+            "title": saved_task.title,
+            "description": saved_task.description,
+            "is_complete": bool(saved_task.completed_at),
+        }}, 200)
+
     return make_response({"task":(saved_task.convert_to_json())}, 200)
+
+    
+
+    
 
 # Update One Task (Successful = Returns 200 OK); No Matching Task Returns 404 Not Found
 @tasks_bp.route("/<task_id>", methods=["PUT"])
@@ -231,7 +243,7 @@ def get_single_goal(goal_id):
 
     return make_response({"goal":(saved_goal.convert_to_json())}, 200)
 
-@goals_bp.route("/<goal_id>", methods=["PUT"])
+@goals_bp.route("/<goal_id>", methods=["PUT"], strict_slashes=False)
 def update_goal(goal_id):
 
     if not is_int(goal_id):
@@ -250,7 +262,7 @@ def update_goal(goal_id):
 
     return make_response({"goal":(saved_goal.convert_to_json())}, 200)
 
-@goals_bp.route("/<goal_id>", methods=["DELETE"])
+@goals_bp.route("/<goal_id>", methods=["DELETE"], strict_slashes=False)
 def delete_goal(goal_id):
 
     if not is_int(goal_id):
@@ -267,20 +279,60 @@ def delete_goal(goal_id):
 
 #=========================================================================
 
-@goals_bp.route("/<goal_id>/tasks", methods=["POST"])
-def task_ids_to_goal(goal_id):
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def post_tasks_to_goal(goal_id):
 
+    if not is_int(goal_id):
+        return {
+            "message": f"ID {goal_id} must be an integer",
+            "success": False
+        }, 400
+
+    # getting a goal with PK goal_id 
     saved_goal = Goal.query.get_or_404(goal_id)
 
+    # form_data is a dictionary like this {"task_ids": [1,2, etc]}
     form_data = request.get_json()
+    task_ids = form_data["task_ids"]
 
-    for each_task_id in form_data["task_ids"]:
+    # UPDATE VARIABLE NAMES
+    for each_task_id in task_ids:
         updated_task = Task.query.get_or_404(each_task_id)
-        updated_task.matching_goal_id = saved_goal.goal_id
+        updated_task.match_goal_id = saved_goal.goal_id
 
     db.session.commit()
 
-    return make_response({"test"}, 200)
+    return make_response({"id": saved_goal.goal_id, "task_ids": task_ids}, 200)
+
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_tasks_of_goal(goal_id):
+
+    if not is_int(goal_id):
+        return {
+            "message": f"ID {goal_id} must be an integer",
+            "success": False
+        }, 400
+
+    saved_goal = Goal.query.get_or_404(goal_id)
+    saved_goal_tasks = []
+
+    tasks = Task.query.filter_by(match_goal_id=goal_id)
+    
+    for task in tasks:
+        json_task = {  
+            "id": task.task_id,
+            "goal_id": task.match_goal_id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": bool(task.completed_at),
+        }
+        saved_goal_tasks.append(json_task)
+
+    return make_response({
+        "id": saved_goal.goal_id,
+        "title": saved_goal.title,
+        "tasks": saved_goal_tasks
+    }, 200)
 
 
 
