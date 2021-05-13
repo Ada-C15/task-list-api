@@ -167,8 +167,6 @@ def handle_goal(goal_id):
         return '',404
     #
     if request.method == "GET":
-        
-        response_body = request.to_json()
         return jsonify(goal=goal.goal_to_json()), 200
    
     
@@ -208,8 +206,9 @@ def tasks_to_goal(goal_id):
 
     for task_id in request_body['task_ids']:
         task = Task.query.get(task_id)
-        # assigning goal_id column in Task with goal_id
-        task.goal_id = int(goal_id)
+        if task not in goal.tasks:
+            goal.tasks.append(task)
+            
     
     db.session.commit()
     
@@ -223,9 +222,8 @@ def get_goal_tasks(goal_id):
         return '',404
     # request body contains a goal object with given goal_id
     
-    tasks_for_goal = Goal.query.get(goal.goal_id)
     list_of_tasks = []
-    #task titles are located in task.goal_id
+    #tasks is referring to our tasks attribute in Goal#
     for task in goal.tasks:
         list_of_tasks.append(task.to_json_goal_id())
         #goal.task(helper function with goal_id as a key)

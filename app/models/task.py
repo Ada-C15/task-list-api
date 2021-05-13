@@ -18,17 +18,14 @@ class Task(db.Model):
             is_complete = True 
             
         return {
-        "id": self.task_id,
-        "title": self.title,
-        "description": self.description,
-        "is_complete": is_complete
-        }
-    
-    def to_json_goal_id(self):
-        return { 
             "id": self.task_id,
-            "goal_id": self.goal_id,
             "title": self.title,
             "description": self.description,
-            "is_complete": False if self.completed_at is None else True
-            }
+            "is_complete": is_complete
+        }
+    
+    #adding "goal_id" key to the returning value from our to_json() helper function 
+    def to_json_goal_id(self):
+        result = self.to_json()
+        result["goal_id"] = self.goal_id
+        return result 
