@@ -1,5 +1,6 @@
 from app import db
 from app.models.task import Task
+from app.models.goal import Goal
 from flask import request
 from flask import request, Blueprint, make_response
 from flask import jsonify
@@ -8,12 +9,9 @@ from sqlalchemy import asc, desc
 import requests
 import json
 import os
-from app.models.goal import Goal
-
 
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 @task_bp.route("/<task_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
-
 def get_single_task(task_id):
 
     task = Task.query.get(task_id)
@@ -132,14 +130,53 @@ def mark_incomplete(task_id):
         return jsonify({"task":task.json_object()}),200
     
 goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
+@goal_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
+def get_goal(goal_id):
 
-@goal_bp.route("", methods=["POST"])
-def one_goal():
+    goal = Goal.query.get(goal_id)
 
-    if request.method == "POST":
-        goal = Goal.query.post()
+    if goal is None:
+        return jsonify(None), 404
 
-        request_body = request.goal_json_object()
+    if request.method == "GET":
+        return jsonify({"goal": goal.goal_json_object()}), 200
+
+    elif request.method == "PUT":
+        form_data = request.get_json()
+
+        goal.title = form_data["title"]
+        
+        db.session.commit()
+        return jsonify({"goal": goal.goal_json_object()}),200
+
+    elif request.method == "DELETE":
+        db.session.delete(goal)
         db.session.commit()
         
-        return jsonify({"goal":goal.goal_json_object()}),201
+        return jsonify({"details": f'Goal {goal.goal_id} "{goal.title}" successfully deleted'}), 200
+
+@goal_bp.route("", methods=["POST", "GET"], strict_slashes=False)
+def one_goal():
+    if request.method == "GET":
+        goals = Goal.query.all()
+        
+        goal_response = []
+
+        for goal in goals:
+            goal_response.append(goal.goal_json_object())
+        
+        return jsonify(goal_response), 200
+
+    if request.method == "POST":
+        request_body = request.get_json() 
+        
+        if request_body == {}:    
+            return jsonify({"details": f'Invalid data'}), 400
+        
+        new_goal = Goal(title=request_body["title"])
+
+        db.session.add(new_goal)
+        db.session.commit()
+        
+        return jsonify({"goal":new_goal.goal_json_object()}),201
+    

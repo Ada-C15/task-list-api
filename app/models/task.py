@@ -3,7 +3,6 @@ from app import db
 from datetime import datetime
 # this is telling flask about my database task table
 
-
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)
