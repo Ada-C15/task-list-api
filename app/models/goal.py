@@ -11,5 +11,4 @@ class Goal(db.Model):
         return {
             "id":self.goal_id,
             "title":self.title,
-            
         }
