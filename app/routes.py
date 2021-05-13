@@ -16,7 +16,7 @@ def hi_slack_api(task):
     key = os.environ.get("API_KEY")
     url = "https://slack.com/api/chat.postMessage"
     slack_str = f"Someone just completed the task {task.title}"
-    requests.post(url, data={"token": key, "channel": "task-list-api", "test": slack_str})
+    requests.post(url, headers={"Authorization": key}, params={"channel": "task-list-api", "text": slack_str})
 
 #wave6
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes= False)
