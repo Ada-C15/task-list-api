@@ -89,7 +89,7 @@ def mark_complete(task_id):
 
     query_params = {
         "channel": "task-notifications",
-        "text": "Someone just completed the task My Beautiful Task",
+        "text": f"Someone just completed the task {task.title}",
         "format": "json"
     }
 
