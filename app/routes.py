@@ -132,7 +132,7 @@ def get_all_goals():
 
 
 @goal_bp.route('/<goal_id>', methods=['GET'], strict_slashes = False)
-def get_single_goal(goal_id):  # same name as parameter route
+def get_single_goal(goal_id):  
     goal = Goal.query.get(goal_id)
     if not goal:
         return "", 404

@@ -8,10 +8,10 @@ class Task(db.Model):
     description = db.Column(db.String)
     completed_at = db.Column(db.DateTime, nullable=True)
     goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True)
-    #is_complete = db.Column(db.Boolean, default = False)
+    
 
     def to_json(self):
-        #is_complete = None
+       
         if self.completed_at == None:
             is_complete = False
         else:
