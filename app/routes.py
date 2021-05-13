@@ -45,6 +45,7 @@ def update_task(task_id):
     task.description = updated_task["description"]
     task.completed_at = updated_task["completed_at"]
     db.session.commit()
+    send_updated_notification(task_id)
     return jsonify(task=task.to_json())
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
@@ -144,6 +145,10 @@ data = {"channel": CHANNEL_ID,"text": None}
 
 def send_new_task_notification():
     data["text"] = f"New task created!"
+    return requests.post(URL, headers=headers, data=data)
+
+def send_updated_notification(task_id):
+    data["text"] = f"Task {task_id} updated."
     return requests.post(URL, headers=headers, data=data)
     
 def send_completed_notification(task_id):
