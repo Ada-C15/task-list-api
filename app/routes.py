@@ -164,10 +164,7 @@ def get_goals():
     goals_response = []
 
     for goal in goals:
-        goals_response.append({
-            "id": goal.goal_id,
-            "title": goal.title,
-        })
+        goals_response.append(goal.to_json())
 
     return jsonify(goals_response)
 
@@ -179,10 +176,7 @@ def get_single_goal(goal_id):
         return make_response("", 404)
 
     return {
-        "goal": {
-            "id": goal.goal_id,
-            "title": goal.title
-        }
+        "goal": goal.to_json()
     }
 
 
@@ -199,10 +193,7 @@ def edit_goal(goal_id):
     db.session.commit()
 
     return {
-        "goal": {
-            "id": goal.goal_id,
-            "title": goal.title
-        }
+        "goal": goal.to_json()
     }
 
 
