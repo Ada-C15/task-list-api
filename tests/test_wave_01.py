@@ -69,7 +69,7 @@ def test_create_task_with_none_completed_at(client):
     # Assert
     assert response.status_code == 201
     assert "task" in response_body
-    assert response_body == {
+    assert response_body == {   
         "task": {
             "id": 1,
             "title": "A Brand New Task",
