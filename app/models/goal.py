@@ -13,10 +13,3 @@ class Goal(db.Model):
             "id": self.goal_id,
             "title": self.title,
         }
-
-    # def with_tasks(self):
-    #     return {
-    #         "id": self.goal_id,
-    #         "title": self.title,
-    #         "tasks": self.with_goal()
-    #     }

@@ -11,7 +11,6 @@ from app.models.goal import Goal
 
 goals_bp = Blueprint(
     "goals", __name__, url_prefix="/goals")
-
 tasks_bp = Blueprint(
     "tasks", __name__, url_prefix="/tasks")
 
@@ -22,7 +21,6 @@ tasks_bp = Blueprint(
 @tasks_bp.route("", methods=["POST"], strict_slashes=False)
 def create_task():
     request_body = request.get_json()
-
     if "title" in request_body and "description" in request_body and "completed_at" in request_body:
         new_task = Task(
             title=request_body["title"],
@@ -58,7 +56,7 @@ def handle_task(task_id):
     task = Task.query.get(task_id)
     if task is None:
         return make_response("", 404)
-
+# thank you audrey!
     if request.method == "GET":
         if task.goal_id is None:
             return jsonify({"task": task.to_dict()}), 200
@@ -117,15 +115,14 @@ def call_slack_api(task):
     }
     return requests.request("POST", url, headers=headers, data=payload)
 
-# IGNORE - WORKS BUT USES SLACK BOLT/PYTHON SDK (from slack API documentation) instead of requests.package
+# IGNORE - WORKS BUT USES SLACK BOLT/PYTHON SDK (from slack API docs) instead of requests.package
 # def call_slack_api(task):
 #     client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
 #     channel_id = "task-notifications"
 #     # try:
 #     result = client.chat_postMessage(
 #         channel=channel_id,
-#         text=f"Someone just completed the task {task.title}"
-#     )
+#         text=f"Someone just completed the task {task.title}")
 #     return result
 
 
@@ -179,14 +176,9 @@ def handle_goal(goal_id):
 # WAVE 6
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
 def sending_list_tasks_to_goal(goal_id):
-    # from request
     request_body = request.get_json()
-    # task ids from the request body
-    # for each task id, attach it to the same goal id (in url)
-    # <goal_id>
-    # query based on task id
     tasks = request_body["task_ids"]
-    # database
+    # (db)
     goal = Goal.query.get(goal_id)
     for task_id in tasks:
         task_db_object = Task.query.get(task_id)
