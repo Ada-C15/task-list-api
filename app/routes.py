@@ -29,7 +29,7 @@ def create_task():
         )
         db.session.add(new_task)
         db.session.commit()
-        return jsonify({"task": new_task.to_dict()}), 201
+        return jsonify({"task": new_task.to_json()}), 201
     else:
         return make_response({"details": "Invalid data"}, 400)
 
@@ -44,7 +44,7 @@ def task_index():
         tasks = Task.query.order_by(Task.title.desc())
     else:
         tasks = Task.query.all()
-    tasks_response = [(task.to_dict()) for task in tasks]
+    tasks_response = [(task.to_json()) for task in tasks]
     return make_response(jsonify(tasks_response), 200)
 
 
@@ -56,7 +56,7 @@ def get_one_task(task_id):
         return make_response("", 404)
 # thank you audrey!
     elif task.goal_id is None:
-        return jsonify({"task": task.to_dict()}), 200
+        return jsonify({"task": task.to_json()}), 200
     else:
         return jsonify({"task": task.with_goal()}), 200
 
@@ -72,7 +72,7 @@ def update_task(task_id):
         task.description = form_data['description']
         task.completed_at = form_data["completed_at"]
         db.session.commit()
-    return jsonify({"task": task.to_dict()}), 200
+    return jsonify({"task": task.to_json()}), 200
 
 
 @tasks_bp.route("/<task_id>", methods=["DELETE"], strict_slashes=False)
@@ -97,7 +97,7 @@ def handle_incomplete(task_id):
     else:
         task.completed_at = None
         db.session.commit()
-        return jsonify({"task": task.to_dict()}), 200
+        return jsonify({"task": task.to_json()}), 200
 
 
 @tasks_bp.route("/<task_id>/mark_complete", methods=["PATCH"], strict_slashes=False)
@@ -109,7 +109,7 @@ def handle_complete(task_id):
         task.completed_at = datetime.now()
         db.session.commit()
         call_slack_api(task)
-    return jsonify({"task": task.to_dict()}), 200
+    return jsonify({"task": task.to_json()}), 200
 
 
 # WAVE 4

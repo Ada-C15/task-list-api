@@ -19,7 +19,7 @@ class Task(db.Model):
         else:
             return False
 
-    def to_dict(self):
+    def to_json(self):
         return {
             "id": self.task_id,
             "title": self.title,
