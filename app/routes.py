@@ -4,8 +4,8 @@ from datetime import datetime
 from flask import request, Blueprint, make_response, jsonify
 import requests
 import os
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
+# from slack_sdk import WebClient
+# from slack_sdk.errors import SlackApiError
 from app.models.goal import Goal
 
 
