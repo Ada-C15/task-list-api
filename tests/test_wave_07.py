@@ -1,3 +1,8 @@
+import pytest
+from app import create_app
+from app.models.goal import Goal
+from app import db
+
 def test_get_tasks_sorted_by_id_asc(client, three_tasks):
     # Act
     response = client.get("/tasks?sort_by_id=asc")
@@ -113,3 +118,15 @@ def test_get_goals_sort_by_title_desc(client, three_goals):
             "title": "Become expert in one field",
       }
     ]
+    
+@pytest.fixture   
+def three_goals(app):
+    db.session.add_all([
+    Goal(
+        title="Find a new job"),
+    Goal(
+        title="Become expert in one field"),
+    Goal(
+        title="Keep healthy schedule")
+])
+    db.session.commit()

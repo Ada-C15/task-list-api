@@ -74,17 +74,7 @@ def one_goal(app):
     db.session.add(new_goal)
     db.session.commit()
     
-@pytest.fixture   
-def three_goals(app):
-    db.session.add_all([
-    Goal(
-        title="Find a new job"),
-    Goal(
-        title="Become expert in one field"),
-    Goal(
-        title="Keep healthy schedule")
-])
-    db.session.commit()
+
 
 
 
