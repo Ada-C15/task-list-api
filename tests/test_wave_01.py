@@ -23,6 +23,7 @@ def test_get_tasks_one_saved_tasks(client, one_task):
         {
             "id": 1,
             "title": "Go on my daily walk 🏞",
+            "goal_id": None,
             "description": "Notice something new every day",
             "is_complete": False
         }
@@ -41,6 +42,7 @@ def test_get_task(client, one_task):
         "task": {
             "id": 1,
             "title": "Go on my daily walk 🏞",
+            "goal_id": None,
             "description": "Notice something new every day",
             "is_complete": False
         }
@@ -73,6 +75,7 @@ def test_create_task_with_none_completed_at(client):
         "task": {
             "id": 1,
             "title": "A Brand New Task",
+            "goal_id": None,
             "description": "Test Description",
             "is_complete": False
         }
@@ -100,6 +103,7 @@ def test_update_task(client, one_task):
         "task": {
             "id": 1,
             "title": "Updated Task Title",
+            "goal_id": None,
             "description": "Updated Test Description",
             "is_complete": False
         }

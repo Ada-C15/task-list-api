@@ -12,3 +12,10 @@ class Goal(db.Model):
             "id": self.goal_id,
             "title": self.title
         }
+
+    def to_json_with_tasks(self, tasks):
+        return {
+        "id": self.goal_id,
+        "title": self.title,
+        "tasks": tasks
+    }
