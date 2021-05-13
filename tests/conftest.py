@@ -73,6 +73,19 @@ def one_goal(app):
     new_goal = Goal(title="Build a habit of going outside daily")
     db.session.add(new_goal)
     db.session.commit()
+    
+@pytest.fixture   
+def three_goals(app):
+    db.session.add_all([
+    Goal(
+        title="Find a new job"),
+    Goal(
+        title="Become expert in one field"),
+    Goal(
+        title="Keep healthy schedule")
+])
+    db.session.commit()
+
 
 
 # This fixture gets called in every test that

@@ -67,3 +67,49 @@ def test_get_tasks_filter_by_title(client, three_tasks):
             "title": "Pay my outstanding tickets 😭"
         }
     ]
+    
+def test_get_goals_sort_by_title_asc(client, three_goals):
+    # Act
+    response = client.get("/goals?sort=asc")
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 200
+    assert len(response_body) == 3
+    assert response_body == [
+       {
+            "id": 2,
+            "title": "Become expert in one field",
+       },
+       {
+            "id": 1,
+            "title": "Find a new job",
+       },
+      {
+            "id": 3,
+            "title": "Keep healthy schedule",
+      }
+    ]
+    
+def test_get_goals_sort_by_title_desc(client, three_goals):
+    # Act
+    response = client.get("/goals?sort=desc")
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 200
+    assert len(response_body) == 3
+    assert response_body == [
+       {
+            "id": 3,
+            "title": "Keep healthy schedule",
+       },
+       {
+            "id": 1,
+            "title": "Find a new job",
+       },
+      {
+            "id": 2,
+            "title": "Become expert in one field",
+      }
+    ]

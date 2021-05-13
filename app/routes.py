@@ -123,7 +123,16 @@ goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
 @goals_bp.route("", methods=["GET"], strict_slashes=False)
 def get_goals():
-    goals = Goal.query.all()
+    order_query = request.args.get("sort")
+    if order_query:
+        if order_query == "asc":
+            goals = Goal.query.order_by(asc(Goal.title))
+        elif order_query == "desc":
+            goals = Goal.query.order_by(desc(Goal.title))
+        else: 
+            raise TypeError("Only asc or desc is accepted here")
+    else:
+        goals = Goal.query.all()
     goals_response = [goal.to_json() for goal in goals]
     return jsonify(goals_response), 200
   
