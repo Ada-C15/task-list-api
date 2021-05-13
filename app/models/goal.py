@@ -12,9 +12,8 @@ Base = declarative_base()
 class Goal(db.Model):
     goal_id = db.Column(db.Integer, primary_key=True,autoincrement=True)
     title = db.Column(db.String)
-    #__tablename__='goal'
-    #child_tasks=db.relationship("Task", backref='goal', lazy=True)
-
+    
+#helper function-returns goal attributes in corrected format
     def goal_to_json(self):
         goal_dict={"id": self.goal_id,
             "title": self.title}
