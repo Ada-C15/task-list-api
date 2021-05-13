@@ -86,25 +86,27 @@ def update_task_by_id(task_id):
 # how to know if it a query param
 def patch_task_by_id(task_id, complete_status): 
     task = Task.query.get(task_id)
-    PATH = "https://slack.com/api/chat.postMessage"
+    # PATH = "https://slack.com/api/chat.postMessage"
 
     # status = request.args.get("complete_status")
     # dont need bc complete_status is a route parameter 
     if task is None: 
         return make_response("", 404)
+        # refactor option: make a 404 message 
 
     if complete_status == "mark_complete": 
         date = datetime.today()
         task.completed_at = date
-        query_params = {
-            "channel": "task-notifications",
-            "text": "u done did it"
-        }
+        send_slack_notification(task)
+        # query_params = {
+        #     "channel": "task-notifications",
+        #     "text": "u done did it"
+        # }
         
-        headers = {
-            "Authorization" : f"Bearer {os.getenv('SLACK_TOKEN')}"
-        }
-        response = requests.post(PATH, params=query_params, headers=headers)
+        # headers = {
+        #     "Authorization" : f"Bearer {os.getenv('SLACK_TOKEN')}"
+        # }
+        # response = requests.post(PATH, params=query_params, headers=headers)
 
     else:
         task.completed_at = None
@@ -112,6 +114,19 @@ def patch_task_by_id(task_id, complete_status):
     db.session.commit()
 
     return make_response({"task": task.to_json()})
+
+def send_slack_notification(task): #add parameter for which task it is
+
+    PATH = "https://slack.com/api/chat.postMessage"
+    query_params = {
+        "channel": "task-notifications",
+        "text": "u done did it"
+    }
+    
+    headers = {
+        "Authorization" : f"Bearer {os.getenv('SLACK_TOKEN')}"
+    }
+    requests.post(PATH, params=query_params, headers=headers)
 
 
 # delete one task by id 
@@ -209,4 +224,50 @@ def delete_goal_by_id(goal_id):
     
     return make_response("", 404)
 
+# NESTED  inside of goals 
+
+# post a list of task IDs to a goal 
+@goals_bp.route("/<int:goal_id>/tasks", methods=["POST"])
+def add_tasks_to_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    request_body = request.get_json() # this is a dictionary
+
+    if goal is None: 
+        return make_response("", 404)
     
+    # updated_goal = Goal(title=request_body["title"])
+    
+    # iterate thru each task id 
+    for task_id in request_body["task_ids"]:
+        # call each task by id (element)
+        task = Task.query.get(task_id)
+        # update the backref value to goal_id 
+        task.goal_id = goal_id
+
+    db.session.commit()
+
+    return make_response(jsonify(id=goal_id, task_ids=request_body["task_ids"]), 200)
+
+# see all messages for a specific user 
+@goals_bp.route("/<int:goal_id>/tasks", methods=["GET"])
+def get_all_tasks_in_one_goal(goal_id): 
+    # find a goal 
+    goal = Goal.query.get(goal_id)
+
+    if goal is None: 
+        return make_response("", 404)
+    
+    goal_response = goal.to_json()
+    # add new key to dictionary of goal response
+    goal_response["tasks"] = []
+    # goal_response["tasks"] = goal.tasks 
+    # iterate thru the tasks in the fake column in goal.tasks
+    # print(goal.tasks)
+    # tasks = goal.tasks
+    for task in goal.tasks: 
+        # add each task record in goal.tasks to list 
+        goal_response["tasks"].append(task.to_json())
+    
+    return jsonify(goal_response)
+
+
