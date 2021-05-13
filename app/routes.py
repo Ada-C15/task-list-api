@@ -189,7 +189,7 @@ def task_mark_complete(task_id):
             params={
             "channel": "task-notifications",
             "text": f"Someone just completed the task {task.title}"},
-            headers={'Authorization': os.environ["SLACK_TOKEN"]})
+            headers={'Authorization': os.environ['SLACK_TOKEN']})
             
     return {
         "task": task.to_json()
