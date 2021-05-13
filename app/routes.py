@@ -11,7 +11,7 @@ import requests
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks") 
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals") 
 
-#### Tasks ###3
+#### Tasks ####
 
 @tasks_bp.route("", methods=["POST","GET"])
 def handle_tasks():
@@ -24,7 +24,9 @@ def handle_tasks():
             db.session.add(new_task)
             db.session.commit()
 
-            return jsonify(new_task.task_response()), 201
+            response = {"task":new_task.task_response()}
+            return jsonify(response), 201
+
         else:
             return make_response ({"details": "Invalid data"},400)
 
@@ -40,7 +42,7 @@ def handle_tasks():
     
         tasks_response = []
         for task in tasks:
-            tasks_response.append(task.task_response_lean())
+            tasks_response.append(task.task_response())
         return jsonify(tasks_response),200
 
 @tasks_bp.route("/<task_id>", methods=["GET","PUT","DELETE"])
@@ -50,7 +52,9 @@ def handle_task(task_id):
         return make_response("", 404)
 
     elif request.method == "GET":
-        return jsonify(task.task_response()),200
+        response = {"task":task.task_response()}
+        return jsonify(response), 200
+        #return jsonify(task.task_response()),200
 
     elif request.method == "PUT":      
         form_data = request.get_json()
@@ -58,7 +62,9 @@ def handle_task(task_id):
         task.description = form_data["description"]
 
         db.session.commit()
-        return jsonify(task.task_response()), 200
+        
+        response = {"task":task.task_response()}
+        return jsonify(response), 200
         
     elif request.method == "DELETE":
         db.session.delete(task)
@@ -78,7 +84,8 @@ def mark_complete(task_id):
     db.session.commit()
     slack_message(task)
     
-    return jsonify(task.task_response()), 200
+    response = {"task":task.task_response()}
+    return jsonify(response), 200
 
 def slack_message(task):
     path = "https://slack.com/api/chat.postMessage"
@@ -102,10 +109,12 @@ def mark_incomplete(task_id):
     task.completed_at = None
     db.session.commit()
 
-    return jsonify(task.task_response()), 200
+    response = {"task":task.task_response()}
+    return jsonify(response), 200
 
 
 #### Goals ####
+
 @goals_bp.route("", methods=["POST","GET"])
 def handle_goals():
     if request.method == "POST":
@@ -116,12 +125,7 @@ def handle_goals():
             db.session.add(new_goal)
             db.session.commit()
 
-            goal_response = {
-                "id": new_goal.goal_id,
-                "title": new_goal.title  
-                }
-            #new_task_response = new_task.task_response()
-            response = {"goal": goal_response}
+            response = {"goal": new_goal.goal_response()}
             return jsonify(response), 201
         else:
             return make_response ({"details": "Invalid data"},400)
@@ -130,12 +134,9 @@ def handle_goals():
         goals = Goal.query.all()
     
         goals_response = []
+        
         for goal in goals:
-            # goals_response.append({
-            #     "id": goal.goal_id,
-            #     "title": goal.title,
-            #     })
-            goals_response.append(goal.goal_response_lean())
+            goals_response.append(goal.goal_response())
         return jsonify(goals_response),200
 
 @goals_bp.route("/<goal_id>", methods=["GET","PUT","DELETE"])
@@ -146,7 +147,8 @@ def handle_goal(goal_id):
         return make_response("", 404)
 
     elif request.method == "GET":
-        return jsonify(goal.goal_response()), 200
+        response = {"goal":goal.goal_response()}
+        return jsonify(response), 200
 
     elif request.method == "PUT":      
         form_data = request.get_json()
@@ -154,7 +156,8 @@ def handle_goal(goal_id):
 
         db.session.commit()
         
-        return jsonify(goal.goal_response()), 200
+        response = {"goal":goal.goal_response()}
+        return jsonify(response), 200
         
     elif request.method == "DELETE":
         db.session.delete(goal)
@@ -191,22 +194,15 @@ def handle_goal_tasks(goal_id):
         elif request.method == "GET":
             goal = Goal.query.get(goal_id)
             
-            task_dict = []
+            goal_task_response = []
 
             for task in goal.tasks:
-                task_dict.append({
-                    "id": task.task_id,
-                    "goal_id": task.goal_id,
-                    "title": task.title,
-                    "description": task.description,
-                    "is_complete": bool(task.completed_at)
-
-                })
+                goal_task_response.append(task.task_response())
 
             response = {
                 "id": goal.goal_id,
                 "title": goal.title,
-                "tasks": task_dict
+                "tasks": goal_task_response
             }
 
             return jsonify(response), 200
