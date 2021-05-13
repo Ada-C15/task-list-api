@@ -118,18 +118,26 @@ def post_goal_tasks(goal_id):
 
 
 
-# @tasks_bp.route("/<goal_id>/tasks", methods=["GET"])
-# def get_goal_tasks(goal_id):
-#     goal = Goal.query.get(goal_id)
-#     if goal is None:
-#         return Response(None),404
+@goals_bp.route("/<goal_id>/tasks", methods=["GET"])
+def get_goal_tasks(goal_id):
+    goal = Goal.query.get(goal_id)
+    if goal is None:
+        return Response(None),404
+
+    tasks_list = []
+    for task in goal.tasks:
+        # task = Task.query.get(task)
+        tasks_list.append(task.api_response())
+        print(tasks_list)
+
+    response_body = {
+        "id": goal.id,
+        "title": goal.title,
+        "tasks": tasks_list
+        }
+    return (response_body, 200)
 
 
-#         tasks = Task.query.all()
-#     tasks_response = []
-#     for task in tasks:
-#         tasks_response.append(task.api_response())
-#     return jsonify(tasks_response), 200
 
 ##################
 
