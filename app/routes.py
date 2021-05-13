@@ -21,7 +21,7 @@ def create_task():
     required_properties = ["title", "description", "completed_at"]
     for prop in required_properties:
         if prop not in request_body:
-            return make_response({"details": "Invalid data"}), 400
+            return make_response({"details": "Invalid data"}, 400)
     new_task = Task(title=request_body["title"],
                     description=request_body["description"],
                     completed_at=request_body["completed_at"])
@@ -30,7 +30,7 @@ def create_task():
     db.session.commit() 
     
     # returning single task created by calling to_json on new task
-    return make_response({"task": new_task.to_json()}), 201
+    return make_response({"task": new_task.to_json()}, 201)
 
 @task_list_bp.route("", methods=["GET"])
 def get_all_tasks():
@@ -58,9 +58,9 @@ def task(task_id):
         return make_response("", 404)
     elif request.method == "GET":
         if task.goal_offspring is None:
-            return make_response({"task": task.to_json()}), 200
+            return make_response({"task": task.to_json()}, 200)
         else:
-            return make_response({"task": task.goal_json()}), 200
+            return make_response({"task": task.goal_json()}, 200)
     
     elif request.method == "PUT":
         task_data = request.get_json()
@@ -69,7 +69,7 @@ def task(task_id):
 
         db.session.commit()
         
-        return make_response({"task": task.to_json()}), 200
+        return make_response({"task": task.to_json()}, 200)
 
     elif request.method == "DELETE":
         db.session.delete(task)
@@ -120,7 +120,7 @@ def mark_incomplete(task_id):
 def create_goal():
     request_body = request.get_json()
     if "title" not in request_body:
-        return make_response({"details": "Invalid data"}), 400
+        return make_response({"details": "Invalid data"}, 400)
     else:
         new_goal = Goal(title=request_body["title"])
 
@@ -128,7 +128,7 @@ def create_goal():
         db.session.commit() 
     
     # returning single task created by calling to_json on new task
-    return make_response({"goal": new_goal.to_json()}), 201
+    return make_response({"goal": new_goal.to_json()}, 201)
     
 
 @goal_list_bp.route("", methods=["GET"])
@@ -139,7 +139,7 @@ def get_all_goals():
         # building a list of jsons by calling to_json on each task
         goals_response.append(goal.to_json())
 
-    return jsonify(goals_response), 200
+    return jsonify(goals_response, 200)
 
 
 @goal_list_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"])
@@ -149,7 +149,7 @@ def goal(goal_id):
     if goal is None:
         return make_response("", 404)
     elif request.method == "GET":
-        return make_response({"goal": goal.to_json()}), 200
+        return make_response({"goal": goal.to_json()}, 200)
     
     elif request.method == "PUT":
         goal_data = request.get_json()
