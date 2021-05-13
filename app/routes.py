@@ -48,12 +48,7 @@ def get_tasks():
     else:
         tasks = Task.query.all()
 
-    tasks_response = []
-
-    for task in tasks:
-        tasks_response.append(task.get_task_info())
-
-    return jsonify(tasks_response)
+    return jsonify([task.get_task_info() for task in tasks])
 
 
 @tasks_bp.route("/<task_id>", methods=["GET"])
@@ -158,12 +153,7 @@ def post_new_goal():
 def get_goals():
     goals = Goal.query.all()
 
-    goals_response = []
-
-    for goal in goals:
-        goals_response.append(goal.to_json())
-
-    return jsonify(goals_response)
+    return jsonify([goal.to_json() for goal in goals])
 
 
 @goals_bp.route("/<goal_id>", methods=['GET'])
@@ -236,12 +226,8 @@ def get_tasks_for_goal(goal_id):
 
     associated_tasks = Task.query.filter_by(goal_id=int(goal_id))
 
-    associated_tasks_info = []
-    for task in associated_tasks:
-        associated_tasks_info.append(task.get_task_info())
-
     response = goal.to_json()
-    response['tasks'] = associated_tasks_info
+    response['tasks'] = [task.get_task_info() for task in associated_tasks]
 
     return response
 
