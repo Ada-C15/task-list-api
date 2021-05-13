@@ -159,7 +159,7 @@ def delete_task_by_id(task_id):
     db.session.commit()
 
     return make_response({
-        "details": 'Task 1 "Go on my daily walk 🏞" successfully deleted'
+        "details": f'Task {task_id} "{task.title}" successfully deleted'
     })
 
 
@@ -253,7 +253,7 @@ def delete_goal_by_id(goal_id):
     db.session.commit()
 
     return make_response({
-        "details": 'Goal 1 "Build a habit of going outside daily" successfully deleted'
+        "details": f'Goal {goal_id} "{goal.title}" successfully deleted'
     }, 200)
 
 
