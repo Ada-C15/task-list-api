@@ -4,7 +4,8 @@ from app.models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify
 import datetime
 import requests
-
+import os
+from dotenv import load_dotenv
 
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
@@ -85,15 +86,16 @@ def mark_complete(task_id):
 
     path = "https://slack.com/api/chat.postMessage"
 
-    headers = {'Authorization': 'Bearer SLACK_API_KEY'}
+    slack_token = os.environ.get('SLACK_API_KEY')
+
+    headers = {'Authorization': f'Bearer {slack_token}'}
 
     query_params = {
         "channel": "task-notifications",
         "text": f"Someone just completed the task {task.title}",
-        "format": "json"
     }
 
-    response = requests.post(path, params=query_params, headers = headers)
+    requests.post(path, params=query_params, headers = headers)
     return {"task": task.to_json()}, 200
 
     
