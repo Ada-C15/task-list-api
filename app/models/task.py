@@ -19,13 +19,13 @@ class Task(db.Model):
             task["goal_id"] = self.goal_id 
         return task
 
-    def sort(query_param_value):
+    def sort(self, query_param_value):
         if query_param_value == "desc":
-            return Task.query.order_by(Task.title.desc()).all()
+            return self.query.order_by(self.title.desc()).all()
         elif query_param_value == "asc":
-            return Task.query.order_by(Task.title).all()
+            return self.query.order_by(self.title).all()
         elif query_param_value == "desc_id":
-            return Task.query.order_by(Task.task_id.desc()).all()
+            return self.query.order_by(self.task_id.desc()).all()
         elif query_param_value == "asc_id":
-            return Task.query.order_by(Task.task_id).all()
-        return Task.query.all()
+            return self.query.order_by(self.task_id).all()
+        return self.query.all()
