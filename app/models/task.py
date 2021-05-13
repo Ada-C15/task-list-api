@@ -14,24 +14,18 @@ class Task(db.Model):
 
     __tablename__= "tasks"
 
-    # def task_completed(self):
-    #     if self.completed_at:
-    #         return True
-    #     else:
-    #         return False
-
     def to_dict(self):
-        if self.completed_at == None:
-            # adds key to temp dict before we can return new_task
-            is_complete = False
-        else:
-            is_complete = True
+        # if self.completed_at != None:
+        #     # adds key to temp dict before we can return new_task
+        #     is_complete = True
+        # else:
+        #     is_complete = False
 
         make_dict = {
             "id": self.id,
             "title": self.title,
             "description": self.description,
-            "is_complete": is_complete
+            "is_complete": self.completed_at != None
         }
         if self.goals_id:
             make_dict["goal_id"] = self.goals_id

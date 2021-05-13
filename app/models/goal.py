@@ -17,5 +17,17 @@ class Goal(db.Model):
         
         return {
             "id": self.id,
-            "title": self.title
+            "title": self.title,
         }
+        
+        
+        #  make_dict = {
+        #     "id": self.id,
+        #     "title": self.title,
+        #     "description": self.description,
+        #     "is_complete": self.completed_at != None
+        # }
+        # if self.goals_id:
+        #     make_dict["goal_id"] = self.goals_id
+
+        # return make_dict

@@ -3,6 +3,8 @@ from flask import request, Blueprint, jsonify
 from .models.task import Task
 from .models.goal import Goal
 import datetime
+import requests
+import os
 
 
 ### WAVES 1 AND 2 - CRUD for TASKS
@@ -152,13 +154,23 @@ def mark_complete(task_id):
     if task is None:
         return jsonify(None), 404
 
+    # if task.completed_at != None:
+    #     return 
+
     task.completed_at=datetime.datetime.now()
+    post_message(task.title)
     db.session.commit()
 
     # we need an extra step to transfer completed_at to is_completed:
     task_dict = task.to_dict()
     
     return jsonify({"task": task_dict}), 200
+
+def post_message(task_title):
+    requests.post("https://slack.com/api/chat.postMessage", \
+            headers={"Authorization": f"Bearer {os.environ.get('SLACK_TOKEN')}"}, \
+                data={"channel": f"{os.environ.get('SLACK_CHANNEL')}", "text":f"Someone just completed the task {task_title}"})
+
 
 
 # define a new route to update (PATCH) one task by its id (route parameter between <>, treated as a variable):
@@ -336,6 +348,7 @@ def add_task_ids_to_goal(goal_id):
             "id": goal.id,
             "task_ids": request_body["task_ids"]
         }), 200
+
 
 # Send a list of task id's to a goal (task_ids)
 
