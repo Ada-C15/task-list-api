@@ -73,6 +73,9 @@ def one_goal(app):
     new_goal = Goal(title="Build a habit of going outside daily")
     db.session.add(new_goal)
     db.session.commit()
+    
+
+
 
 
 # This fixture gets called in every test that
