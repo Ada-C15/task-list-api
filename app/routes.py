@@ -8,6 +8,8 @@ from sqlalchemy import asc, desc
 from datetime import datetime
 import requests
 import os 
+from sqlalchemy import Table, Column, Integer, ForeignKey
+from sqlalchemy.orm import relationship
  
 
 
@@ -122,14 +124,14 @@ def slack_message(task):
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"], strict_slashes=False)
 def incomplete_task(task_id):
 
-        if request.method == "PATCH":
-            task = Task.query.get(task_id)
-            if task is None:
-                return jsonify(None), 404
+    if request.method == "PATCH":
+        task = Task.query.get(task_id)
+        if task is None:
+            return jsonify(None), 404
 
-            task.completed_at = None
+        task.completed_at = None
 
-            return jsonify({"task": task.display_tasks()}), 200
+        return jsonify({"task": task.display_tasks()}), 200
 
 
 
@@ -173,7 +175,7 @@ def one_goal():
 
 
 
-# # GET, CHANGE, AND DELETE A SPECIFIC GOAL ID
+# GET, CHANGE, AND DELETE A SPECIFIC GOAL ID
 @goals_bp.route("/<goal_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False)
 def handle_goal(goal_id):
 
@@ -192,8 +194,6 @@ def handle_goal(goal_id):
         form_data = request.get_json()
 
         goal.title = form_data["title"]
-        
-
         db.session.commit()
 
         return make_response({"goal": {
@@ -212,3 +212,49 @@ def handle_goal(goal_id):
         "message": f"Goal with id {goal.goal_id} was not found",
         "success": False,
     }, 404
+
+
+# GOALS WITH TASKS ENDPOINT 
+@goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
+def post_goals_with_tasks(goal_id):
+    
+    if request.method == "POST":
+        form_data = request.get_json()
+
+        for task_id in form_data["task_ids"]:
+            task = Task.query.get(task_id)
+            task.goal_id = goal_id 
+        db.session.commit()
+
+        return jsonify({"id": int(goal_id),"task_ids": form_data["task_ids"]}), 200
+
+
+
+
+@goals_bp.route("<goal_id>/tasks", methods=["GET"], strict_slashes=False)
+def get_goals_with_tasks(goal_id):
+    
+    if request.method == "GET":
+    
+        goal = Goal.query.get(goal_id)
+
+        if goal is None:
+            return make_response("", 404)
+        
+        tasks = []
+        for task in goal.tasks:
+            tasks.append({
+                    "id": task.id,
+                    "goal_id": goal.goal_id,
+                    "title": task.title,
+                    "description": task.description,
+                    "is_complete": task.complete_helper()
+                    })
+        
+        return make_response({
+                "id": goal.goal_id,
+                "title": goal.title,
+                "tasks": tasks
+                } , 200)   
+
+            
