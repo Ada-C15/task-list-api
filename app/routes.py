@@ -172,7 +172,7 @@ def mark_task_is_complete(task_id):
     db.session.commit()
 
     glados(ongoing_task) # call GLAdOS bot
-
+    print()
     return jsonify({"task": ongoing_task.to_json_format()})
 
 
@@ -192,7 +192,7 @@ def mark_task_incomplete(task_id):
 def glados(ongoing_task):
     """Implements GLAdOS as a bot in Slack"""
 
-    glados_first_msgs = os.environ.get('BOT_SLACK_IVA')
+    glados_first_msgs = os.environ.get('GLA_DOS')
 
     path = "https://slack.com/api/chat.postMessage"
 
