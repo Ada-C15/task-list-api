@@ -26,7 +26,6 @@ class Task(db.Model):
                 "id": self.task_id,
                 "title": self.title,
                 "description": self.description,
-                # Not sure if I should change this part to make if completed_at is null is_complete is False
                 "is_complete": result
             }
         else:
@@ -34,7 +33,6 @@ class Task(db.Model):
                 "id": self.task_id,
                 "title": self.title,
                 "description": self.description,
-                # Not sure if I should change this part to make if completed_at is null is_complete is False
                 "is_complete": result,
                 "goal_id": self.goal_id
 

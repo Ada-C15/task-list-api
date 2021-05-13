@@ -23,7 +23,6 @@ def get_single_task(task_id):
         request_body = request.get_json()
         task.title = request_body["title"]
         task.description = request_body["description"]
-        # Save action
         db.session.commit()
         return {"task": task.to_json()}, 200
     elif request.method == "DELETE":
@@ -49,7 +48,7 @@ def tasks_index():
         tasks = Task.query.order_by(Task.title.desc())
     else:
         tasks = Task.query.all()
-    # This portion is the just a GET request
+    # This portion is just a GET request
     if tasks == None:
         return []
     else:
@@ -91,7 +90,6 @@ def mark_complete(task_id):
     
 
 def bot_notification(patch_task):
-    # notification_task = Task.query.get(task_id)
     PATH = "https://slack.com/api/chat.postMessage"
     API_TOKEN = os.environ.get("API_KEY")
 
@@ -158,14 +156,13 @@ def get_single_goal(goal_id):
     # With the GET, POST and DELETE request if there is nothing we output this
     if request == None or goal == None:
         return jsonify(None), 404
-    # This portion is the GET request for only one task
+    # This portion is the GET request for only one goal
     elif request.method == "GET":
         return {"goal": goal.to_json_goal()}, 200
     elif request.method == "PUT":
-        # This portion is the PUT request for only one task
+        # This portion is the PUT request for only one goal
         request_body = request.get_json()
         goal.title = request_body["title"]
-        # Save action
         db.session.commit()
         return {"goal": goal.to_json_goal()}, 200
     elif request.method == "DELETE":
@@ -183,7 +180,6 @@ def get_single_goal(goal_id):
 def post_tasks_ids_to_goal(goal_id):
     goal = Goal.query.get(goal_id)
     request_body = request.get_json()
-    # Post
 
     for task_id in request_body["task_ids"]:
         task = Task.query.get(task_id)
