@@ -214,7 +214,7 @@ def handle_goal(goal_id):
     }, 404
 
 
-# GOALS WITH TASKS ENDPOINT 
+# ADD GOALS WITH TASKS ENDPOINT 
 @goals_bp.route("/<goal_id>/tasks", methods=["POST"], strict_slashes=False)
 def post_goals_with_tasks(goal_id):
     
@@ -230,7 +230,7 @@ def post_goals_with_tasks(goal_id):
 
 
 
-
+#  GET GOALS WITH TASKS 
 @goals_bp.route("<goal_id>/tasks", methods=["GET"], strict_slashes=False)
 def get_goals_with_tasks(goal_id):
     
