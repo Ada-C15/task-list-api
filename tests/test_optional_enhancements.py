@@ -49,3 +49,19 @@ def test_get_tasks_sorted_by_id_desc(client, three_tasks):
             "is_complete": False,
             "title": "Water the garden 🌷"}
     ]
+
+def test_get_tasks_filtered_by_title(client, three_tasks):
+    # Act
+    response = client.get("/tasks?filter_by_title=Answer%20forgotten%20email%20📧")
+    response_body = response.get_json()
+
+    # Assert
+    assert response.status_code == 200
+    assert len(response_body) == 1
+    assert response_body == [
+        {
+            "description": "",
+            "id": 2,
+            "is_complete": False,
+            "title": "Answer forgotten email 📧"}
+    ]

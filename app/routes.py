@@ -41,6 +41,7 @@ def post_new_task():
 def get_tasks():
     sort_query = request.args.get("sort")
     sort_by_id_query = request.args.get("sort_by_id")
+    filter_by_query = request.args.get("filter_by_title")
 
     if sort_query == "asc":
         tasks = Task.query.order_by("title")
@@ -50,6 +51,8 @@ def get_tasks():
         tasks = Task.query.order_by("task_id")
     elif sort_by_id_query == "desc":
         tasks = Task.query.order_by(desc("task_id"))
+    elif filter_by_query:
+        tasks = Task.query.filter_by(title=filter_by_query)
     else:
         tasks = Task.query.all()
 
