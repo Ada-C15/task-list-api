@@ -1,17 +1,31 @@
+# datetime is a Python(?) module, and I'm not honestly sure why it needs to be imported - But I used it to capture the current timestamp for when a task is posted to the server 
 import datetime
+# requests is a package for formatting HTTP requests, which you use in conjuction with a request method a la requests.get() or requests.post()
 import requests
+#  ❓ I didn't use this, and commenting it out doesn't seem to affect my code from working
 from flask.wrappers import Response 
+# need to import db module in order to add and commit (save) to databases when requests get made to add or update database items
 from app import db
+# Both models need to be imported to have access to them, like you would import any class to gain access to it (a Model is just a class inherited from the db.Model)
 from app.models.task import Task
 from app.models.goal import Goal
+# asc and desc are module functions that need to be imported to be used
 from sqlalchemy import asc, desc
+# The following are all dependencies:
+# request is an OBJECT (not to be confused with the 'requests' PACKAGE) used to get info about an HTTP request
+# Blueprint is a class 
+#  ❓ make_response is a method that instantiates a Response object - I'm a little confused about what I need this, as the code seems to work without it
+# jsonify is a method used to convert a JSON HTTP request body into a Python dictionary 
 from flask import request, Blueprint, make_response, jsonify
+# dotenv is a Python package 
 from dotenv import load_dotenv
+# os is a module that provides the ability to read environmental variables, which are actually stored outside of the code - needed to be able to read the hidden bot API token
 import os
 
-
+# this method loads the values from the .env file which the os module can then read 
 load_dotenv()
 
+# instantiating blueprints for task and goal, which ....
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
