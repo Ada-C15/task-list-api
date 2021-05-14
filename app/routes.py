@@ -122,7 +122,7 @@ def mark_complete(task_id):
     task.completed_at = datetime.utcnow()
     db.session.commit()
 
-    slack_token = os.environ["SLACK_API_TOKEN"]
+    SLACK_TOKEN = os.environ["SLACK_API_TOKEN"]
     slack_channel = "task-notifications"
     slack_icon_url = "https://slack.com/api/chat.postMessage"
     text = f"Someone just completed the task {task.title}"
