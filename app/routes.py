@@ -1,8 +1,14 @@
+from flask_sqlalchemy.model import camel_to_snake_case
 from tests.test_wave_01 import test_create_task_must_contain_description
 from flask import Blueprint
 from app import db
 from app.models.task import Task
 from flask import request, Blueprint, make_response, jsonify
+from datetime import datetime
+
+
+def order_by_title(task_response):
+    return task_response["title"]
 
 task_list_bp = Blueprint("task_list", __name__, url_prefix='/tasks')
 @task_list_bp.route('', methods=['GET', 'POST'])
@@ -18,6 +24,14 @@ def handle_tasks():
                 'description': task.description,
                 'is_complete': task.completed_at != None
             })
+        # allows access to keys - sort
+        arg = request.args
+        if "sort" in request.args:
+            if arg['sort'] == "asc":
+                task_response = sorted(task_response, key = order_by_title)
+            elif arg['sort'] == "desc":
+                task_response = sorted(task_response, key = order_by_title, reverse = True)
+
         return jsonify(task_response)
     elif request.method == 'POST':
         request_body = request.get_json()
@@ -29,14 +43,15 @@ def handle_tasks():
             return {
                 "details": "Invalid data"
             }, 400
-        elif "is complete" not in request_body:
+        elif "completed_at" not in request_body:
             return {
                 "details": "Invalid data"
             }, 400
-
+        stringify_format = "%a, %d %b %Y %H:%M:%S %Z"
         new_task = Task(
             title = request_body['title'],
             description = request_body['description'], 
+            completed_at = datetime.strptime(request_body["completed_at"], stringify_format)
         )
         db.session.add(new_task)
         db.session.commit()
@@ -80,6 +95,41 @@ def handle_task(task_id):  # same name as parameter route
         return({
             'task': task.serialize()
         },200)
+
+@task_list_bp.route('/<task_id>/mark_complete',methods = ['PATCH'])
+def mark_complete_task(task_id):
+    task = Task.query.get(task_id)
+    if not task:
+        return "", 404
+    task.completed_at = datetime.utcnow()
+    return{
+        'task':{
+            'id': task.task_id,
+            'title': task.title,
+            'description': task.description,
+            'is_complete': task.completed_at != None
+        }      
+    },200
+@task_list_bp.route('/<task_id>/mark_incomplete',methods = ['PATCH'])
+def mark_incomplete_task(task_id):
+    task = Task.query.get(task_id)
+    if not task:
+        return "", 404
+    task.completed_at = None
+    return{
+        'task':{
+            'id': task.task_id,
+            'title': task.title,
+            'description': task.description,
+            'is_complete': task.completed_at != None
+        }      
+    },200
+
+
+
+
+
+
         
 
     
