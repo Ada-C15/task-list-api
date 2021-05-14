@@ -1,5 +1,6 @@
 from flask import Blueprint
 from app.models.goal import Goal
+from app.models.task import Task
 from app import db
 from flask import request, Blueprint, make_response, Response, jsonify
 from datetime import date
@@ -121,6 +122,38 @@ def mark_incomplete(goal_id):
 
 @goal_bp.route("/<int:id>/tasks", methods=["GET", "POST"])
 def tasks_and_goal(id):
-    goal = Goal.query.get(id)
-    if not goal:
-        return make_response("Goal does\'t exist", 404)
+    if request.method == "GET":
+        goal = Goal.query.get(id)
+        if not goal:
+            return make_response("Goal does\'t exist", 404)
+        return {
+            "id": goal.goal_id,
+            "title": goal.title,
+            "tasks": [task.get_json() for task in goal.tasks]
+        }
+
+    elif request.method == "POST":
+        goal = Goal.query.get(id)
+        if not goal:
+            return make_response("Goal does\'t exist", 404)
+            
+        if request.method == "POST":
+            task_ids = request.get_json()["task_ids"]
+            for task_id in task_ids:
+                task = Task.query.get(task_id)
+                if task not in goal.tasks:
+                    goal.tasks.append(task)
+            response_body = {
+                "id" : goal.goal_id,
+                "task_ids" : [task.task_id for task in goal.tasks]
+            }
+            db.session.commit()
+            goal = Goal.query.get(id)
+        
+            task_id_list = [_.task_id for _ in goal.tasks]
+            
+            return make_response({
+               "id": goal.goal_id,
+               "task_ids" : task_id_list
+               }, 200)
+

@@ -88,6 +88,7 @@ def handle_task(task_id):
         return {
             "task": {
                 "id": task.task_id,
+                "goal_id": task.goal_id,
                 "title": task.title,
                 "description": task.description,
                 "is_complete": completed_at
