@@ -199,22 +199,17 @@ def handle_goal_tasks(goal_id):
     else:
         
         request_body = request.get_json()
-        if request.method == "GET":
-            task_list = []
-            tasks = Task.query.join(Goal).filter('goal_id')
-            task_list.append(tasks)
 
-            for task in task_list:
-                return {
-                    "task": {
-                    "id": task.task_id,
-                    "goal_id": goal.goal_id,
-                    "title": task.title,
-                    "description": task.description,
-                    "is_complete": False if task.completed_at is None else True
+        if request.method == "GET":
+
+            tasks = Task.query.filter_by(goal_id=goal_id)
+            response_body = [task.to_json() for task in tasks]
+
+            return {
+                    "id": goal.goal_id,
+                    "title": goal.title,
+                    "tasks": response_body
             }
-        }
-            # loop through list to turn each result into dictionary
         
         elif request.method == "POST":
             task_list = request_body["task_ids"]
