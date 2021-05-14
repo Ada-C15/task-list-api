@@ -13,15 +13,13 @@ class Task(db.Model):
     def completed(self):
         return bool(self.completed_at)       
     
-    def api_response(self, complete=False):
+    def api_response(self): 
         response_body = {
                         "id": self.id,
                         "title": self.title,
                         "description": self.description,
                         "is_complete": self.completed()
                         }
-        if complete:  
-            response_body["is_complete"]= self.completed() 
         
         if self.goal_id:
             response_body["goal_id"] = self.goal_id

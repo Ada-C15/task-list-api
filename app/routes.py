@@ -31,16 +31,14 @@ def post_tasks():
 
 @tasks_bp.route("", methods=["GET"])
 def get_tasks():
-    title_query = request.args.get("sort")
-    if title_query == "asc":
+    sort_param = request.args.get("sort")
+    if sort_param == "asc":
         tasks = Task.query.order_by(Task.title).all()
-    elif title_query == "desc":
+    elif sort_param == "desc":
         tasks = Task.query.order_by(Task.title.desc()).all()
     else:
         tasks = Task.query.all()
-    tasks_response = []
-    for task in tasks:
-        tasks_response.append(task.api_response())
+    tasks_response = [task.api_response() for task in tasks] 
     return jsonify(tasks_response), 200
 
 @tasks_bp.route("/<task_id>", methods=["GET"])
@@ -70,7 +68,7 @@ def mark_complete(task_id):
     task.completed_at = datetime.now()
     db.session.commit()
     slack_bot_complete(task.title)
-    return jsonify({"task": task.api_response(True)}), 200
+    return jsonify({"task": task.api_response()}), 200   #removed "true" as argument
 
 @tasks_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
 def mark_incomplete(task_id):
@@ -111,9 +109,7 @@ def post_goals():
 @goals_bp.route("", methods=["GET"])
 def get_goals():
     goals = Goal.query.all()
-    goals_response = []
-    for goal in goals:
-        goals_response.append(goal.api_response())
+    goals_response = [goal.api_response() for goal in goals]
     return jsonify(goals_response), 200
 
 @goals_bp.route("/<goal_id>", methods=["GET"])
@@ -156,7 +152,6 @@ def post_goal_tasks(goal_id):
         task = Task.query.get(task_id)
         task.goal_id = goal_id
         db.session.commit()
-    print(form_data["task_ids"][0])
     return make_response({"id": goal.id,
                     "task_ids": form_data["task_ids"]}), 200
 
@@ -166,10 +161,7 @@ def get_goal_tasks(goal_id):
     if goal is None:
         return Response(None),404
 
-    tasks_list = []
-    for task in goal.tasks:
-        tasks_list.append(task.api_response())
-        print(tasks_list)
+    tasks_list = [task.api_response() for task in goal.tasks]
 
     response_body = {
         "id": goal.id,
