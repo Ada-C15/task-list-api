@@ -44,7 +44,7 @@ def create_task():
     db.session.commit()
         
     return jsonify({
-    "task": new_task.to_json()
+    "task": new_task.to_python_dict()
     }), 201
 
 
@@ -67,12 +67,12 @@ def tasks():
         if sort_titles == "asc":
             task_by_asc = Task.query.order_by(Task.title.asc())
             for task in task_by_asc:
-                task_response.append(task.to_json())   
+                task_response.append(task.to_python_dict())   
         
         if sort_titles == 'desc':
             task_by_desc = Task.query.order_by(Task.title.desc())
             for task in task_by_desc:
-                task_response.append(task.to_json())
+                task_response.append(task.to_python_dict())
         return jsonify(task_response), 200
     
     else:
@@ -80,7 +80,7 @@ def tasks():
         task_response = []
         for task in tasks:
             #using to_json helper function 
-            task_response.append(task.to_json())
+            task_response.append(task.to_python_dict())
         return jsonify(task_response), 200
 
 
@@ -101,9 +101,9 @@ def task(task_id):
     #checking to see if task has goal_id
     if request.method == "GET":
         if task.goal_id:
-            return {"task": task.to_json_goal_id()}
+            return {"task": task.to_python_dict_goal_id()}
         else:
-            return {"task":task.to_json()},200
+            return {"task":task.to_python_dict()},200
     
     if request.method == 'PUT':
         request_body = request.get_json()
@@ -112,7 +112,7 @@ def task(task_id):
         task.description = request_body['description']
         task.completed_at = request_body['completed_at']
         db.session.commit()
-        return jsonify(task=task.to_json()), 200
+        return jsonify(task=task.to_python_dict()), 200
 
     if request.method == 'DELETE':
         db.session.delete(task)
@@ -138,7 +138,7 @@ def complete(task_id):
     # calling helper function
     call_slack(task)
     
-    return make_response({"task": task.to_json()}, 200)#helper function to 
+    return make_response({"task": task.to_python_dict()}, 200)#helper function to 
 
  
 def call_slack(task):
@@ -166,7 +166,7 @@ def in_complete(task_id):
         return '', 404    
     task.completed_at = None 
     db.session.commit()
-    return make_response({"task": task.to_json()}, 200)
+    return make_response({"task": task.to_python_dict()}, 200)
 
 
 
@@ -184,12 +184,11 @@ def create_goal():
         return make_response(jsonify({"details":"Invalid data"}), 400)
 
     new_goal = Goal(title = request_body["title"]) 
-       
     db.session.add(new_goal)
     db.session.commit()
         
     return jsonify({
-    "goal": new_goal.goal_to_json()
+    "goal": new_goal.goal_to_python_dict()
     }), 201
 
 
@@ -206,14 +205,14 @@ def handle_goal(goal_id):
         return '',404
     
     if request.method == "GET":
-        return jsonify(goal=goal.goal_to_json()), 200
+        return jsonify(goal=goal.goal_to_python_dict()), 200
    
     if request.method =='PUT':
         request_body = request.get_json()
         #assigning updated values to task
         goal.title = request_body['title']
         db.session.commit()
-        return jsonify(goal=goal.goal_to_json()), 200
+        return jsonify(goal=goal.goal_to_python_dict()), 200
 
     if request.method == 'DELETE':
         db.session.delete(goal)
@@ -231,7 +230,7 @@ def get_goals():
     goals = Goal.query.all()
     goals_response = []
     for goal in goals:
-        goals_response.append(goal.goal_to_json())
+        goals_response.append(goal.goal_to_python_dict())
     return jsonify(goals_response)
 
 
@@ -274,6 +273,6 @@ def get_goal_tasks(goal_id):
     #tasks is referring to our tasks attribute in goal instance
     # we are using the backref "tasks" in Goal model for goal.tasks
     for task in goal.tasks:
-        list_of_tasks.append(task.to_json_goal_id())#goal.task(helper function with goal_id as a key)
+        list_of_tasks.append(task.to_python_dict_goal_id())#goal.task(helper function with goal_id as a key)
     return jsonify(id=int(goal_id),title=goal.title,tasks=list_of_tasks), 200
 

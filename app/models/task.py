@@ -3,6 +3,14 @@ from app import db
 
 
 class Task(db.Model):
+    """
+    Attributes:
+        task_id
+        title   
+        description 
+        completed_at
+        goal_id
+    """
     task_id = db.Column(db.Integer, primary_key=True,autoincrement=True)
     title = db.Column(db.String)
     description = db.Column(db.String)
@@ -10,8 +18,13 @@ class Task(db.Model):
     goal_id = db.Column(db.Integer, db.ForeignKey("goal.goal_id"), nullable=True)
 
 
-    # helper function that gives is_complete a value to use in the is_complete and returns dict of task instances
-    def to_json(self):
+    
+    def to_python_dict(self):
+        """
+            Input:  An instance of Task 
+            Output: The instance of Task in a python dictionary, is_complete attribute is assigned
+                    a boolean data type value
+        """
         if self.completed_at == None:
             is_complete = False
         else:
@@ -24,8 +37,13 @@ class Task(db.Model):
             "is_complete": is_complete
         }
     
-    #adding "goal_id" key to the returning value from our to_json() helper function 
-    def to_json_goal_id(self):
-        result = self.to_json()
+    
+    def to_python_dict_goal_id(self):
+        """
+            Input:  An instance of Task 
+            Output: Returns the Task instance in a python dictionary adding a "goal_id" key to the
+                    dictionary 
+        """
+        result = self.to_python_dict()
         result["goal_id"] = self.goal_id
         return result 
