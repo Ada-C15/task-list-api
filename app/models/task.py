@@ -28,3 +28,8 @@ class Task(db.Model):
         else:
             return False
 
+    @classmethod
+    def new_task_from_json(cls, body):
+        new_task = Task(title=body["title"], description=body["description"], completed_at=body["completed_at"])
+        return new_task
+

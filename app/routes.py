@@ -4,7 +4,6 @@ from app.models.goal import Goal
 from flask import Blueprint, make_response, jsonify, request
 from app import db
 from sqlalchemy import asc, desc
-from datetime import datetime
 from datetime import date
 import requests
 import os
@@ -17,9 +16,9 @@ goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
 def return_404():
         return make_response("", 404)
 
-def from_json(body): 
-        new_task = Task(title=body["title"], description=body["description"], completed_at=body["completed_at"])
-        return new_task
+# def from_json(body): 
+#         new_task = Task(title=body["title"], description=body["description"], completed_at=body["completed_at"])
+#         return new_task
 
 @task_bp.route("", methods=["GET", "POST"])
 def get_tasks():
@@ -42,7 +41,7 @@ def get_tasks():
     elif request.method == "POST":
         request_body = request.get_json()
         try:
-            new_task = from_json(request_body)
+            new_task = Task.new_task_from_json(request_body)
         except KeyError:
             return make_response({"details": "Invalid data"}, 400)
         db.session.add(new_task)
@@ -59,13 +58,16 @@ def handle_single_task(task_id):
         return {"task": task.to_json()}
     elif request.method == "PUT":
         request_body = request.get_json()
-
-        task.title = request_body["title"]
-        task.description = request_body["description"]
-        task.completed_at = request_body["completed_at"]
+        try:
+            new_task = Task.new_task_from_json(request_body)
+            # task.title = request_body["title"]
+            # task.description = request_body["description"]
+            # task.completed_at = None
+        except KeyError:
+            return make_response({"details": "Invalid data"}, 400)
 
         db.session.commit()
-        updated_task = task.to_json()
+        updated_task = new_task.to_json()
         updated_task["is_complete"] = task.is_complete()
 
         return make_response({"task": updated_task}, 200)
@@ -81,9 +83,7 @@ def update_task_with_completion(task_id):
     if task is None:
         return return_404()
     else: 
-        local_date = date.today()
-        today = local_date.strftime("%m%d%y")
-        task.completed_at = today
+        task.completed_at = date.today()
         db.session.commit()
         updated_task = task.to_json()
         updated_task["is_complete"] = task.is_complete()
