@@ -21,10 +21,20 @@ class Task(db.Model):
         return is_complete
 
     def get_json(self):
-        return {
-            "id": self.task_id,
-            "goal_id": self.goal_id,
-            "title": self.title,
-            "description": self.description,
-            "is_complete": self.is_complete()
-        }
+        if self.goal_id == None:
+            return {
+                    "id": self.task_id,
+                    "title": self.title,
+                    "description": self.description,
+                    "is_complete": self.is_complete()
+                }
+        else:
+            return {
+                    "id": self.task_id,
+                    "goal_id": self.goal_id,
+                    "title": self.title,
+                    "description": self.description,
+                    "is_complete": self.is_complete()
+                }
+            
+        

@@ -10,7 +10,7 @@ from secrets import slack_token
 task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 @task_bp.route("", methods=["GET", "POST"])
-def handle_tasks():  # NameError
+def handle_tasks(): 
     if request.method == "GET":
 
         tasks = Task.query.all()
@@ -84,19 +84,13 @@ def handle_task(task_id):
         if task.completed_at == None:
             completed_at = False
         else:
-            completed_at = True
-        return {
-            "task": {
-                "id": task.task_id,
-                "goal_id": task.goal_id,
-                "title": task.title,
-                "description": task.description,
-                "is_complete": completed_at
-            }
-        }
+            completed_at=True
+        return {"task":task.get_json()}
+
     elif request.method == "PUT":
         form_data = request.get_json()
 
+        #update_task = Task.
         task.title = form_data["title"]
         task.description = form_data["description"]
         task.completed_at = form_data["completed_at"]
