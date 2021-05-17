@@ -54,7 +54,7 @@ def slack_post_to_task_notifications_channel(text):
 
     # this is the code that induces the bot to make the post by sending a POST request 
     # The required parameters for this endpoint are the token (post_headers) and channel (post_data)
-    # ❓ confused as to why PATCH or POST or PUT all work here as verbs - but not GET
+    # ❓ confused as to why PATCH or POST or PUT all work here as verbs
     requests.post('https://slack.com/api/chat.postMessage', headers=post_headers, data=post_data)
 
 
