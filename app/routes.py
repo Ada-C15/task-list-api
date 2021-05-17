@@ -22,6 +22,8 @@ from dotenv import load_dotenv
 # os is a module that provides the ability to read environmental variables, which are actually stored outside of the code - needed to be able to read the hidden bot API token
 import os
 
+from flask import abort
+
 # this method loads the values from the .env file which the os module can then read 
 load_dotenv()
 
@@ -33,7 +35,6 @@ goals_bp = Blueprint("goals", __name__, url_prefix="/goals")
 # HELPER FUNCTIONS:
 #=============================================================================
 
-# This helper function gets called 
 def slack_post_to_task_notifications_channel(text):
     """
     inputs: text (string), which is the message to be posted
@@ -54,32 +55,21 @@ def slack_post_to_task_notifications_channel(text):
     # this is the code that induces the bot to make the post by sending a POST request 
     # The required parameters for this endpoint are the token (post_headers) and channel (post_data)
     # ❓ confused as to why PATCH or POST or PUT all work here as verbs - but not GET
-    requests.get('https://slack.com/api/chat.postMessage', headers=post_headers, data=post_data)
+    requests.post('https://slack.com/api/chat.postMessage', headers=post_headers, data=post_data)
 
-# When this helper function gets called, it checks to see if executing `return int(some_value)` raises a ValueError exception, then returns so - call this in my function that checks for valid input and returns a 400 code if not
-# ❓ It seems like there should be a way to integrate this code into valid_id_or_400(), but it seems tricky and I even noticed that Chris kept them separate in the videos
-def is_int(value):
-    """
-    input: any value
-    output: tries to return an integer form of input value; if that raises an error, it returns False
-    """
-    try:
-        return int(value)
-    except ValueError:
-        return False
 
 def valid_id_or_400(input_id):
     """
-    input: an input ID 
-    output: returns False and a 400 status code if the input ID is not an integer 
+    input: an input id 
+    output: a 400 status code if the input ID is not able to be converted to an integer  
     """
+    # tries to convert the input_id to an integer
+    try:
+        return int(input_id)
+    # if a ValueError is raised, an abort with 400 gets triggered 
+    except ValueError:
+        abort(400,{"message": f"ID {input_id} must be an integer", "success": False})
 
-    if not is_int(input_id):
-        return {
-            "message": f"ID {input_id} must be an integer",
-            "success": False
-        }, 400
-    
 
 # TASK ENDPOINTS:
 #=============================================================================
@@ -90,6 +80,7 @@ def valid_id_or_400(input_id):
 def get_single_task(task_id):
 
     # ❓ Would it make sense to bundle checking for valid task id and querying a task for that id into one instance method or helper function - since I'm doing that for every endpoint
+    # This helper function does nothing if task_id is invalid, but aborts with a 400 code if task_id is invalid (instead of raising an error)
     valid_id_or_400(task_id)
 
     # get_or_404 is a built-in SQLAlchemy Query subclass method that works just like get(), except it aborts with 404 if not found rather than aboridng with None like get() 
