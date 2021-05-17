@@ -78,13 +78,11 @@ def mark_complete(task_id):
     return mark_task(task_id, True)
 
 def mark_task(task_id, completed):
-    task = Task.query.get(task_id)
+    task = Task.query.get_or_404(task_id)
     status = datetime.utcnow() if completed else None
-    if task:
-        task.completed_at = status
-        db.session.commit()
-        return jsonify(task=task.to_json())
-    return jsonify(None), 404
+    task.completed_at = status
+    db.session.commit()
+    return jsonify(task=task.to_json())
 
 ######################## GOAL ROUTES ######################## 
 
