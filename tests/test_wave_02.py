@@ -50,3 +50,4 @@ def test_get_tasks_sorted_desc(client, three_tasks):
             "is_complete": False,
             "title": "Answer forgotten email 📧"},
     ]
+
