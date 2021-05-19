@@ -37,7 +37,7 @@ def handle_goals():
                     new_goal.serialize()
             },201
  
-@goal_list_bp.route('/<goal_id>', methods = ['GET'])  
+@goal_list_bp.route('/<goal_id>', methods = ['GET','PUT'])  
 def handle_goal(goal_id):
     goal = Goal.query.get(goal_id)
     if not goal:
@@ -50,7 +50,14 @@ def handle_goal(goal_id):
                 goal.serialize()
             
         })
-   
+    elif request.method == 'PUT':
+        request_body = request.get_json()
+        if 'title' in request_body:
+            goal.title = request_body['title']
+        db.session.commit()
+        return({
+            'goal': goal.serialize()
+        },200)
 
 
 def order_by_title(task_response):
