@@ -37,7 +37,7 @@ def handle_goals():
                     new_goal.serialize()
             },201
  
-@goal_list_bp.route('/<goal_id>', methods = ['GET','PUT'])  
+@goal_list_bp.route('/<goal_id>', methods = ['GET','PUT', 'DELETE'])  
 def handle_goal(goal_id):
     goal = Goal.query.get(goal_id)
     if not goal:
@@ -57,6 +57,13 @@ def handle_goal(goal_id):
         db.session.commit()
         return({
             'goal': goal.serialize()
+        },200)
+    
+    elif request.method =='DELETE':
+        db.session.delete(goal)
+        db.session.commit()
+        return({
+            "details": f'Goal {goal_id} "{goal.title}" successfully deleted'
         },200)
 
 
