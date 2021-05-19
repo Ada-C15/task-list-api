@@ -36,6 +36,10 @@ def handle_goals():
                 'goal':
                     new_goal.serialize()
             },201
+        else:
+            return({
+                "details": f'Invalid data'
+        },400)
  
 @goal_list_bp.route('/<goal_id>', methods = ['GET','PUT', 'DELETE'])  
 def handle_goal(goal_id):
