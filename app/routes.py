@@ -3,8 +3,54 @@ from tests.test_wave_01 import test_create_task_must_contain_description
 from flask import Blueprint
 from app import db
 from app.models.task import Task
+from app.models.goal import Goal
 from flask import request, Blueprint, make_response, jsonify
 from datetime import datetime
+import requests
+
+
+
+goal_list_bp = Blueprint("goal_list", __name__, url_prefix = '/goals')
+
+@goal_list_bp.route('', methods = ['GET','POST'])
+def handle_goals():
+    if request.method == 'GET':
+        goals = Goal.query.all()
+        goal_response = []
+        for goal in goals:
+            goal_response.append({
+                'id': goal.goal_id,
+                'title': goal.title
+            })
+        return jsonify(goal_response)
+    
+    elif request.method == 'POST':
+        request_body = request.get_json()
+        if "title" in request_body:
+            new_goal = Goal(
+                title = request_body['title']
+            )
+            db.session.add(new_goal)
+            db.session.commit()
+            return{
+                'goal':
+                    new_goal.serialize()
+            },201
+ 
+@goal_list_bp.route('/<goal_id>', methods = ['GET'])  
+def handle_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if not goal:
+        return "", 404
+
+    if request.method == 'GET':
+        #check expected output in test
+        return({
+            'goal':
+                goal.serialize()
+            
+        })
+   
 
 
 def order_by_title(task_response):
@@ -48,11 +94,18 @@ def handle_tasks():
                 "details": "Invalid data"
             }, 400
         stringify_format = "%a, %d %b %Y %H:%M:%S %Z"
-        new_task = Task(
-            title = request_body['title'],
-            description = request_body['description'], 
-            completed_at = datetime.strptime(request_body["completed_at"], stringify_format)
-        )
+        if request_body["completed_at"]:
+
+            new_task = Task(
+                title = request_body['title'],
+                description = request_body['description'], 
+                completed_at = datetime.strptime(request_body["completed_at"], stringify_format)
+            )
+        else:
+             new_task = Task(
+                title = request_body['title'],
+                description = request_body['description'], 
+            )
         db.session.add(new_task)
         db.session.commit()
         return{
@@ -102,6 +155,7 @@ def mark_complete_task(task_id):
     if not task:
         return "", 404
     task.completed_at = datetime.utcnow()
+    task.notify_slack()
     return{
         'task':{
             'id': task.task_id,
