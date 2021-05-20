@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 db = SQLAlchemy()
 migrate = Migrate()
 load_dotenv()
+slack_key = os.environ.get("SLACK_API_KEY")
 
 
 def create_app(test_config=None):
@@ -28,7 +29,12 @@ def create_app(test_config=None):
 
     db.init_app(app)
     migrate.init_app(app, db)
+    
+    # Add Blueprint route
+    from .routes import task_list_bp
+    app.register_blueprint(task_list_bp)
 
-    # Register Blueprints here
+    from .routes import goal_list_bp
+    app.register_blueprint(goal_list_bp)
 
     return app
