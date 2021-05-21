@@ -14,7 +14,7 @@ from sqlalchemy import asc, desc
 # The following are all dependencies:
 # request is an OBJECT (not to be confused with the 'requests' PACKAGE) used to get info about an HTTP request
 # Blueprint is a class 
-#  ❓ make_response is a Flask helper method that instantiates a Response object - I'm a little confused about what I need this, as the code seems to work without it. But I know that it convert the return value from a view function to an instance of response_class. (from Flask documentation)
+# make_response is a Flask helper method that instantiates a Response object 
 # jsonify is a method used to convert a JSON HTTP request body into a Python dictionary 
 from flask import request, Blueprint, make_response, jsonify
 # dotenv is a Python package 
@@ -54,7 +54,7 @@ def slack_post_to_task_notifications_channel(text):
 
     # this is the code that induces the bot to make the post by sending a POST request 
     # The required parameters for this endpoint are the token (post_headers) and channel (post_data)
-    # ❓ confused as to why PATCH or POST or PUT all work here as verbs
+    # interesting to note that PATCH or POST or PUT all work here as verbs, which is unexpected given the Slack documentation for this endpoint
     requests.post('https://slack.com/api/chat.postMessage', headers=post_headers, data=post_data)
 
 
@@ -156,7 +156,6 @@ def task_index():
     if query_sort_direction == "asc":
         # asc() and desc() are SQLalchemy module functions (imported above)
         # order_by is another SQLalechemy method that can be used on a Query object 
-        # ❓ should probably get some clarity on what both asc() and order_by() are doing to together order the Task query by ascending order and sticking it in a list
         tasks = Task.query.order_by(asc(Task.title))
     elif query_sort_direction == "desc": 
         tasks = Task.query.order_by(desc(Task.title))
@@ -166,7 +165,7 @@ def task_index():
     for task in tasks:
         tasks_response.append(task.convert_to_json())
 
-    # ❓ from Flask documentation: jsonify() serializes data to JSON and wraps it in a Response with the application/json mimetype.
+    # jsonify() serializes data to JSON and wraps it in a Response with the application/json mimetype.
     # Used jsonify here instead of makes_response() BECAUSE tasks_response is a list of dictionaries? 
     return jsonify(tasks_response), 200
 
@@ -316,10 +315,6 @@ def get_tasks_for_goal(goal_id):
 
     
     
-
-# REFACTORING CONSIDERATIONS:
-
-# Make it so that a task can only be marked completed once (trying to mark a completed task completes returns an error message)
 
 
 
