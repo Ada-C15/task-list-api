@@ -20,6 +20,16 @@ class Task(db.Model):
         } 
         return result     
 
+    # def serialize_two(self):
+    #     result = {
+    #         'id': self.task_id,
+    #         'goal_id': self.goal_id,
+    #         'title': self.title,
+    #         'description': self.description,
+    #         'is_complete': self.completed_at != None
+    #     } 
+    #     return result     
+
     def notify_slack(self):
         message = f"Someone just completed the task {self.title}"
         url = "https://slack.com/api/chat.postMessage"

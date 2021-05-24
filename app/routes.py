@@ -70,6 +70,31 @@ def handle_goal(goal_id):
             "details": f'Goal {goal_id} "{goal.title}" successfully deleted'
         },200)
 
+@goal_list_bp.route('/<goal_id>/tasks', methods = ['GET'])  
+def get_tasks_for_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    if not goal:
+        return "", 404
+    
+    tasks = goal.tasks
+    json_tasks = []
+    for task in tasks:
+        serializeds_task = task.serialize() # dict
+        serializeds_task['goal_id'] = int(goal_id)
+        json_tasks.append(serializeds_task)
+        # result = {
+        #     'id': self.task_id,
+        #     'title': self.title,
+        #     'description': self.description,
+        #     'is_complete': self.completed_at != None
+        # } 
+
+    return {
+        "id": goal.goal_id,
+        "title": goal.title,
+        "tasks": json_tasks
+    }, 200
+            
 
 def order_by_title(task_response):
     return task_response["title"]
@@ -86,7 +111,8 @@ def handle_tasks():
                 'id': task.task_id,
                 'title': task.title,
                 'description': task.description,
-                'is_complete': task.completed_at != None
+                'is_complete': task.completed_at != None,
+                'goal_id': task.goal_id 
             })
         # allows access to keys - sort
         arg = request.args
@@ -162,6 +188,8 @@ def handle_task(task_id):  # same name as parameter route
             task.description = request_body['description']
         if 'completed_at' in request_body:
             task.completed = request_body['completed_at']
+        if 'goal_id' in request_body:
+            task.goal_id= request_body['goal_id']
         db.session.commit()
         return({
             'task': task.serialize()
@@ -196,6 +224,45 @@ def mark_incomplete_task(task_id):
             'is_complete': task.completed_at != None
         }      
     },200
+
+@goal_list_bp.route('/<goal_id>/tasks', methods = ['POST'])  
+def add_task_to_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    tasks = request.json
+    tasks = tasks["task_ids"]  
+    if not goal:
+         return "", 404
+    # task = db.session.query(Task.id)
+    query = db.session.query(Task).filter(Task.task_id.in_(tasks))
+
+    results = query.all()
+    for task in results:
+        task.goal_id = goal.goal_id
+    return{
+        'id': goal.goal_id,
+        'task_ids': tasks   
+    },200
+        
+    
+
+        
+        
+
+    
+    
+    
+
+#filter 
+    #get task id from request body
+
+
+    #Use task id to query test database to get those task sql alchemy join filter all 
+    #loop through the list
+    #Set each tasks.goal id to the goal id of goal task.goal_id = goal.id
+    #create response body from test
+
+
+
 
 
 

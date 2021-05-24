@@ -54,6 +54,9 @@ def test_get_tasks_for_specific_goal_no_tasks(client, one_goal):
     response = client.get("/goals/1/tasks")
     response_body = response.get_json()
 
+    # package = amazon_website.buy("socks")
+    # package_contents = package.get_json()
+
     # Assert
     assert response.status_code == 200
     assert "tasks" in response_body
