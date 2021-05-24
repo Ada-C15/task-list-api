@@ -1,5 +1,6 @@
 .vscode
 .DS_Store
+project_notes.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -8,6 +9,10 @@ __pycache__/
 
 # C extensions
 *.so
+
+# test folder
+
+tests/
 
 # Distribution / packaging
 .Python

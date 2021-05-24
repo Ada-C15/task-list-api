@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
 from dotenv import load_dotenv
+# from slack_sdk import WebClient
+# from slack_sdk.errors import SlackApiError
 
 
 db = SQLAlchemy()
@@ -29,6 +31,12 @@ def create_app(test_config=None):
     db.init_app(app)
     migrate.init_app(app, db)
 
-    # Register Blueprints here
+    # Register Blueprints for Task routes
+    from .routes import tasks_bp
+    app.register_blueprint(tasks_bp)
+
+    # Register Blueprints for Goal routes
+    from .routes import goals_bp
+    app.register_blueprint(goals_bp)
 
     return app
