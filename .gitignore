@@ -139,3 +139,7 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Xtra Scratch files
+scratch_pad.md 
+scratch_pad.py
