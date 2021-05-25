@@ -9,7 +9,9 @@ from datetime import datetime
 import requests
 
 
-
+def order_by_title(task_response):
+    return task_response["title"]
+    
 goal_list_bp = Blueprint("goal_list", __name__, url_prefix = '/goals')
 
 @goal_list_bp.route('', methods = ['GET','POST'])
@@ -18,10 +20,7 @@ def handle_goals():
         goals = Goal.query.all()
         goal_response = []
         for goal in goals:
-            goal_response.append({
-                'id': goal.goal_id,
-                'title': goal.title
-            })
+            goal_response.append(goal.serialize())
         return jsonify(goal_response)
     
     elif request.method == 'POST':
@@ -82,12 +81,7 @@ def get_tasks_for_goal(goal_id):
         serializeds_task = task.serialize() # dict
         serializeds_task['goal_id'] = int(goal_id)
         json_tasks.append(serializeds_task)
-        # result = {
-        #     'id': self.task_id,
-        #     'title': self.title,
-        #     'description': self.description,
-        #     'is_complete': self.completed_at != None
-        # } 
+
 
     return {
         "id": goal.goal_id,
@@ -95,34 +89,49 @@ def get_tasks_for_goal(goal_id):
         "tasks": json_tasks
     }, 200
             
+@goal_list_bp.route('/<goal_id>/tasks', methods = ['POST'])  
+def add_task_to_goal(goal_id):
+    goal = Goal.query.get(goal_id)
+    tasks = request.json
+    tasks = tasks["task_ids"]  
+    if not goal:
+         return "", 404
+    # task = db.session.query(Task.id)
+    query = db.session.query(Task).filter(Task.task_id.in_(tasks))
 
-def order_by_title(task_response):
-    return task_response["title"]
+    results = query.all()
+    for task in results:
+        task.goal_id = goal.goal_id
+    return{
+        'id': goal.goal_id,
+        'task_ids': tasks   
+    },200
+        
+
+
+
 
 task_list_bp = Blueprint("task_list", __name__, url_prefix='/tasks')
 @task_list_bp.route('', methods=['GET', 'POST'])
 def handle_tasks():
     if request.method == 'GET':
         #return full list of tasks
-        tasks = Task.query.all()
+        
+        # allows access to keys - sort
+        arg = request.args # better name
+        if "sort" in arg:
+            if arg['sort'] == "asc":
+                tasks = Task.query.order_by(Task.title.asc())
+            elif arg['sort'] == "desc":
+                tasks = Task.query.order_by(Task.title.desc())
+        else:
+            tasks = Task.query.all()
         task_response = []
         for task in tasks:
-            task_response.append({
-                'id': task.task_id,
-                'title': task.title,
-                'description': task.description,
-                'is_complete': task.completed_at != None,
-                'goal_id': task.goal_id 
-            })
-        # allows access to keys - sort
-        arg = request.args
-        if "sort" in request.args:
-            if arg['sort'] == "asc":
-                task_response = sorted(task_response, key = order_by_title)
-            elif arg['sort'] == "desc":
-                task_response = sorted(task_response, key = order_by_title, reverse = True)
-
+            task_response.append(task.serialize())
+                
         return jsonify(task_response)
+
     elif request.method == 'POST':
         request_body = request.get_json()
         if "title" not in request_body:
@@ -225,24 +234,7 @@ def mark_incomplete_task(task_id):
         }      
     },200
 
-@goal_list_bp.route('/<goal_id>/tasks', methods = ['POST'])  
-def add_task_to_goal(goal_id):
-    goal = Goal.query.get(goal_id)
-    tasks = request.json
-    tasks = tasks["task_ids"]  
-    if not goal:
-         return "", 404
-    # task = db.session.query(Task.id)
-    query = db.session.query(Task).filter(Task.task_id.in_(tasks))
 
-    results = query.all()
-    for task in results:
-        task.goal_id = goal.goal_id
-    return{
-        'id': goal.goal_id,
-        'task_ids': tasks   
-    },200
-        
     
 
         
@@ -252,14 +244,7 @@ def add_task_to_goal(goal_id):
     
     
 
-#filter 
-    #get task id from request body
 
-
-    #Use task id to query test database to get those task sql alchemy join filter all 
-    #loop through the list
-    #Set each tasks.goal id to the goal id of goal task.goal_id = goal.id
-    #create response body from test
 
 
 

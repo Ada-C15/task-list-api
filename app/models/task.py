@@ -18,6 +18,8 @@ class Task(db.Model):
             'description': self.description,
             'is_complete': self.completed_at != None
         } 
+        if self.goal_id:
+            result['goal_id'] = self.goal_id
         return result     
 
     # def serialize_two(self):
