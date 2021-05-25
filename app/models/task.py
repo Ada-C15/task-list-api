@@ -2,6 +2,7 @@ from flask import current_app
 from requests.models import parse_header_links
 from app import db
 import requests
+import os
 
 
 class Task(db.Model):
@@ -41,7 +42,7 @@ class Task(db.Model):
             "text": message
         }
         headers = {
-            "Authorization":"Bearer xoxb-2054232917126-2062969942578-52P3S23cj940QFt3KlQnQzOW",
+            "Authorization": os.environ.get('SLACK_API')
         }
         r = requests.post(url, data = params, headers = headers)
         r.status_code
