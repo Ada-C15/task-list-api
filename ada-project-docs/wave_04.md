@@ -119,7 +119,7 @@ Press the "Test Method" button!
 Scroll down to see the HTTP response. Answer the following questions:
 
 - Did we get a success message? If so, did we see the message in our actual Slack workspace?
-- Did we get an error emssage? If so, why?
+- Did we get an error message? If so, why?
 - What is the shape of this JSON? Is it a JSON object or array? What keys and values are there?
 
 ### Verify with Postman
