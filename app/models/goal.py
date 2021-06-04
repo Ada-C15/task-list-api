@@ -23,7 +23,7 @@ class Goal(db.Model): # Goal is the parent class
                 complete = True
             else:
                 complete = False
-        
+
             task_list.append({
                 "id": task.task_id,
                 "goal_id": task.goal_id,
