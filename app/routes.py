@@ -210,9 +210,10 @@ def handle_task(task_id):  # same name as parameter route
 def mark_complete_task(task_id):
     task = Task.query.get(task_id)
     if not task:
-        return "", 404
+        return "Task not found", 404
     task.completed_at = datetime.utcnow()
     task.notify_slack()
+    db.session.commit()
     return{
         'task':{
             'id': task.task_id,
@@ -225,8 +226,9 @@ def mark_complete_task(task_id):
 def mark_incomplete_task(task_id):
     task = Task.query.get(task_id)
     if not task:
-        return "", 404
+        return "Task Not Found", 404
     task.completed_at = None
+    db.session.commit()
     return{
         'task':{
             'id': task.task_id,
