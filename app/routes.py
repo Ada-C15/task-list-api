@@ -102,6 +102,8 @@ def add_task_to_goal(goal_id):
     results = query.all()
     for task in results:
         task.goal_id = goal.goal_id
+        db.session.commit()
+
     return{
         'id': goal.goal_id,
         'task_ids': tasks   
