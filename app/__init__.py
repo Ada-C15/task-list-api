@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_cors import CORS
 import os
 from dotenv import load_dotenv
 
@@ -27,8 +28,17 @@ def create_app(test_config=None):
     from app.models.goal import Goal
 
     db.init_app(app)
+    CORS(app)
     migrate.init_app(app, db)
 
+
+
     # Register Blueprints here
+    from .routes import task_list_bp, goal_list_bp
+    app.register_blueprint(task_list_bp)
+    app.register_blueprint(goal_list_bp)
+
+    
+
 
     return app
