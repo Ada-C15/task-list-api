@@ -9,16 +9,17 @@ import os
 from dotenv import load_dotenv
 import requests
 
-load_dotenv()
+load_dotenv() # parse .env file and load all relevant env vars
 
-task_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
-goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
+# instantiate blueprints of all models
+task_bp = Blueprint("tasks", __name__, url_prefix="/tasks") # blueprint class is invoked to allow for app functions to be defined (in routes below) 
+goal_bp = Blueprint("goals", __name__, url_prefix="/goals") # without requiring the instance of the object of that bp to exist yet
 
 # TASK ROUTES
-@task_bp.route("", methods=["POST"])
+@task_bp.route("", methods=["POST"]) # run the .route method on task_bp, have it look for X API call and run the following logic
 def create_task():
     """Create a task for the database"""
-    request_body = request.get_json()
+    request_body = request.get_json() # {'title': 'refresh on topic for SL', 'description': 'run through all routes', 'completed_at': None}
 
     if "title" not in request_body or "description" not in request_body or "completed_at" not in request_body:
         return make_response({"details": "Invalid data"}, 400)
@@ -28,27 +29,27 @@ def create_task():
     
     db.session.add(new_task)
     db.session.commit()
-    return jsonify({"task": new_task.to_json()}), 201
+    return jsonify({"task": new_task.to_json()}), 201 # jsonify() ensures proper data serialization: {'task': {'id': 4, 'title': 'test addtl tadfadefsdask', 'description': 'print statement', 'is_complete': False}} 
 
 @task_bp.route("", methods=["GET"])
 def get_all_tasks():
     """Get multiple tasks per request"""
-    tasks_ordered = request.args.get("sort")
+    hold_tasks = [] # for hold the collection of dicts later
+    tasks_ordered = request.args.get("sort") # request is a Flask obj that has methods .args and .get(); "sort" cue taken from wv 2 tests
 
-    if not tasks_ordered:
-        tasks = Task.query.all()
-    elif tasks_ordered == "asc":
-        tasks = Task.query.order_by(asc(Task.title))
-    elif tasks_ordered == "desc":
+    if not tasks_ordered: # if doesnt exist
+        tasks = Task.query.all() # pull everything
+    elif tasks_ordered == "asc": # otherwise if the str cmd you got was asc (asc cue from tests),
+        tasks = Task.query.order_by(asc(Task.title)) # sort in asc order; asc() method's from SQLAlchemy lib
+    elif tasks_ordered == "desc": # "" desc
         tasks = Task.query.order_by(desc(Task.title))
+    
+    if not tasks: # if none exist
+        return jsonify(hold_tasks) # return []
 
-    hold_tasks = []
-    if not tasks:
-        return jsonify(hold_tasks) 
-
-    for task in tasks:
-        hold_tasks.append(task.to_json())
-    return jsonify(hold_tasks)
+    for task in tasks: # otherwise
+        hold_tasks.append(task.to_json()) # append properly formatted tasks to list for later return
+    return jsonify(hold_tasks) # list of dicts or []
 
 @task_bp.route("/<task_id>", methods=["GET"])
 def get_single_task(task_id):
@@ -77,7 +78,7 @@ def update_task_element(task_id):
     request_body = request.get_json()
     task.title = request_body["title"]
     task.description = request_body["description"]
-    task.completed_at = request_body["completed_at"]
+    #task.completed_at = request_body["completed_at"] # C15 tests look for this, C16's do not
 
     db.session.commit()
     return jsonify({"task": task.to_json()})
@@ -185,24 +186,21 @@ def delete_goal(goal_id):
 def create_goal_w_tasks(goal_id):
     """Assigns related tasks to a goal"""
 
-    goal_id = int(goal_id)
-    request_body = request.get_json()
-    task_ids = request_body["task_ids"]
-    goal = Goal.query.get(goal_id)
-    ti_list = []
+    goal_id = int(goal_id) # incoming str > int
+    request_body = request.get_json() # rmr: {'title': 'testadsfasde goal'} >>> key err; {'title': 'testadsfasde goal', 'task_ids': [1, 2]} √
+    task_ids = request_body["task_ids"] # list of ints; wrote to appease the tests... in postman, include attr task_ids set to [] or [1,3,2,4]
 
-    for task_id in task_ids:
-        task = Task.query.get(task_id)
-        task.goal_id = goal_id 
-        ti_list.append(task_id)
-
+    for task_id in task_ids: # for every int in the list of ints
+        task = Task.query.get(task_id) # build back each int's asso'd task
+        task.goal_id = goal_id # ensure that each built-back task has the same goal id
         db.session.add(task)
         db.session.commit()
-    return make_response({"id": goal_id, "task_ids": ti_list}, 200)
+
+    return make_response({"id": goal_id, "task_ids": task_ids}, 200) # purely for tests
 
 @goal_bp.route("/<goal_id>/tasks", methods=["GET"])
 def get_single_tasked_goal(goal_id):
-    """Gets multiple goals and associated tasks per request"""
+    """Gets a goal and its associated tasks"""
 
     goal_id = int(goal_id)
     hold_related_tasks = []
@@ -210,11 +208,20 @@ def get_single_tasked_goal(goal_id):
 
     if not goal:
         return make_response("", 404)
-    for task in goal.tasks: 
-        hold_related_tasks.append(task.to_json())
+
+    for task in goal.tasks: # for every task id int in the list called tasks on the goal.py side: 
+        hold_related_tasks.append(task.to_json()) # append properly formatted task to arbitrary list for final return
+
     for i in range(len(hold_related_tasks)):
-        hold_related_tasks[i]["goal_id"] = goal_id
-    return jsonify({
+        hold_related_tasks[i]["goal_id"] = goal_id # make sure goal id is correct and the same for each task
+
+    print(goal.goal_id) # 1, √ 
+    print(goal.title) # 'test goal', √
+    print(hold_related_tasks) # [{'id': 1, 'title': 'refresh on topic for SL', 'description': 'run through all routes', 'is_complete': False, 'goal_id': 1}, 
+                                # {'id': 2, 'title': 'test addtl task', 'description': 'print statement', 'is_complete': False, 'goal_id': 1}, 
+                                # {'id': 4, 'title': 'test addtl tadfadefsdask', 'description': 'print statement', 'is_complete': False, 'goal_id': 1}] √
+
+    return jsonify({ # whole thing evals to the following when jsonify or make_response are in play: <Response 542 bytes [200 OK]>
             "id": goal.goal_id,
             "title": goal.title,
             "tasks": hold_related_tasks

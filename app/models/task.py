@@ -1,4 +1,3 @@
-from flask import current_app
 from app import db
 from datetime import datetime
 
@@ -7,7 +6,7 @@ class Task(db.Model):
     title = db.Column(db.String(50))
     description = db.Column(db.String(100))
     completed_at = db.Column(db.DateTime, nullable=True)
-    goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True)
+    goal_id = db.Column(db.Integer, db.ForeignKey('goal.goal_id'), nullable=True) # prettyprinted on youtube explains concept: https://www.youtube.com/watch?v=juPQ04_twtA&t=412s&ab_channel=PrettyPrinted 
 
     def to_json(self):
         if self.completed_at:
